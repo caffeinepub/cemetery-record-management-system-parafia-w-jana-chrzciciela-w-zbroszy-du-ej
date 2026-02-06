@@ -1,2 +1,3 @@
-# cemetery-record-management-system-parafia-w-jana-chrzciciela-w-zbroszy-du-ej
-Exported from Caffeine project: Publish Draft Version 26 for testing
+## 
+
+To run app build and run docker image: `docker build -t app . docker run -it --network host app`

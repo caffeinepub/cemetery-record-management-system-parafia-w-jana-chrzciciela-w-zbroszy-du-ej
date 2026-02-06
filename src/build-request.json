@@ -1,0 +1,43 @@
+{
+  "kind": "build_request",
+  "title": "Publish Draft Version 26 for testing",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Publish (run) Draft Version 26 so it becomes the active preview build available for testing via the standard preview link.",
+      "target": "unknown",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "uruchom version 26"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Draft Version 26 is published and becomes the currently running preview build.",
+        "The standard preview URL (e.g., https://caffeine.icp.xyz/preview) opens the app running Draft Version 26."
+      ]
+    }
+  ],
+  "constraints": [],
+  "nonGoals": [
+    "Do not implement new features or UI changes as part of this request.",
+    "Do not modify backend canister logic or frontend code; this is a publish/run action only."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
+  }
+}

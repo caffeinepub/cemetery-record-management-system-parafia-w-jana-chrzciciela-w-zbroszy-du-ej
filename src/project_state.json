@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "New project",
+  "architectural_notes": [
+    "Preview/testing link becomes active only after publishing a version; reverted versions do not automatically generate an active preview draft/link.",
+    "Preview link for the published version is accessed via the platform UI (right panel) or direct preview URL when provided (e.g., https://caffeine.icp.xyz/preview)."
+  ],
+  "known_issues": [],
+  "isFixRequest": false,
+  "existing_features": [
+    {
+      "id": "feature-publish-run-draft-version-26-so-it-becomes-the-active-preview-build-available-for-testing-via-the-standard-preview-link",
+      "title": "Publish (run) Draft Version 26 so it becomes the active preview build available for testing via the standard preview link.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [],
+  "projectName": "Publish Draft Version 26 for testing",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

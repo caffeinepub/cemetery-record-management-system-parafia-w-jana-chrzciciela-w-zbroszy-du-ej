@@ -1,0 +1,64 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-05T21:28:06.442Z",
+  "summary": "REQ-1 is a deployment/publish action (make Draft Version 26 the active preview). The diff instead introduces multiple backend/frontend code changes and documentation, but provides no concrete evidence that Draft Version 26 was actually published or that the preview URL now serves Version 26. Additionally, the diff violates stated non-goals by modifying backend and (apparently) frontend code.",
+  "missing_requirements": [
+    {
+      "id": "REQ-1",
+      "requirement": "Publish (run) Draft Version 26 so it becomes the active preview build available for testing via the standard preview link (e.g., https://caffeine.icp.xyz/preview).",
+      "reason": "The diff contains source code and documentation changes, but no evidence of an actual publish/deploy action (e.g., release metadata, CI/CD configuration, version switch, or deployment record) that would make Draft Version 26 the currently running preview build.",
+      "evidence": [
+        "frontend/docs/publish-draft-v26-preview.md",
+        "backend/main.mo",
+        "project_state.json"
+      ]
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "Backend data migration adding a new `searchDisclaimer` section to persistent site content state.",
+      "reason": "Not requested; request explicitly states this is publish-only with no backend canister logic modifications.",
+      "evidence": [
+        "backend/migration.mo",
+        "backend/main.mo"
+      ]
+    },
+    {
+      "description": "Backend canister changes to `SiteContent`/`PublicHtmlSection` types including new `searchDisclaimer` field and migration wiring.",
+      "reason": "Not requested and violates non-goal of not modifying backend logic.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "description": "Frontend implementation changes across many components/pages (public site content query usage, admin content tab, public page behavior, grave search/map behavior, etc.).",
+      "reason": "Not requested and violates non-goal of not modifying frontend code; diff summary indicates numerous frontend feature changes unrelated to publishing Draft Version 26.",
+      "evidence": [
+        "frontend-file-summaries.txt"
+      ]
+    },
+    {
+      "description": "Added documentation describing how to publish Draft Version 26.",
+      "reason": "Not requested as an implementation requirement; the requirement is to actually publish/run Draft Version 26, not to add a guide.",
+      "evidence": [
+        "frontend/docs/publish-draft-v26-preview.md"
+      ]
+    },
+    {
+      "description": "Project state tracking file updated/added with a pending feature request entry.",
+      "reason": "Not part of the requested publish action; appears to be internal bookkeeping rather than publishing Draft Version 26.",
+      "evidence": [
+        "project_state.json"
+      ]
+    }
+  ],
+  "confidence": 0.74,
+  "changed_files": [
+    "backend/main.mo",
+    "backend/migration.mo",
+    "frontend-file-summaries.txt",
+    "frontend/docs/publish-draft-v26-preview.md",
+    "project_state.json"
+  ]
+}
