@@ -1,25 +1,424 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "New project",
-  "architectural_notes": [
-    "Preview/testing link becomes active only after publishing a version; reverted versions do not automatically generate an active preview draft/link.",
-    "Preview link for the published version is accessed via the platform UI (right panel) or direct preview URL when provided (e.g., https://caffeine.icp.xyz/preview)."
-  ],
-  "known_issues": [],
-  "isFixRequest": false,
+  "summary": "Web-based cemetery record management system for the parish “Parafia św. Jana Chrzciciela w Zbroszy Dużej”, built as an Internet Computer (ICP) Motoko canister backend with a React/Tailwind frontend. Public site provides an editable, CMS-driven homepage (hero image/text, logo, footer/contact info, and section tiles), public grave search and a read-only tile map with strict data minimization. Authenticated managers (via Internet Identity) access the management panel for cemetery structure (alleys), grave record CRUD, interactive map-based editing, paginated browsing/search, printable HTML export (for PDF printing), and site content management. Project direction changed to simplify authorization: any successfully logged-in user is intended to have full management access (no separate admin role).",
   "existing_features": [
     {
-      "id": "feature-publish-run-draft-version-26-so-it-becomes-the-active-preview-build-available-for-testing-via-the-standard-preview-link",
-      "title": "Publish (run) Draft Version 26 so it becomes the active preview build available for testing via the standard preview link.",
+      "id": "IF-1",
+      "title": "Internet Identity authentication (login/logout + persisted identity)",
+      "synonyms": [
+        "Internet Identity",
+        "AuthClient",
+        "delegation identity",
+        "login session"
+      ],
+      "description": "Provides an Internet Identity provider and hook that initializes @dfinity/auth-client, loads persisted identities on mount, supports login with configured derivation origin and long-lived delegations, and supports logout/clear with status flags for UI flow control.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-2",
+      "title": "Backend actor initialization with identity + access control bootstrap via secret token",
+      "synonyms": [
+        "useActor",
+        "actor factory",
+        "_initializeAccessControlWithSecret"
+      ],
+      "description": "Creates an anonymous actor for public browsing and an identity-backed actor for authenticated sessions; on authenticated actor creation it calls _initializeAccessControlWithSecret using a secret extracted from the URL hash/session to register the principal and potentially assign admin role.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-3",
+      "title": "Role-based access control in backend",
+      "synonyms": [
+        "AccessControl",
+        "MixinAuthorization",
+        "admin/user/guest roles"
+      ],
+      "description": "Implements role storage per Principal and exposes role lookup, admin checks, and admin-only role assignment. Role initialization assigns the first matching secret user as admin and others as user; anonymous principals are guests.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-4",
+      "title": "Connection status and resilient UX messaging",
+      "synonyms": [
+        "ConnectionStatus",
+        "actor availability banner",
+        "SiteContentLoadErrorBanner"
+      ],
+      "description": "Frontend displays connection/loading warnings when actor initialization is delayed or unavailable and shows non-technical error banners for public site-content loading failures while continuing to render fallbacks.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-5",
+      "title": "Authenticated user profile creation and persistence",
+      "synonyms": [
+        "ProfileSetupModal",
+        "getCallerUserProfile",
+        "saveCallerUserProfile"
+      ],
+      "description": "Authenticated users can fetch/save their own profile; the app enforces profile setup by showing a modal that cannot be dismissed until required fields are provided and saved.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-6",
+      "title": "Cemetery state model (alleys with grave id lists) + retrieval APIs",
+      "synonyms": [
+        "CemeteryView",
+        "getCemeteryState",
+        "getCemeteryStateWithoutVerification"
+      ],
+      "description": "Backend maintains cemetery name, alley list, and per-alley grave-id sets; exposes query APIs returning a frontend-friendly view. Backend contains a consistency verifier used by the verified getter.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-7",
+      "title": "Alley management (add/remove) with domain errors",
+      "synonyms": [
+        "addAlley",
+        "removeAlley",
+        "duplicate alley prevention"
+      ],
+      "description": "Admins can add alleys (rejecting duplicates) and remove alleys (rejecting missing alleys and non-empty alleys) using AsyncResult domain errors consumed by frontend hooks with user-friendly messaging.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-8",
+      "title": "Grave lifecycle management (add/update/remove) with invariant enforcement",
+      "synonyms": [
+        "grave CRUD",
+        "addGrave",
+        "updateGrave",
+        "removeGrave"
+      ],
+      "description": "Admins can add graves into an existing alley, update records while enforcing immutable fields (id/alley/plotNumber), and remove only free graves; backend returns structured domain errors for not-found, invariant violations, and alley/grave inconsistency.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-9",
+      "title": "Paginated grave browsing API + infinite scrolling in admin UI",
+      "synonyms": [
+        "getPaginatedGraves",
+        "useInfiniteQuery",
+        "load more"
+      ],
+      "description": "Backend supports offset-based pagination for full grave records; frontend uses useInfiniteQuery to progressively load pages and show loaded vs total counts with a “load more” control.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-10",
+      "title": "Admin grave search with multiple backend filters",
+      "synonyms": [
+        "searchGraves",
+        "filter by owner/status/locality/year"
+      ],
+      "description": "Backend provides an admin-only query that filters grave records by optional surname, year of death, owner surname, grave status, and owner address substring; frontend exposes a mutation hook with retry/backoff and sanitized error reporting.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-11",
+      "title": "Public grave data minimization APIs",
+      "synonyms": [
+        "PublicGraveShape",
+        "searchPublicGraves",
+        "getPublicGraves"
+      ],
+      "description": "Backend exposes public read-only endpoints that return reduced deceased-person-centric records (no owner/contact) and allow public searching by surname and/or year of death.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-12",
+      "title": "Public tile map data API (status + deceased list per grave)",
+      "synonyms": [
+        "PublicTileData",
+        "getPublicTiles"
+      ],
+      "description": "Backend exposes public tile data per grave (id, alley, plotNumber, status, deceased persons) used to render a public read-only cemetery map without exposing owner details.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-13",
+      "title": "Statistics and autocomplete support",
+      "synonyms": [
+        "getGraveStatistics",
+        "getSurnamesForAutocomplete"
+      ],
+      "description": "Backend exposes grave status counters and a derived surname list for autocomplete; frontend includes cached query hooks for these endpoints.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-14",
+      "title": "Public homepage hero rendering from backend-managed site content",
+      "synonyms": [
+        "HeroSection",
+        "publicSiteContent",
+        "dynamic hero image"
+      ],
+      "description": "Public homepage hero loads SiteContent and renders persisted headline/intro and background (uploaded blob preferred, then URL, then a static fallback), with skeleton loaders and error banner fallback behavior.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-15",
+      "title": "Homepage section tiles navigation with deferred section rendering",
+      "synonyms": [
+        "PublicSectionsTiles",
+        "PublicPage navigation",
+        "scroll-into-view"
+      ],
+      "description": "Public homepage provides four large section tiles (Map/Search/Prayer/About). Prayer and About sections are hidden by default and become visible only after the user clicks their tile; selection also scrolls smoothly to the relevant section/tab content, avoiding duplicated navigation controls.",
       "reqIds": [
-        "REQ-1"
+        "REQ-11",
+        "REQ-12"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-16",
+      "title": "Public grave search UI with instant in-memory filtering",
+      "synonyms": [
+        "GraveSearch (public)",
+        "client-side search",
+        "full-text filtering"
+      ],
+      "description": "Public search loads public grave shapes once and provides instant, per-keystroke in-memory filtering limited to deceased names and year of death; results render minimal public-safe cards.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-17",
+      "title": "Public cemetery tile map visualization (read-only)",
+      "synonyms": [
+        "GraveTileMap",
+        "status legend",
+        "tooltips"
+      ],
+      "description": "Renders cemetery alleys as grids of tiles with shared status-to-color styling, a legend, and tooltips showing location, status, and deceased list, using public tile data and without edit actions.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-18",
+      "title": "Management panel (admin dashboard) with tabbed tools and lazy loading",
+      "synonyms": [
+        "AdminPanel",
+        "management dashboard",
+        "tabs"
+      ],
+      "description": "Authenticated users see a tabbed admin dashboard with sections for grave management, interactive map, layout tools, admin search, export, and site content management; heavy sections are lazy-loaded.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-19",
+      "title": "Interactive admin tile map with click-to-edit grave dialog",
+      "synonyms": [
+        "AdminGraveTileMap",
+        "click tile to edit",
+        "status-colored hover rings"
+      ],
+      "description": "Admin map renders tiles per alley with status-based styling and rich tooltips (including owner/payment); clicking a tile opens the edit dialog prefilled with the selected grave record.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-20",
+      "title": "Grave edit/create dialog with nested deceased + owner forms",
+      "synonyms": [
+        "GraveEditDialog",
+        "deceased list editor",
+        "owner editor",
+        "payment date editor"
+      ],
+      "description": "Provides a modal workflow for creating a new grave (select alley + plot number) and editing existing graves (status, deceased persons with dates/places, owner details, payment validity), with correct state reset on selection changes and error-tolerant submit behavior.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-21",
+      "title": "Cemetery structure management UI (alleys + adding/removing graves)",
+      "synonyms": [
+        "CemeteryLayoutManager",
+        "layout tools"
+      ],
+      "description": "Admin UI for adding/removing alleys (with confirmation dialog for deletions) and adding graves by selecting an alley and plot number; integrates with mutation hooks and cache invalidation.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-22",
+      "title": "Printable export via generated HTML (for PDF printing)",
+      "synonyms": [
+        "PDFExport",
+        "HTML-to-PDF",
+        "A4 report"
+      ],
+      "description": "Generates a styled HTML report organized by alleys and grave numbers including deceased and owner details, intended to be printed/saved as PDF through the browser print dialog.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-23",
+      "title": "Persistent site content management (hero, footer, prayer, cemetery sections)",
+      "synonyms": [
+        "SiteContentManager",
+        "SiteContent API",
+        "public content CMS"
+      ],
+      "description": "Backend stores editable SiteContent including hero, footer, and two public HTML sections (“Modlitwa za zmarłych” and “Nasz cmentarz/orzeczenie”); admin UI allows editing titles and HTML bodies and saves updates that are rendered on the public homepage.",
+      "reqIds": [
+        "REQ-14"
+      ],
+      "version": 1
+    },
+    {
+      "id": "IF-24",
+      "title": "Image upload pipeline with client-side resizing and blob persistence",
+      "synonyms": [
+        "ImageUploadEditor",
+        "imageEditing.ts",
+        "ExternalBlob uploads",
+        "upload progress"
+      ],
+      "description": "Admin UI supports selecting local images, previewing, automatically resizing to target dimensions, and uploading as ExternalBlob with progress callbacks; used for parish logo and hero background images stored in backend-managed site content.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-25",
+      "title": "Centralized data fetching with caching, retries, and user-friendly error handling",
+      "synonyms": [
+        "useQueries",
+        "TanStack Query cache tuning",
+        "exponential backoff",
+        "domain error formatting"
+      ],
+      "description": "All backend calls are wrapped in React Query hooks with tuned cache staleness/GC times, retry/backoff for transient errors, domain error formatting for cemetery operations, sanitization of technical/authorization errors, and toast notifications for user feedback.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "IF-26",
+      "title": "Theming system (light/dark) with custom tile styling tokens",
+      "synonyms": [
+        "Tailwind OKLCH variables",
+        "next-themes",
+        "tile theme tokens"
+      ],
+      "description": "Implements a light/dark theme using CSS variables (OKLCH) and next-themes, with custom color tokens for the public homepage section tiles to maintain consistent branding and accessible focus/hover states.",
+      "reqIds": [],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-public-homepage-so-the-four-main-navigation-tiles-map-search-prayer-for-the-deceased-our-cemetery-are-the-single-primary-entry-points-to-their-corresponding-sections-with-no-duplicate-call-to-action-buttons-on-the-homepage-for-map-or-search",
+      "title": "Update the public homepage so the four main navigation tiles (Map, Search, Prayer for the deceased, Our cemetery) are the single, primary entry points to their corresponding sections, with no duplicate call-to-action buttons on the homepage for Map or Search.",
+      "reqIds": [
+        "REQ-15"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-the-tile-interaction-behavior-on-the-public-homepage-clicking-each-tile-must-open-the-corresponding-full-section-view-map-and-search-must-open-their-full-views-prayer-and-our-cemetery-must-render-only-after-clicking-their-tiles-and-must-not-be-visible-by-default-on-initial-homepage-load",
+      "title": "Implement the tile interaction behavior on the public homepage: clicking each tile must open the corresponding full section view. Map and Search must open their full views; Prayer and Our cemetery must render only after clicking their tiles and must not be visible by default on initial homepage load.",
+      "reqIds": [
+        "REQ-16"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-restyle-the-four-homepage-navigation-tiles-to-match-the-requested-visual-style-large-and-readable-rounded-corners-subtle-shadow-and-hover-animations-that-brighten-with-a-gold-accent-ensure-the-look-is-consistent-in-both-light-and-dark-mode-with-the-specified-palette-light-stone-parchment-background-with-graphite-dark-brown-text-dark-navy-background-with-gold-accents-and-light-cream-text",
+      "title": "Restyle the four homepage navigation tiles to match the requested visual style: large and readable, rounded corners, subtle shadow, and hover animations that brighten with a gold accent; ensure the look is consistent in both light and dark mode with the specified palette (light: stone/parchment background with graphite/dark-brown text; dark: navy background with gold accents and light-cream text).",
+      "reqIds": [
+        "REQ-17"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-management-panel-available-after-internet-identity-login-supports-full-editing-of-the-prayer-for-the-deceased-section-and-the-our-cemetery-section-including-headings-titles-and-rich-content-including-quotes-and-saving-changes-without-a-full-page-reload",
+      "title": "Ensure the management panel (available after Internet Identity login) supports full editing of the Prayer for the deceased section and the Our cemetery section, including headings/titles and rich content (including quotes), and saving changes without a full page reload.",
+      "reqIds": [
+        "REQ-18"
       ],
       "version": 1
     }
   ],
-  "new_feature_requests": [],
-  "projectName": "Publish Draft Version 26 for testing",
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Simplify authorization: remove admin/user role gating so any Internet Identity login grants full access to management panel and all write operations",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Unified, integrated grave search: single search UI with multi-field filters + autocomplete, live result count, and quick sorting",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Implement in-memory full-text search over paginated/lazy-loaded datasets (case-insensitive), avoiding per-keystroke backend calls",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Public data minimization: public browsing/search/map must expose only deceased name/surname, year of death (if present), and payment/reservation status; no owner/contact/address",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Make public and admin tile maps visually 1:1 for hover/highlight behavior and status color semantics, while keeping public tooltips minimal; ensure correct grave numbering/labels in public view",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Homepage navigation tiles (Mapa/Wyszukiwanie/Modlitwa/Nasz cmentarz): no duplicated CTA buttons; content sections appear only after tile click; admin can edit Modlitwa and Nasz cmentarz content + hero/logo/footer (Polish-only UI) with save without full page reload",
+      "reqIds": [],
+      "status": "pending"
+    }
+  ],
+  "architectural_notes": [
+    "Backend is a Motoko canister actor with in-memory state (Map/List/Set) and explicit upgrade migration (backend/migration.mo) to evolve persisted state (notably SiteContent).",
+    "Authorization is implemented via an AccessControl module composed into the canister using a Motoko mixin (MixinAuthorization); roles are #admin/#user/#guest and initial role assignment uses a secret compared against the CAFFEINE_ADMIN_TOKEN env var.",
+    "Backend exposes separate admin vs public data surfaces: full GraveRecord APIs are admin-gated, while public APIs return reduced shapes (PublicGraveShape) and tile data (PublicTileData).",
+    "Persistent site content (SiteContent) is stored in backend state and served publicly; admin-only mutation methods update homepage hero, footer, logo, and editable HTML sections.",
+    "Binary assets use Caffeine blob storage primitives: ExternalBlob is used in SiteContent fields; blob lifecycle/GC and gateway authorization are handled via backend/blob-storage mixin modules.",
+    "Frontend uses React + TanStack React Query with centralized hooks (useQueries.ts) that apply resource-specific caching (staleTime/gcTime), retry with exponential backoff, and automatic invalidation after mutations.",
+    "Backend actor creation is centralized in useActor; actor is recreated per authenticated principal and triggers cache invalidation/refetch for all non-actor queries when identity changes.",
+    "UI is split into PublicPage vs AdminPanel; heavy components (search, maps, dialogs) are lazy-loaded with React.Suspense for performance.",
+    "Styling uses TailwindCSS with OKLCH CSS variables, next-themes for dark/light theme switching, and shadcn/ui component patterns.",
+    "Search UX is optimized by fetching datasets (public shapes or paginated admin pages) and applying instant in-memory full-text filtering on the client to avoid per-keystroke backend calls."
+  ],
+  "known_issues": [
+    "Frontend routes any authenticated user to the management panel, but the backend gates most management operations as admin-only; without a valid admin secret/token, authenticated non-admins will see authorization failures (traps) rather than a role-gated UI experience.",
+    "Calling _initializeAccessControlWithSecret will trap if CAFFEINE_ADMIN_TOKEN is not set in the canister environment, preventing successful authenticated initialization.",
+    "Blob storage cashier env var name appears typo-prone (\"CAFFFEINE_STORAGE_CASHIER_PRINCIPAL\" with three ‘F’s); misconfiguration will cause runtime traps when storage functions are used.",
+    "Several backend authorization failures use Runtime.trap (e.g., updateSiteContent, addGrave, addAlley) rather than returning typed domain errors, making error handling less graceful and potentially crashing calls.",
+    "PublicPage renders admin-managed HTML via dangerouslySetInnerHTML (prayer/about sections); without HTML sanitization this can enable XSS if content is malicious.",
+    "Public GraveTileMap includes a fallback tile construction when tile data is missing that sets plotNumber=graveId, which could display incorrect plot numbers/status if the public tiles payload is incomplete.",
+    "Backend text filtering uses case-sensitive Text.contains for surnames/owner/locality, which may not match user expectations for Polish case-insensitive searching.",
+    "Some queries return empty arrays when the actor is unavailable (instead of surfacing an error), which can mask connectivity/configuration issues and present as “no data”.",
+    "Two different global CSS variable files exist (frontend/index.css and frontend/src/index.css) with overlapping theme tokens, increasing risk of confusion or inconsistent styling depending on import/build configuration.",
+    "Some public UI text is not fully localized (e.g., “Year of death” in public results), indicating incomplete Polish-only UX."
+  ],
+  "isFixRequest": true,
+  "gameProjectType": "none",
+  "projectName": "Cemetery Record Management System — Parafia św. Jana Chrzciciela w Zbroszy Dużej",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

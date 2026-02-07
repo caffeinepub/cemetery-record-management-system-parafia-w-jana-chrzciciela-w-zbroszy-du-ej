@@ -2,10 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-publish-run-draft-version-26-so-it-becomes-the-active-preview-build-available-for-testing-via-the-standard-preview-link",
-      "featureTitle": "Publish (run) Draft Version 26 so it becomes the active preview build available for testing via the standard preview link.",
+      "featureId": "feature-update-the-public-homepage-so-the-four-main-navigation-tiles-map-search-prayer-for-the-deceased-our-cemetery-are-the-single-primary-entry-points-to-their-corresponding-sections-with-no-duplicate-call-to-action-buttons-on-the-homepage-for-map-or-search",
+      "featureTitle": "Update the public homepage so the four main navigation tiles (Map, Search, Prayer for the deceased, Our cemetery) are the single, primary entry points to their corresponding sections, with no duplicate call-to-action buttons on the homepage for Map or Search.",
       "files": [
-        "frontend/docs/publish-draft-v26-preview.md"
+        "frontend/src/pages/PublicPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -17,7 +17,70 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-1"
+        "REQ-15"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-the-tile-interaction-behavior-on-the-public-homepage-clicking-each-tile-must-open-the-corresponding-full-section-view-map-and-search-must-open-their-full-views-prayer-and-our-cemetery-must-render-only-after-clicking-their-tiles-and-must-not-be-visible-by-default-on-initial-homepage-load",
+      "featureTitle": "Implement the tile interaction behavior on the public homepage: clicking each tile must open the corresponding full section view. Map and Search must open their full views; Prayer and Our cemetery must render only after clicking their tiles and must not be visible by default on initial homepage load.",
+      "files": [
+        "frontend/src/components/PublicSectionsTiles.tsx",
+        "frontend/src/pages/PublicPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-16"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-restyle-the-four-homepage-navigation-tiles-to-match-the-requested-visual-style-large-and-readable-rounded-corners-subtle-shadow-and-hover-animations-that-brighten-with-a-gold-accent-ensure-the-look-is-consistent-in-both-light-and-dark-mode-with-the-specified-palette-light-stone-parchment-background-with-graphite-dark-brown-text-dark-navy-background-with-gold-accents-and-light-cream-text",
+      "featureTitle": "Restyle the four homepage navigation tiles to match the requested visual style: large and readable, rounded corners, subtle shadow, and hover animations that brighten with a gold accent; ensure the look is consistent in both light and dark mode with the specified palette (light: stone/parchment background with graphite/dark-brown text; dark: navy background with gold accents and light-cream text).",
+      "files": [
+        "frontend/src/components/PublicSectionsTiles.tsx",
+        "frontend/src/index.css"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-17"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-the-management-panel-available-after-internet-identity-login-supports-full-editing-of-the-prayer-for-the-deceased-section-and-the-our-cemetery-section-including-headings-titles-and-rich-content-including-quotes-and-saving-changes-without-a-full-page-reload",
+      "featureTitle": "Ensure the management panel (available after Internet Identity login) supports full editing of the Prayer for the deceased section and the Our cemetery section, including headings/titles and rich content (including quotes), and saving changes without a full page reload.",
+      "files": [
+        "frontend/src/components/admin/SiteContentManager.tsx",
+        "frontend/src/pages/PublicPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-18"
       ],
       "confidence": "high"
     }

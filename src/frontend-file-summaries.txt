@@ -26,6 +26,5 @@
   "frontend/src/components/admin/ImageUploadEditor.tsx": "Reusable admin image upload editor component with file selection, live preview, automatic resizing to specified dimensions, upload progress tracking, and saving as ExternalBlob with proper type casting for Uint8Array compatibility.",
   "frontend/src/components/SiteContentLoadErrorBanner.tsx": "Reusable banner component displaying non-technical error messages when site content cannot be loaded, allowing the page to continue rendering with fallback content.",
   "frontend/src/components/PublicSectionsTiles.tsx": "Reusable component rendering four large, elegantly styled section tiles (Map, Search, Prayer, Cemetery) with enhanced hover effects including subtle scale, gold accent borders, and smooth transitions for both light (stone/parchment) and dark (navy+gold) themes.",
-  "frontend/tailwind.config.js": "Tailwind configuration extended with tile color utilities mapping to CSS custom properties for consistent themed styling across light and dark modes.",
-  "frontend/docs/publish-draft-v26-preview.md": "Operational runbook documenting the exact steps to select, publish, and verify Draft Version 26 as the active preview build, including verification procedures and rollback instructions."
+  "frontend/tailwind.config.js": "Tailwind configuration extended with tile color utilities mapping to CSS custom properties for consistent themed styling across light and dark modes."
 }

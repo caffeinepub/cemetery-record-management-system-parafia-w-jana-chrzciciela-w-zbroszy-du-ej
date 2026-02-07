@@ -211,7 +211,6 @@ export type AsyncResult_1 = {
 export interface SiteContent {
     logoImage?: ExternalBlob;
     cemeteryInformation: PublicHtmlSection;
-    searchDisclaimer: PublicHtmlSection;
     prayerForTheDeceased: PublicHtmlSection;
     gravesDeclaration: PublicHtmlSection;
     footer: FooterContent;
@@ -276,7 +275,6 @@ export interface backendInterface {
     getPublicGraves(): Promise<Array<PublicGraveShape>>;
     getPublicGravesByAlley(alley: string): Promise<Array<PublicGraveShape>>;
     getPublicTiles(): Promise<Array<PublicTileData>>;
-    getSearchDisclaimer(): Promise<PublicHtmlSection>;
     getSiteContent(): Promise<SiteContent>;
     getSurnamesForAutocomplete(): Promise<Array<string>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
@@ -293,7 +291,6 @@ export interface backendInterface {
     updateHomepageHeroContent(newContent: HomepageHeroContent): Promise<void>;
     updateLogoImage(newLogo: ExternalBlob | null): Promise<void>;
     updatePrayerForTheDeceased(newSection: PublicHtmlSection): Promise<void>;
-    updateSearchDisclaimer(newSection: PublicHtmlSection): Promise<void>;
     updateSiteContent(newContent: SiteContent): Promise<void>;
 }
 import type { AsyncResult as _AsyncResult, AsyncResult_1 as _AsyncResult_1, DeceasedPerson as _DeceasedPerson, Error as _Error, ExternalBlob as _ExternalBlob, FooterContent as _FooterContent, GraveOwner as _GraveOwner, GraveRecord as _GraveRecord, GraveStatus as _GraveStatus, HomepageHeroContent as _HomepageHeroContent, PaginatedGravesResult as _PaginatedGravesResult, PublicGraveShape as _PublicGraveShape, PublicHtmlSection as _PublicHtmlSection, PublicTileData as _PublicTileData, SiteContent as _SiteContent, Time as _Time, UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
@@ -711,20 +708,6 @@ export class Backend implements backendInterface {
             return from_candid_vec_n45(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getSearchDisclaimer(): Promise<PublicHtmlSection> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getSearchDisclaimer();
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getSearchDisclaimer();
-            return result;
-        }
-    }
     async getSiteContent(): Promise<SiteContent> {
         if (this.processError) {
             try {
@@ -946,20 +929,6 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.updatePrayerForTheDeceased(arg0);
-            return result;
-        }
-    }
-    async updateSearchDisclaimer(arg0: PublicHtmlSection): Promise<void> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.updateSearchDisclaimer(arg0);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.updateSearchDisclaimer(arg0);
             return result;
         }
     }
@@ -1212,7 +1181,6 @@ function from_candid_record_n47(_uploadFile: (file: ExternalBlob) => Promise<Uin
 async function from_candid_record_n49(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     logoImage: [] | [_ExternalBlob];
     cemeteryInformation: _PublicHtmlSection;
-    searchDisclaimer: _PublicHtmlSection;
     prayerForTheDeceased: _PublicHtmlSection;
     gravesDeclaration: _PublicHtmlSection;
     footer: _FooterContent;
@@ -1220,7 +1188,6 @@ async function from_candid_record_n49(_uploadFile: (file: ExternalBlob) => Promi
 }): Promise<{
     logoImage?: ExternalBlob;
     cemeteryInformation: PublicHtmlSection;
-    searchDisclaimer: PublicHtmlSection;
     prayerForTheDeceased: PublicHtmlSection;
     gravesDeclaration: PublicHtmlSection;
     footer: FooterContent;
@@ -1229,7 +1196,6 @@ async function from_candid_record_n49(_uploadFile: (file: ExternalBlob) => Promi
     return {
         logoImage: record_opt_to_undefined(await from_candid_opt_n37(_uploadFile, _downloadFile, value.logoImage)),
         cemeteryInformation: value.cemeteryInformation,
-        searchDisclaimer: value.searchDisclaimer,
         prayerForTheDeceased: value.prayerForTheDeceased,
         gravesDeclaration: value.gravesDeclaration,
         footer: value.footer,
@@ -1551,7 +1517,6 @@ async function to_candid_record_n65(_uploadFile: (file: ExternalBlob) => Promise
 async function to_candid_record_n69(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     logoImage?: ExternalBlob;
     cemeteryInformation: PublicHtmlSection;
-    searchDisclaimer: PublicHtmlSection;
     prayerForTheDeceased: PublicHtmlSection;
     gravesDeclaration: PublicHtmlSection;
     footer: FooterContent;
@@ -1559,7 +1524,6 @@ async function to_candid_record_n69(_uploadFile: (file: ExternalBlob) => Promise
 }): Promise<{
     logoImage: [] | [_ExternalBlob];
     cemeteryInformation: _PublicHtmlSection;
-    searchDisclaimer: _PublicHtmlSection;
     prayerForTheDeceased: _PublicHtmlSection;
     gravesDeclaration: _PublicHtmlSection;
     footer: _FooterContent;
@@ -1568,7 +1532,6 @@ async function to_candid_record_n69(_uploadFile: (file: ExternalBlob) => Promise
     return {
         logoImage: value.logoImage ? candid_some(await to_candid_ExternalBlob_n66(_uploadFile, _downloadFile, value.logoImage)) : candid_none(),
         cemeteryInformation: value.cemeteryInformation,
-        searchDisclaimer: value.searchDisclaimer,
         prayerForTheDeceased: value.prayerForTheDeceased,
         gravesDeclaration: value.gravesDeclaration,
         footer: value.footer,

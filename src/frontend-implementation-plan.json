@@ -1,20 +1,97 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Publish Draft Version 26 preview build (run action only)",
+  "title": "Homepage navigation tiles as primary entry points + admin editing for Prayer/Our cemetery content",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Document the operational steps to publish/run Draft Version 26 so it becomes the active preview build at the standard preview URL.",
+      "id": "REQ-15",
+      "summary": "Make the 4 homepage tiles the only Map/Search entry points by removing any duplicate Map/Search CTAs from the public homepage UI.",
       "acceptanceCriteria": [
-        "Draft Version 26 is published and becomes the currently running preview build.",
-        "The standard preview URL (e.g., https://caffeine.icp.xyz/preview) opens the app running Draft Version 26."
+        "The homepage does not render any additional Map/Search CTA buttons outside the 4 main tiles.",
+        "Map access is provided via the Map tile only; Search access is provided via the Search tile only."
       ],
       "file_operations": [
         {
-          "path": "frontend/docs/publish-draft-v26-preview.md",
-          "operation": "create",
-          "description": "Create a runbook describing the exact steps to select Draft Version 26 and publish/run it as the active preview build using the standard preview workflow/tooling, including how to verify via the standard preview link and how to confirm the deployed draft/version label if applicable. No application code changes."
+          "path": "frontend/src/pages/PublicPage.tsx",
+          "operation": "modify",
+          "description": "Refactor the public homepage layout so Map/Search access is only achievable by clicking the corresponding navigation tiles (e.g., do not render Map/Search as default-visible primary content on initial load). Ensure no extra Map/Search CTA buttons are introduced elsewhere on the homepage."
+        }
+      ]
+    },
+    {
+      "id": "REQ-16",
+      "summary": "Implement tile click behavior to open the full Map/Search views and to reveal+scroll to Prayer/Our cemetery sections only after clicking their tiles.",
+      "acceptanceCriteria": [
+        "On initial homepage load, the Prayer section is not rendered/visible.",
+        "On initial homepage load, the Our cemetery section is not rendered/visible.",
+        "Clicking the Prayer tile reveals the Prayer section and scrolls the page to it.",
+        "Clicking the Our cemetery tile reveals the Our cemetery section and scrolls the page to it.",
+        "Clicking the Map tile opens the map section as the primary content view (not a small preview).",
+        "Clicking the Search tile opens the search section as the primary content view (not a small preview)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/PublicPage.tsx",
+          "operation": "modify",
+          "description": "Update homepage state and rendering so Prayer/About sections are not mounted until their tiles are clicked; on tile click, mount the target section and smooth-scroll to it. For Map/Search, render the corresponding full view as the primary content after click (not a preview), and scroll into view."
+        },
+        {
+          "path": "frontend/src/components/PublicSectionsTiles.tsx",
+          "operation": "modify",
+          "description": "Ensure tile IDs and onSelect wiring remain aligned with the homepage section selection logic so each tile reliably opens the correct full section view."
+        }
+      ]
+    },
+    {
+      "id": "REQ-17",
+      "summary": "Restyle homepage navigation tiles to be large, elegant, rounded, shadowed, and with subtle gold-accent hover animations consistent across light/dark palettes.",
+      "acceptanceCriteria": [
+        "Tiles are visually large, with rounded corners and a subtle shadow at rest.",
+        "On hover, tiles show a noticeable but subtle brightening and a gold-accent highlight (e.g., border/ring/icon accent).",
+        "Light mode tiles read as stone/parchment with dark text; dark mode tiles read as navy with gold accents and cream text.",
+        "Tiles are centered under the hero section content and keep a clean 1-column to 2-column to 4-column responsive layout."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/PublicSectionsTiles.tsx",
+          "operation": "modify",
+          "description": "Adjust tile sizing, spacing, hover/active/focus states, and responsive grid behavior to match the requested large rounded-tile aesthetic with subtle brightening and gold-accent highlight."
+        },
+        {
+          "path": "frontend/src/index.css",
+          "operation": "modify",
+          "description": "Review and tune the existing light (stone/parchment + graphite/dark-brown) and dark (navy + gold + light-cream) tile design tokens (tile surface/border/accent/icon/text) to ensure consistent readability and contrast across themes."
+        },
+        {
+          "path": "frontend/tailwind.config.js",
+          "operation": "modify",
+          "description": "If needed to support the tile hover animation/visual polish (e.g., ring/shadow/transition consistency), extend Tailwind theme tokens that are consumed by the tile classes without introducing new global stylesheet entry points."
+        }
+      ]
+    },
+    {
+      "id": "REQ-18",
+      "summary": "Ensure the logged-in management panel supports rich editing (title + HTML body including quotes) for Prayer and Our cemetery content with in-app save and immediate public reflection.",
+      "acceptanceCriteria": [
+        "A logged-in manager can edit and save the title and body HTML for both Prayer and Our cemetery sections from the management panel UI.",
+        "Edits support quote formatting via HTML (e.g., <blockquote>) and persist correctly.",
+        "Saving completes via in-app state updates (no full page refresh) and the public homepage reflects the updated content after save."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/admin/SiteContentManager.tsx",
+          "operation": "modify",
+          "description": "Enhance the Prayer and Our cemetery editing UI to explicitly support rich HTML editing (including quotes via blockquote) and add an in-panel rendered preview (using the same public prose styling) so managers can validate formatting before saving. Use the existing update flow so saves occur without a full page reload. Verify the component's usage instructions before implementing (authorization)."
+        },
+        {
+          "path": "frontend/src/pages/PublicPage.tsx",
+          "operation": "modify",
+          "description": "Ensure the public Prayer and Our cemetery sections render from the persisted site content and correctly display rich HTML (including blockquote formatting). Confirm the page updates reflect React Query invalidation after a manager save without requiring a full refresh."
+        },
+        {
+          "path": "frontend/src/pages/AdminPanel.tsx",
+          "operation": "modify",
+          "description": "Gate the content-editing area to authorized admins/managers in the UI (e.g., hide/disable the 'Treść' tab or show an access denied state when not permitted) and handle backend authorization errors gracefully. Verify the component's usage instructions before implementing (authorization)."
         }
       ]
     }

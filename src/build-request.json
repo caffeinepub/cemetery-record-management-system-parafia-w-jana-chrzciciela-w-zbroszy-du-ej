@@ -1,43 +1,106 @@
 {
   "kind": "build_request",
-  "title": "Publish Draft Version 26 for testing",
+  "title": "Homepage navigation tiles: styling + click-to-open full section views; admin editing for Prayer/About content",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-1",
-      "text": "Publish (run) Draft Version 26 so it becomes the active preview build available for testing via the standard preview link.",
-      "target": "unknown",
+      "id": "REQ-15",
+      "text": "Update the public homepage so the four main navigation tiles (Map, Search, Prayer for the deceased, Our cemetery) are the single, primary entry points to their corresponding sections, with no duplicate call-to-action buttons on the homepage for Map or Search.",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-8"
         ],
         "quotes": [
-          "uruchom version 26"
+          "Clicking a tile navigates to the appropriate section of the application. Do not duplicate functionality.",
+          "Do NOT place additional “Search” buttons on the homepage",
+          "Do NOT duplicate the “Map of graves” button elsewhere"
         ]
       },
       "acceptanceCriteria": [
-        "Draft Version 26 is published and becomes the currently running preview build.",
-        "The standard preview URL (e.g., https://caffeine.icp.xyz/preview) opens the app running Draft Version 26."
+        "The homepage does not render any additional Map/Search CTA buttons outside the 4 main tiles.",
+        "Map access is provided via the Map tile only; Search access is provided via the Search tile only."
+      ]
+    },
+    {
+      "id": "REQ-16",
+      "text": "Implement the tile interaction behavior on the public homepage: clicking each tile must open the corresponding full section view. Map and Search must open their full views; Prayer and Our cemetery must render only after clicking their tiles and must not be visible by default on initial homepage load.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-8"
+        ],
+        "quotes": [
+          "Map of graves – opens the full map view",
+          "Search – opens the full grave search view",
+          "Prayer for the deceased – opens the full content view",
+          "Our cemetery – opens the full informational view + regulations",
+          "Prayer for the deceased and Our cemetery sections: display only after clicking the tile; not visible by default on the homepage"
+        ]
+      },
+      "acceptanceCriteria": [
+        "On initial homepage load, the Prayer section is not rendered/visible.",
+        "On initial homepage load, the Our cemetery section is not rendered/visible.",
+        "Clicking the Prayer tile reveals the Prayer section and scrolls the page to it.",
+        "Clicking the Our cemetery tile reveals the Our cemetery section and scrolls the page to it.",
+        "Clicking the Map tile opens the map section as the primary content view (not a small preview).",
+        "Clicking the Search tile opens the search section as the primary content view (not a small preview)."
+      ]
+    },
+    {
+      "id": "REQ-17",
+      "text": "Restyle the four homepage navigation tiles to match the requested visual style: large and readable, rounded corners, subtle shadow, and hover animations that brighten with a gold accent; ensure the look is consistent in both light and dark mode with the specified palette (light: stone/parchment background with graphite/dark-brown text; dark: navy background with gold accents and light-cream text).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-8"
+        ],
+        "quotes": [
+          "Four large, elegant buttons/tiles, centered under the text",
+          "large, readable; rounded corners; gentle shadow; subtle hover animations (brightening / gold accent)",
+          "Light mode: background: light stone / parchment; text: graphite / dark brown",
+          "Dark mode: background: navy; accents: gold; text: light cream"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Tiles are visually large, with rounded corners and a subtle shadow at rest.",
+        "On hover, tiles show a noticeable but subtle brightening and a gold-accent highlight (e.g., border/ring/icon accent).",
+        "Light mode tiles read as stone/parchment with dark text; dark mode tiles read as navy with gold accents and cream text.",
+        "Tiles are centered under the hero section content and keep a clean 1-column to 2-column to 4-column responsive layout."
+      ]
+    },
+    {
+      "id": "REQ-18",
+      "text": "Ensure the management panel (available after Internet Identity login) supports full editing of the Prayer for the deceased section and the Our cemetery section, including headings/titles and rich content (including quotes), and saving changes without a full page reload.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-8"
+        ],
+        "quotes": [
+          "In the Manager panel provide: full editing of the Prayer for the deceased content; full editing of the Our cemetery content; editing of texts, headings and quotes; save changes without reloading the page"
+        ]
+      },
+      "acceptanceCriteria": [
+        "A logged-in manager can edit and save the title and body HTML for both Prayer and Our cemetery sections from the management panel UI.",
+        "Edits support quote formatting via HTML (e.g., <blockquote>) and persist correctly.",
+        "Saving completes via in-app state updates (no full page refresh) and the public homepage reflects the updated content after save."
       ]
     }
   ],
-  "constraints": [],
+  "constraints": [
+    "Do not duplicate Map or Search functionality on the homepage outside the four main tiles.",
+    "Prayer and Our cemetery sections must not be visible by default on the public homepage; they must render only after clicking their tiles.",
+    "Respect the existing single-actor Motoko backend architecture.",
+    "Do not modify any files under frontend immutablePaths (as defined in SYSTEM_CONTEXT)."
+  ],
   "nonGoals": [
-    "Do not implement new features or UI changes as part of this request.",
-    "Do not modify backend canister logic or frontend code; this is a publish/run action only."
+    "Adding new backend services, databases, or third-party authentication providers.",
+    "Implementing real-time features (WebSockets/push notifications/chat).",
+    "Introducing additional homepage CTAs that replicate Search or Map access."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }

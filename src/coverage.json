@@ -1,24 +1,65 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-05T21:28:06.444Z",
+  "generatedAt": "2026-02-05T00:32:45.137Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 1,
-    "implemented": 1,
+    "total": 4,
+    "implemented": 4,
     "items": [
       {
-        "id": "REQ-1",
-        "summary": "Publish (run) Draft Version 26 so it becomes the active preview build available for testing via the standard preview link.",
+        "id": "REQ-15",
+        "summary": "Update the public homepage so the four main navigation tiles (Map, Search, Prayer for the deceased, Our cemetery) are the single, primary entry points to their corresponding sections, with no duplicate call-to-action buttons on the homepage for Map or Search.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/docs/publish-draft-v26-preview.md"
+          "frontend/src/pages/PublicPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/docs/publish-draft-v26-preview.md"
+          "frontend/src/pages/PublicPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-16",
+        "summary": "Implement the tile interaction behavior on the public homepage: clicking each tile must open the corresponding full section view. Map and Search must open their full views; Prayer and Our cemetery must render only after clicking their tiles and must not be visible by default on initial homepage load.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/PublicPage.tsx",
+          "frontend/src/components/PublicSectionsTiles.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/PublicPage.tsx",
+          "frontend/src/components/PublicSectionsTiles.tsx"
+        ]
+      },
+      {
+        "id": "REQ-17",
+        "summary": "Restyle the four homepage navigation tiles to match the requested visual style: large and readable, rounded corners, subtle shadow, and hover animations that brighten with a gold accent; ensure the look is consistent in both light and dark mode with the specified palette (light: stone/parchment background with graphite/dark-brown text; dark: navy background with gold accents and light-cream text).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/PublicSectionsTiles.tsx",
+          "frontend/src/index.css",
+          "frontend/tailwind.config.js"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/PublicSectionsTiles.tsx",
+          "frontend/src/index.css"
+        ]
+      },
+      {
+        "id": "REQ-18",
+        "summary": "Ensure the management panel (available after Internet Identity login) supports full editing of the Prayer for the deceased section and the Our cemetery section, including headings/titles and rich content (including quotes), and saving changes without a full page reload.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/admin/SiteContentManager.tsx",
+          "frontend/src/pages/PublicPage.tsx",
+          "frontend/src/pages/AdminPanel.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/admin/SiteContentManager.tsx",
+          "frontend/src/pages/PublicPage.tsx"
         ]
       }
     ]
@@ -27,15 +68,17 @@
     "backend/main.mo",
     "backend/migration.mo",
     "build-request.json",
-    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/docs/publish-draft-v26-preview.md",
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
+    "frontend/src/components/PublicSectionsTiles.tsx",
+    "frontend/src/components/admin/SiteContentManager.tsx",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
+    "frontend/src/index.css",
+    "frontend/src/pages/PublicPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

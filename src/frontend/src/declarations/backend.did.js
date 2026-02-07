@@ -121,7 +121,6 @@ export const PublicTileData = IDL.Record({
 export const SiteContent = IDL.Record({
   'logoImage' : IDL.Opt(ExternalBlob),
   'cemeteryInformation' : PublicHtmlSection,
-  'searchDisclaimer' : PublicHtmlSection,
   'prayerForTheDeceased' : PublicHtmlSection,
   'gravesDeclaration' : PublicHtmlSection,
   'footer' : FooterContent,
@@ -202,7 +201,6 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getPublicTiles' : IDL.Func([], [IDL.Vec(PublicTileData)], ['query']),
-  'getSearchDisclaimer' : IDL.Func([], [PublicHtmlSection], ['query']),
   'getSiteContent' : IDL.Func([], [SiteContent], ['query']),
   'getSurnamesForAutocomplete' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
   'getUserProfile' : IDL.Func(
@@ -237,7 +235,6 @@ export const idlService = IDL.Service({
   'updateHomepageHeroContent' : IDL.Func([HomepageHeroContent], [], []),
   'updateLogoImage' : IDL.Func([IDL.Opt(ExternalBlob)], [], []),
   'updatePrayerForTheDeceased' : IDL.Func([PublicHtmlSection], [], []),
-  'updateSearchDisclaimer' : IDL.Func([PublicHtmlSection], [], []),
   'updateSiteContent' : IDL.Func([SiteContent], [], []),
 });
 
@@ -357,7 +354,6 @@ export const idlFactory = ({ IDL }) => {
   const SiteContent = IDL.Record({
     'logoImage' : IDL.Opt(ExternalBlob),
     'cemeteryInformation' : PublicHtmlSection,
-    'searchDisclaimer' : PublicHtmlSection,
     'prayerForTheDeceased' : PublicHtmlSection,
     'gravesDeclaration' : PublicHtmlSection,
     'footer' : FooterContent,
@@ -442,7 +438,6 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getPublicTiles' : IDL.Func([], [IDL.Vec(PublicTileData)], ['query']),
-    'getSearchDisclaimer' : IDL.Func([], [PublicHtmlSection], ['query']),
     'getSiteContent' : IDL.Func([], [SiteContent], ['query']),
     'getSurnamesForAutocomplete' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
     'getUserProfile' : IDL.Func(
@@ -477,7 +472,6 @@ export const idlFactory = ({ IDL }) => {
     'updateHomepageHeroContent' : IDL.Func([HomepageHeroContent], [], []),
     'updateLogoImage' : IDL.Func([IDL.Opt(ExternalBlob)], [], []),
     'updatePrayerForTheDeceased' : IDL.Func([PublicHtmlSection], [], []),
-    'updateSearchDisclaimer' : IDL.Func([PublicHtmlSection], [], []),
     'updateSiteContent' : IDL.Func([SiteContent], [], []),
   });
 };

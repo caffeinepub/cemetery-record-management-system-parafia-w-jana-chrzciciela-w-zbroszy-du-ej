@@ -129,7 +129,6 @@ export type AsyncResult_1 = {
 export interface SiteContent {
     logoImage?: ExternalBlob;
     cemeteryInformation: PublicHtmlSection;
-    searchDisclaimer: PublicHtmlSection;
     prayerForTheDeceased: PublicHtmlSection;
     gravesDeclaration: PublicHtmlSection;
     footer: FooterContent;
@@ -183,7 +182,6 @@ export interface backendInterface {
     getPublicGraves(): Promise<Array<PublicGraveShape>>;
     getPublicGravesByAlley(alley: string): Promise<Array<PublicGraveShape>>;
     getPublicTiles(): Promise<Array<PublicTileData>>;
-    getSearchDisclaimer(): Promise<PublicHtmlSection>;
     getSiteContent(): Promise<SiteContent>;
     getSurnamesForAutocomplete(): Promise<Array<string>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
@@ -200,6 +198,5 @@ export interface backendInterface {
     updateHomepageHeroContent(newContent: HomepageHeroContent): Promise<void>;
     updateLogoImage(newLogo: ExternalBlob | null): Promise<void>;
     updatePrayerForTheDeceased(newSection: PublicHtmlSection): Promise<void>;
-    updateSearchDisclaimer(newSection: PublicHtmlSection): Promise<void>;
     updateSiteContent(newContent: SiteContent): Promise<void>;
 }

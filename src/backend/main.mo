@@ -1,18 +1,19 @@
-import List "mo:core/List";
 import Map "mo:core/Map";
+import List "mo:core/List";
 import Array "mo:core/Array";
 import Text "mo:core/Text";
+import Time "mo:core/Time";
 import Int "mo:core/Int";
 import Nat "mo:core/Nat";
-import Set "mo:core/Set";
 import Order "mo:core/Order";
-import Time "mo:core/Time";
+import Iter "mo:core/Iter";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 import Storage "blob-storage/Storage";
 import MixinStorage "blob-storage/Mixin";
+import Set "mo:core/Set";
 import Migration "migration";
 
 (with migration = Migration.run)
@@ -121,7 +122,6 @@ actor {
     gravesDeclaration : PublicHtmlSection;
     prayerForTheDeceased : PublicHtmlSection;
     cemeteryInformation : PublicHtmlSection;
-    searchDisclaimer : PublicHtmlSection;
   };
 
   // NEW: Persistent site-managed HTML content section (for WYSIWYG fields)
@@ -220,12 +220,6 @@ actor {
     cemeteryInformation = {
       title = "O naszym cmentarzu";
       content = "Cmentarz parafialny znajduje się w Zbroszy Dużej (polska_q64) blisko kościoła. Jest to miejsce szczególnej pamięci o zmarłych i złączenia z całą wspólnotą kościoła. ";
-    };
-    searchDisclaimer = {
-      title = "Ostrzeżenie o publicznym udostępnianiu";
-      content = "Wszystkie dane pochodzą ze źródeł publicznych (w tym z nagrobków). Jeśli życzą sobie państwo usunięcia lub korekty danych, prosimy o kontakt z nami "
-      # "na adres mailowy lub telefonicznie napisane w stopce powyżej.\n\n\"Nie chcesz bowiem śmierci grzesznika, lecz pragniesz, "
-      # "by ludzie się nawracali i mieli życie wieczne\" ";
     };
   };
 
@@ -338,11 +332,6 @@ actor {
     siteContentState.cemeteryInformation;
   };
 
-  // NEW: Public API for search disclaimer (called on public search page).
-  public query ({ caller }) func getSearchDisclaimer() : async PublicHtmlSection {
-    siteContentState.searchDisclaimer;
-  };
-
   // Admin-only public section update methods (called through the management panel).
   public shared ({ caller }) func updateGravesDeclaration(newSection : PublicHtmlSection) : async () {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
@@ -363,14 +352,6 @@ actor {
       Runtime.trap("Unauthorized: Only admins can update persistent section");
     };
     siteContentState := { siteContentState with cemeteryInformation = newSection };
-  };
-
-  // Admin-only persistent update for search disclaimer section.
-  public shared ({ caller }) func updateSearchDisclaimer(newSection : PublicHtmlSection) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can update persistent section");
-    };
-    siteContentState := { siteContentState with searchDisclaimer = newSection };
   };
 
   // Persistent admin business logic.

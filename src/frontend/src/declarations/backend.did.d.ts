@@ -91,7 +91,6 @@ export interface PublicTileData {
 export interface SiteContent {
   'logoImage' : [] | [ExternalBlob],
   'cemeteryInformation' : PublicHtmlSection,
-  'searchDisclaimer' : PublicHtmlSection,
   'prayerForTheDeceased' : PublicHtmlSection,
   'gravesDeclaration' : PublicHtmlSection,
   'footer' : FooterContent,
@@ -161,7 +160,6 @@ export interface _SERVICE {
   'getPublicGraves' : ActorMethod<[], Array<PublicGraveShape>>,
   'getPublicGravesByAlley' : ActorMethod<[string], Array<PublicGraveShape>>,
   'getPublicTiles' : ActorMethod<[], Array<PublicTileData>>,
-  'getSearchDisclaimer' : ActorMethod<[], PublicHtmlSection>,
   'getSiteContent' : ActorMethod<[], SiteContent>,
   'getSurnamesForAutocomplete' : ActorMethod<[], Array<string>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
@@ -190,7 +188,6 @@ export interface _SERVICE {
   'updateHomepageHeroContent' : ActorMethod<[HomepageHeroContent], undefined>,
   'updateLogoImage' : ActorMethod<[[] | [ExternalBlob]], undefined>,
   'updatePrayerForTheDeceased' : ActorMethod<[PublicHtmlSection], undefined>,
-  'updateSearchDisclaimer' : ActorMethod<[PublicHtmlSection], undefined>,
   'updateSiteContent' : ActorMethod<[SiteContent], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;

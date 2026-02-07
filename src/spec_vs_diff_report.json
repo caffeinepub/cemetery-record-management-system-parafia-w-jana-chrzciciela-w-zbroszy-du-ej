@@ -1,64 +1,36 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-05T21:28:06.442Z",
-  "summary": "REQ-1 is a deployment/publish action (make Draft Version 26 the active preview). The diff instead introduces multiple backend/frontend code changes and documentation, but provides no concrete evidence that Draft Version 26 was actually published or that the preview URL now serves Version 26. Additionally, the diff violates stated non-goals by modifying backend and (apparently) frontend code.",
+  "generatedAt": "2026-02-05T00:32:45.113Z",
+  "summary": "REQ-17 tile restyling and REQ-18 CMS-style editing support for Prayer and Our cemetery appear implemented (new tile component + palette variables; admin content manager fields; backend persistent `cemeteryInformation`). However, REQ-15/REQ-16 are only partially met because the public homepage still renders Search (and Map via tabs) content by default, meaning Map/Search are not exclusively accessed via the tiles and the tiles are not the sole primary entry points.",
   "missing_requirements": [
     {
-      "id": "REQ-1",
-      "requirement": "Publish (run) Draft Version 26 so it becomes the active preview build available for testing via the standard preview link (e.g., https://caffeine.icp.xyz/preview).",
-      "reason": "The diff contains source code and documentation changes, but no evidence of an actual publish/deploy action (e.g., release metadata, CI/CD configuration, version switch, or deployment record) that would make Draft Version 26 the currently running preview build.",
+      "id": "REQ-15",
+      "requirement": "Update the public homepage so the four main navigation tiles (Map, Search, Prayer for the deceased, Our cemetery) are the single, primary entry points to their corresponding sections, with no duplicate call-to-action buttons on the homepage for Map or Search.",
+      "reason": "The homepage still renders the Search/Map section UI (tabs with full Search/Map content) directly on the page regardless of tile clicks (Search is active by default). This contradicts the 'single, primary entry points' / 'no duplicate CTA' intent because Map/Search access is available outside the tiles.",
       "evidence": [
-        "frontend/docs/publish-draft-v26-preview.md",
-        "backend/main.mo",
-        "project_state.json"
+        "frontend/src/pages/PublicPage.tsx (activeTab initialized to 'search'; TabsContent for search/map always rendered under tiles)"
+      ]
+    },
+    {
+      "id": "REQ-16",
+      "requirement": "Implement the tile interaction behavior on the public homepage: clicking each tile must open the corresponding full section view. Map and Search must open their full views; Prayer and Our cemetery must render only after clicking their tiles and must not be visible by default on initial homepage load.",
+      "reason": "Prayer and Our cemetery are gated by `showPrayer`/`showAbout` and therefore hidden by default, but Search (and the tab container for Search/Map) is shown immediately on initial load due to `activeTab` defaulting to 'search' and Tabs being rendered unconditionally. This undermines the 'click-to-open' behavior for Search (and arguably Map) as primary views.",
+      "evidence": [
+        "frontend/src/pages/PublicPage.tsx (useState('search'); TabsContent value='search' always present; tiles only scroll to tabsRef)"
       ]
     }
   ],
-  "hallucinated_features": [
-    {
-      "description": "Backend data migration adding a new `searchDisclaimer` section to persistent site content state.",
-      "reason": "Not requested; request explicitly states this is publish-only with no backend canister logic modifications.",
-      "evidence": [
-        "backend/migration.mo",
-        "backend/main.mo"
-      ]
-    },
-    {
-      "description": "Backend canister changes to `SiteContent`/`PublicHtmlSection` types including new `searchDisclaimer` field and migration wiring.",
-      "reason": "Not requested and violates non-goal of not modifying backend logic.",
-      "evidence": [
-        "backend/main.mo"
-      ]
-    },
-    {
-      "description": "Frontend implementation changes across many components/pages (public site content query usage, admin content tab, public page behavior, grave search/map behavior, etc.).",
-      "reason": "Not requested and violates non-goal of not modifying frontend code; diff summary indicates numerous frontend feature changes unrelated to publishing Draft Version 26.",
-      "evidence": [
-        "frontend-file-summaries.txt"
-      ]
-    },
-    {
-      "description": "Added documentation describing how to publish Draft Version 26.",
-      "reason": "Not requested as an implementation requirement; the requirement is to actually publish/run Draft Version 26, not to add a guide.",
-      "evidence": [
-        "frontend/docs/publish-draft-v26-preview.md"
-      ]
-    },
-    {
-      "description": "Project state tracking file updated/added with a pending feature request entry.",
-      "reason": "Not part of the requested publish action; appears to be internal bookkeeping rather than publishing Draft Version 26.",
-      "evidence": [
-        "project_state.json"
-      ]
-    }
-  ],
-  "confidence": 0.74,
+  "hallucinated_features": [],
+  "confidence": 0.72,
   "changed_files": [
     "backend/main.mo",
     "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/docs/publish-draft-v26-preview.md",
+    "frontend/src/components/PublicSectionsTiles.tsx",
+    "frontend/src/components/admin/SiteContentManager.tsx",
+    "frontend/src/index.css",
+    "frontend/src/pages/PublicPage.tsx",
     "project_state.json"
   ]
 }
