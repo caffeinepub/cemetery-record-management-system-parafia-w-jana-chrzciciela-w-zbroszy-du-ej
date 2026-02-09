@@ -1,36 +1,73 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-05T00:32:45.113Z",
-  "summary": "REQ-17 tile restyling and REQ-18 CMS-style editing support for Prayer and Our cemetery appear implemented (new tile component + palette variables; admin content manager fields; backend persistent `cemeteryInformation`). However, REQ-15/REQ-16 are only partially met because the public homepage still renders Search (and Map via tabs) content by default, meaning Map/Search are not exclusively accessed via the tiles and the tiles are not the sole primary entry points.",
+  "generatedAt": "2026-02-09T07:23:49.849Z",
+  "summary": "Frontend improvements for search responsiveness were added (debounced inputs in admin/public UIs) and in-memory search indexing/caching was implemented. However, server-side paginated search APIs in the backend are not evidenced in the provided backend diff, and the public search UI still appears to rely on loading all public graves and filtering in memory rather than using backend paginated search when a query is present. Additionally, several unrelated site-content management and UI features were introduced that are not part of the performance/search BuildRequest.",
   "missing_requirements": [
     {
-      "id": "REQ-15",
-      "requirement": "Update the public homepage so the four main navigation tiles (Map, Search, Prayer for the deceased, Our cemetery) are the single, primary entry points to their corresponding sections, with no duplicate call-to-action buttons on the homepage for Map or Search.",
-      "reason": "The homepage still renders the Search/Map section UI (tabs with full Search/Map content) directly on the page regardless of tile clicks (Search is active by default). This contradicts the 'single, primary entry points' / 'no duplicate CTA' intent because Map/Search access is available outside the tiles.",
+      "id": "REQ-3",
+      "requirement": "Add backend query APIs that support server-side grave searching with pagination for both public-safe and admin searches (case-insensitive substring semantics).",
+      "reason": "The backend diff snippet shows added/changed types (e.g., PaginatedGravesResult, SiteContent changes), but does not show any new query methods for grave searching (public-safe or admin) with pagination. With only the truncated excerpt, there is insufficient evidence the required backend search query APIs were implemented.",
       "evidence": [
-        "frontend/src/pages/PublicPage.tsx (activeTab initialized to 'search'; TabsContent for search/map always rendered under tiles)"
+        "backend/main.mo (truncated)"
       ]
     },
     {
-      "id": "REQ-16",
-      "requirement": "Implement the tile interaction behavior on the public homepage: clicking each tile must open the corresponding full section view. Map and Search must open their full views; Prayer and Our cemetery must render only after clicking their tiles and must not be visible by default on initial homepage load.",
-      "reason": "Prayer and Our cemetery are gated by `showPrayer`/`showAbout` and therefore hidden by default, but Search (and the tab container for Search/Map) is shown immediately on initial load due to `activeTab` defaulting to 'search' and Tabs being rendered unconditionally. This undermines the 'click-to-open' behavior for Search (and arguably Map) as primary views.",
+      "id": "REQ-4",
+      "requirement": "Update frontend data-fetching to use new backend paginated search endpoints when a search query is present, while keeping existing behavior for empty queries; public search must not request restricted fields.",
+      "reason": "In the updated public search component, public mode still calls useGetPublicGraves and performs in-memory filtering via searchPublicGravesInMemory. There is no evidence that public-mode non-empty queries switch to backend paginated search (even though a hook name useInfiniteSearchPublicGravesPaginated is imported).",
       "evidence": [
-        "frontend/src/pages/PublicPage.tsx (useState('search'); TabsContent value='search' always present; tiles only scroll to tabsRef)"
+        "frontend/src/components/GraveSearch.tsx (truncated)"
       ]
     }
   ],
-  "hallucinated_features": [],
+  "hallucinated_features": [
+    {
+      "description": "Added/expanded site content management (new SiteContent fields/HTML sections, admin content manager UI with WYSIWYG editor, and dynamic header/footer driven by public site content).",
+      "reason": "The BuildRequest is focused on performance and grave search. These content-management changes are not requested and are unrelated to REQ-1..REQ-4.",
+      "evidence": [
+        "backend/main.mo (truncated) (SiteContent/PublicHtmlSection additions)",
+        "frontend/src/components/admin/SiteContentManager.tsx (truncated)",
+        "frontend/src/components/Footer.tsx",
+        "frontend-file-summaries.txt (multiple entries referencing new content tab/sections)"
+      ]
+    },
+    {
+      "description": "New URL/session parameter utility module for persisting and clearing URL/hash parameters.",
+      "reason": "Not requested by the BuildRequest; unrelated to grave search performance/pagination requirements.",
+      "evidence": [
+        "frontend/src/utils/urlParams.ts (truncated)"
+      ]
+    },
+    {
+      "description": "Admin GraveEditDialog behavior changes (state reset logic, dialog stays open on errors, title changes) and lazy-loading of dialog.",
+      "reason": "Not part of the stated search performance requirements; these are functional/UI changes beyond REQ-1..REQ-4.",
+      "evidence": [
+        "frontend/src/components/admin/GraveEditDialog.tsx (truncated)",
+        "frontend/src/components/admin/GraveManagement.tsx (truncated)"
+      ]
+    },
+    {
+      "description": "Public cemetery map/tiles behavior and styling changes (per file summary).",
+      "reason": "Not requested in the BuildRequest; unrelated to implementing debounced search, in-memory indexing, or backend paginated search.",
+      "evidence": [
+        "frontend-file-summaries.txt (GraveTileMap summary)"
+      ]
+    }
+  ],
   "confidence": 0.72,
   "changed_files": [
     "backend/main.mo",
-    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/PublicSectionsTiles.tsx",
+    "frontend/src/components/Footer.tsx",
+    "frontend/src/components/GraveSearch.tsx",
+    "frontend/src/components/admin/GraveEditDialog.tsx",
+    "frontend/src/components/admin/GraveManagement.tsx",
     "frontend/src/components/admin/SiteContentManager.tsx",
-    "frontend/src/index.css",
-    "frontend/src/pages/PublicPage.tsx",
+    "frontend/src/hooks/useDebouncedValue.ts",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/utils/graveFullTextSearch.ts",
+    "frontend/src/utils/urlParams.ts",
     "project_state.json"
   ]
 }

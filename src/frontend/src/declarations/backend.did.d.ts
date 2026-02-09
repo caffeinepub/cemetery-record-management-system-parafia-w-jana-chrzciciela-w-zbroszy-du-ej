@@ -177,9 +177,22 @@ export interface _SERVICE {
     ],
     Array<GraveRecord>
   >,
+  'searchGravesPaginated' : ActorMethod<
+    [[] | [string], [] | [bigint], bigint, bigint],
+    PaginatedGravesResult
+  >,
   'searchPublicGraves' : ActorMethod<
     [[] | [string], [] | [bigint]],
     Array<PublicGraveShape>
+  >,
+  'searchPublicGravesPaginated' : ActorMethod<
+    [[] | [string], [] | [bigint], bigint, bigint],
+    {
+      'graves' : Array<PublicGraveShape>,
+      'nextOffset' : [] | [bigint],
+      'pageSize' : bigint,
+      'totalGraves' : bigint,
+    }
   >,
   'updateCemeteryInformation' : ActorMethod<[PublicHtmlSection], undefined>,
   'updateFooterContent' : ActorMethod<[FooterContent], undefined>,

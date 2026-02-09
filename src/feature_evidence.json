@@ -2,10 +2,12 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-public-homepage-so-the-four-main-navigation-tiles-map-search-prayer-for-the-deceased-our-cemetery-are-the-single-primary-entry-points-to-their-corresponding-sections-with-no-duplicate-call-to-action-buttons-on-the-homepage-for-map-or-search",
-      "featureTitle": "Update the public homepage so the four main navigation tiles (Map, Search, Prayer for the deceased, Our cemetery) are the single, primary entry points to their corresponding sections, with no duplicate call-to-action buttons on the homepage for Map or Search.",
+      "featureId": "feature-improve-grave-search-responsiveness-by-reducing-unnecessary-re-filtering-and-re-rendering-during-typing-in-both-public-and-admin-search-uis",
+      "featureTitle": "Improve grave search responsiveness by reducing unnecessary re-filtering and re-rendering during typing in both public and admin search UIs.",
       "files": [
-        "frontend/src/pages/PublicPage.tsx"
+        "frontend/src/components/GraveSearch.tsx",
+        "frontend/src/components/admin/GraveManagement.tsx",
+        "frontend/src/hooks/useDebouncedValue.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -17,16 +19,17 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-15"
+        "REQ-1"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-implement-the-tile-interaction-behavior-on-the-public-homepage-clicking-each-tile-must-open-the-corresponding-full-section-view-map-and-search-must-open-their-full-views-prayer-and-our-cemetery-must-render-only-after-clicking-their-tiles-and-must-not-be-visible-by-default-on-initial-homepage-load",
-      "featureTitle": "Implement the tile interaction behavior on the public homepage: clicking each tile must open the corresponding full section view. Map and Search must open their full views; Prayer and Our cemetery must render only after clicking their tiles and must not be visible by default on initial homepage load.",
+      "featureId": "feature-optimize-in-memory-search-implementation-by-precomputing-and-reusing-normalized-searchable-strings-fields-for-graves-instead-of-normalizing-every-field-for-every-record-on-every-filter-run",
+      "featureTitle": "Optimize in-memory search implementation by precomputing and reusing normalized searchable strings/fields for graves, instead of normalizing every field for every record on every filter run.",
       "files": [
-        "frontend/src/components/PublicSectionsTiles.tsx",
-        "frontend/src/pages/PublicPage.tsx"
+        "frontend/src/components/GraveSearch.tsx",
+        "frontend/src/components/admin/GraveManagement.tsx",
+        "frontend/src/utils/graveFullTextSearch.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -38,16 +41,17 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-16"
+        "REQ-2"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-restyle-the-four-homepage-navigation-tiles-to-match-the-requested-visual-style-large-and-readable-rounded-corners-subtle-shadow-and-hover-animations-that-brighten-with-a-gold-accent-ensure-the-look-is-consistent-in-both-light-and-dark-mode-with-the-specified-palette-light-stone-parchment-background-with-graphite-dark-brown-text-dark-navy-background-with-gold-accents-and-light-cream-text",
-      "featureTitle": "Restyle the four homepage navigation tiles to match the requested visual style: large and readable, rounded corners, subtle shadow, and hover animations that brighten with a gold accent; ensure the look is consistent in both light and dark mode with the specified palette (light: stone/parchment background with graphite/dark-brown text; dark: navy background with gold accents and light-cream text).",
+      "featureId": "feature-update-frontend-data-fetching-to-use-the-new-backend-paginated-search-endpoints-when-a-search-query-is-present-while-keeping-existing-behavior-for-empty-queries-e-g-browsing-lists-infinite-loading",
+      "featureTitle": "Update frontend data-fetching to use the new backend paginated search endpoints when a search query is present, while keeping existing behavior for empty queries (e.g., browsing lists / infinite loading).",
       "files": [
-        "frontend/src/components/PublicSectionsTiles.tsx",
-        "frontend/src/index.css"
+        "frontend/src/components/GraveSearch.tsx",
+        "frontend/src/components/admin/GraveManagement.tsx",
+        "frontend/src/hooks/useQueries.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -59,28 +63,7 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-17"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-ensure-the-management-panel-available-after-internet-identity-login-supports-full-editing-of-the-prayer-for-the-deceased-section-and-the-our-cemetery-section-including-headings-titles-and-rich-content-including-quotes-and-saving-changes-without-a-full-page-reload",
-      "featureTitle": "Ensure the management panel (available after Internet Identity login) supports full editing of the Prayer for the deceased section and the Our cemetery section, including headings/titles and rich content (including quotes), and saving changes without a full page reload.",
-      "files": [
-        "frontend/src/components/admin/SiteContentManager.tsx",
-        "frontend/src/pages/PublicPage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "blob-storage@4.0.0"
-      ],
-      "testIds": [
-        "REQ-18"
+        "REQ-4"
       ],
       "confidence": "high"
     }

@@ -1,106 +1,104 @@
 {
   "kind": "build_request",
-  "title": "Homepage navigation tiles: styling + click-to-open full section views; admin editing for Prayer/About content",
+  "title": "Improve overall app performance and speed up grave search",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-15",
-      "text": "Update the public homepage so the four main navigation tiles (Map, Search, Prayer for the deceased, Our cemetery) are the single, primary entry points to their corresponding sections, with no duplicate call-to-action buttons on the homepage for Map or Search.",
+      "id": "REQ-1",
+      "text": "Improve grave search responsiveness by reducing unnecessary re-filtering and re-rendering during typing in both public and admin search UIs.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-8"
+          "msg-4"
         ],
         "quotes": [
-          "Clicking a tile navigates to the appropriate section of the application. Do not duplicate functionality.",
-          "Do NOT place additional “Search” buttons on the homepage",
-          "Do NOT duplicate the “Map of graves” button elsewhere"
+          "czy można jeszcze poprawić szybkość działania aplikacji i szybkość wyszukiwania?"
         ]
       },
       "acceptanceCriteria": [
-        "The homepage does not render any additional Map/Search CTA buttons outside the 4 main tiles.",
-        "Map access is provided via the Map tile only; Search access is provided via the Search tile only."
+        "Typing in the grave search input does not trigger a full filter operation on every single keystroke (e.g., input is debounced).",
+        "Search results update smoothly for large datasets without noticeable UI jank (no long main-thread stalls during fast typing).",
+        "The optimization applies to both public search (frontend/src/components/GraveSearch.tsx) and admin management search (frontend/src/components/admin/GraveManagement.tsx)."
       ]
     },
     {
-      "id": "REQ-16",
-      "text": "Implement the tile interaction behavior on the public homepage: clicking each tile must open the corresponding full section view. Map and Search must open their full views; Prayer and Our cemetery must render only after clicking their tiles and must not be visible by default on initial homepage load.",
+      "id": "REQ-2",
+      "text": "Optimize in-memory search implementation by precomputing and reusing normalized searchable strings/fields for graves, instead of normalizing every field for every record on every filter run.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-8"
+          "msg-4"
         ],
         "quotes": [
-          "Map of graves – opens the full map view",
-          "Search – opens the full grave search view",
-          "Prayer for the deceased – opens the full content view",
-          "Our cemetery – opens the full informational view + regulations",
-          "Prayer for the deceased and Our cemetery sections: display only after clicking the tile; not visible by default on the homepage"
+          "czy można jeszcze poprawić szybkość działania aplikacji i szybkość wyszukiwania?"
         ]
       },
       "acceptanceCriteria": [
-        "On initial homepage load, the Prayer section is not rendered/visible.",
-        "On initial homepage load, the Our cemetery section is not rendered/visible.",
-        "Clicking the Prayer tile reveals the Prayer section and scrolls the page to it.",
-        "Clicking the Our cemetery tile reveals the Our cemetery section and scrolls the page to it.",
-        "Clicking the Map tile opens the map section as the primary content view (not a small preview).",
-        "Clicking the Search tile opens the search section as the primary content view (not a small preview)."
+        "Admin in-memory search (searchGravesInMemory) avoids repeated per-field lowercase/trim work for unchanged grave records during subsequent searches.",
+        "Public in-memory search (searchPublicGravesInMemory) avoids repeated per-field lowercase/trim work for unchanged public grave records during subsequent searches.",
+        "Search result correctness remains the same as before for equivalent queries (case-insensitive, substring matching as currently implemented)."
       ]
     },
     {
-      "id": "REQ-17",
-      "text": "Restyle the four homepage navigation tiles to match the requested visual style: large and readable, rounded corners, subtle shadow, and hover animations that brighten with a gold accent; ensure the look is consistent in both light and dark mode with the specified palette (light: stone/parchment background with graphite/dark-brown text; dark: navy background with gold accents and light-cream text).",
-      "target": "frontend",
+      "id": "REQ-3",
+      "text": "Add backend query APIs that support server-side grave searching with pagination so the frontend does not need to load and filter large datasets in memory to search efficiently.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-8"
+          "msg-4"
         ],
         "quotes": [
-          "Four large, elegant buttons/tiles, centered under the text",
-          "large, readable; rounded corners; gentle shadow; subtle hover animations (brightening / gold accent)",
-          "Light mode: background: light stone / parchment; text: graphite / dark brown",
-          "Dark mode: background: navy; accents: gold; text: light cream"
+          "czy można jeszcze poprawić szybkość działania aplikacji i szybkość wyszukiwania?"
         ]
       },
       "acceptanceCriteria": [
-        "Tiles are visually large, with rounded corners and a subtle shadow at rest.",
-        "On hover, tiles show a noticeable but subtle brightening and a gold-accent highlight (e.g., border/ring/icon accent).",
-        "Light mode tiles read as stone/parchment with dark text; dark mode tiles read as navy with gold accents and cream text.",
-        "Tiles are centered under the hero section content and keep a clean 1-column to 2-column to 4-column responsive layout."
+        "Backend exposes a query method for public-safe grave search that only returns public-safe fields (equivalent to PublicGraveShape) and supports pagination (limit/pageSize + offset/cursor).",
+        "Backend exposes a query method for admin grave search that returns full GraveRecord data and supports pagination (limit/pageSize + offset/cursor).",
+        "Search is case-insensitive and supports the same matching semantics currently offered in the UI (substring match across the same fields per mode)."
       ]
     },
     {
-      "id": "REQ-18",
-      "text": "Ensure the management panel (available after Internet Identity login) supports full editing of the Prayer for the deceased section and the Our cemetery section, including headings/titles and rich content (including quotes), and saving changes without a full page reload.",
+      "id": "REQ-4",
+      "text": "Update frontend data-fetching to use the new backend paginated search endpoints when a search query is present, while keeping existing behavior for empty queries (e.g., browsing lists / infinite loading).",
       "target": "both",
       "source": {
         "messageIds": [
-          "msg-8"
+          "msg-4"
         ],
         "quotes": [
-          "In the Manager panel provide: full editing of the Prayer for the deceased content; full editing of the Our cemetery content; editing of texts, headings and quotes; save changes without reloading the page"
+          "czy można jeszcze poprawić szybkość działania aplikacji i szybkość wyszukiwania?"
         ]
       },
       "acceptanceCriteria": [
-        "A logged-in manager can edit and save the title and body HTML for both Prayer and Our cemetery sections from the management panel UI.",
-        "Edits support quote formatting via HTML (e.g., <blockquote>) and persist correctly.",
-        "Saving completes via in-app state updates (no full page refresh) and the public homepage reflects the updated content after save."
+        "When the user enters a non-empty query, the UI fetches search results from the backend rather than filtering the entire loaded dataset in memory.",
+        "Search results are paginated and can be incrementally loaded (consistent with the existing 'Load more' pattern in admin where applicable).",
+        "When the query is cleared, the UI returns to the existing non-search loading mode without requiring a full page refresh.",
+        "Public search never requests or displays restricted fields (owner/address/phone/payment)."
       ]
     }
   ],
   "constraints": [
-    "Do not duplicate Map or Search functionality on the homepage outside the four main tiles.",
-    "Prayer and Our cemetery sections must not be visible by default on the public homepage; they must render only after clicking their tiles.",
-    "Respect the existing single-actor Motoko backend architecture.",
-    "Do not modify any files under frontend immutablePaths (as defined in SYSTEM_CONTEXT)."
+    "Do not edit files under frontend/src/components/ui (shadcn components must be composed, not modified).",
+    "Do not modify any paths listed as immutable in SYSTEM_CONTEXT (e.g., frontend/src/hooks/useInternetIdentity.ts/tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx).",
+    "Backend must remain a single Motoko actor with all logic in backend/main.mo; only add backend/migration.mo if a state upgrade is required for new indexes/caches."
   ],
   "nonGoals": [
-    "Adding new backend services, databases, or third-party authentication providers.",
-    "Implementing real-time features (WebSockets/push notifications/chat).",
-    "Introducing additional homepage CTAs that replicate Search or Map access."
+    "Do not add third-party search services or external databases.",
+    "Do not add real-time features (WebSockets) or background push updates.",
+    "Do not change authorization/role rules as part of this performance work unless strictly required for the new search endpoints."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }

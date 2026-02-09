@@ -23,11 +23,19 @@ function LoadingFallback() {
 }
 
 export default function App() {
-  const { identity } = useInternetIdentity();
+  const { identity, loginStatus } = useInternetIdentity();
   const { data: userProfile, isLoading: profileLoading, isFetched } = useGetCallerUserProfile();
 
   const isAuthenticated = !!identity;
-  const showProfileSetup = isAuthenticated && !profileLoading && isFetched && userProfile === null;
+  const isInitializing = loginStatus === 'initializing';
+  
+  // Only show profile setup when we're sure the user is authenticated and has no profile
+  // Avoid showing it during initialization to prevent flash
+  const showProfileSetup = isAuthenticated && 
+                          !isInitializing && 
+                          !profileLoading && 
+                          isFetched && 
+                          userProfile === null;
 
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

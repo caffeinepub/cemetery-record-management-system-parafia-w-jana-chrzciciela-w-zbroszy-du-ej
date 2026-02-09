@@ -5,20 +5,22 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Save, Image as ImageIcon, Heart, Church } from 'lucide-react';
-import { useGetSiteContent, useUpdateSiteContent, useUpdateLogoImage } from '../../hooks/useQueries';
+import { useGetSiteContent, useUpdateSiteContent } from '../../hooks/useQueries';
 import { ExternalBlob } from '../../backend';
 import { Separator } from '@/components/ui/separator';
 import ImageUploadEditor from './ImageUploadEditor';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 
 export default function SiteContentManager() {
   const { data: siteContent, isLoading } = useGetSiteContent();
   const updateSiteContent = useUpdateSiteContent();
-  const updateLogoImage = useUpdateLogoImage();
 
   // Hero content state
   const [headline, setHeadline] = useState('');
   const [introParagraph, setIntroParagraph] = useState('');
-  const [isUploadingHero, setIsUploadingHero] = useState(false);
+  const [heroBackgroundImage, setHeroBackgroundImage] = useState<ExternalBlob | null>(null);
+  const [logoImage, setLogoImage] = useState<ExternalBlob | null>(null);
 
   // Footer content state
   const [address, setAddress] = useState('');
@@ -27,241 +29,202 @@ export default function SiteContentManager() {
   const [officeHours, setOfficeHours] = useState('');
   const [bankAccountNumber, setBankAccountNumber] = useState('');
   const [websiteLink, setWebsiteLink] = useState('');
-  const [isUpdatingFooter, setIsUpdatingFooter] = useState(false);
 
-  // Prayer section state
+  // Public sections state
+  const [gravesDeclarationTitle, setGravesDeclarationTitle] = useState('');
+  const [gravesDeclarationContent, setGravesDeclarationContent] = useState('');
   const [prayerTitle, setPrayerTitle] = useState('');
   const [prayerContent, setPrayerContent] = useState('');
-  const [isUpdatingPrayer, setIsUpdatingPrayer] = useState(false);
+  const [cemeteryInfoTitle, setCemeteryInfoTitle] = useState('');
+  const [cemeteryInfoContent, setCemeteryInfoContent] = useState('');
 
-  // Cemetery section state
-  const [cemeteryTitle, setCemeteryTitle] = useState('');
-  const [cemeteryContent, setCemeteryContent] = useState('');
-  const [isUpdatingCemetery, setIsUpdatingCemetery] = useState(false);
-
-  // Initialize form with current site content
+  // Load initial data
   useEffect(() => {
     if (siteContent) {
       setHeadline(siteContent.homepageHero.headline);
       setIntroParagraph(siteContent.homepageHero.introParagraph);
+      setHeroBackgroundImage(siteContent.homepageHero.heroBackgroundImage || null);
+      setLogoImage(siteContent.logoImage || null);
+
       setAddress(siteContent.footer.address);
       setPhoneNumber(siteContent.footer.phoneNumber);
       setEmail(siteContent.footer.email);
       setOfficeHours(siteContent.footer.officeHours);
       setBankAccountNumber(siteContent.footer.bankAccountNumber);
       setWebsiteLink(siteContent.footer.websiteLink);
+
+      setGravesDeclarationTitle(siteContent.gravesDeclaration.title);
+      setGravesDeclarationContent(siteContent.gravesDeclaration.content);
       setPrayerTitle(siteContent.prayerForTheDeceased.title);
       setPrayerContent(siteContent.prayerForTheDeceased.content);
-      setCemeteryTitle(siteContent.cemeteryInformation.title);
-      setCemeteryContent(siteContent.cemeteryInformation.content);
+      setCemeteryInfoTitle(siteContent.cemeteryInformation.title);
+      setCemeteryInfoContent(siteContent.cemeteryInformation.content);
     }
   }, [siteContent]);
 
-  const handleLogoSave = async (blob: ExternalBlob) => {
-    await updateLogoImage.mutateAsync(blob);
+  const handleSaveLogoImage = async (blob: ExternalBlob) => {
+    setLogoImage(blob);
   };
 
-  const handleHeroBackgroundSave = async (blob: ExternalBlob) => {
-    if (!siteContent) return;
-
-    setIsUploadingHero(true);
-    try {
-      await updateSiteContent.mutateAsync({
-        ...siteContent,
-        homepageHero: {
-          ...siteContent.homepageHero,
-          headline,
-          introParagraph,
-          heroBackgroundImage: blob,
-        },
-      });
-    } finally {
-      setIsUploadingHero(false);
-    }
+  const handleSaveHeroBackgroundImage = async (blob: ExternalBlob) => {
+    setHeroBackgroundImage(blob);
   };
 
-  const handleHeroTextSave = async () => {
+  const handleSave = async () => {
     if (!siteContent) return;
 
-    setIsUploadingHero(true);
-    try {
-      await updateSiteContent.mutateAsync({
-        ...siteContent,
-        homepageHero: {
-          ...siteContent.homepageHero,
-          headline,
-          introParagraph,
-        },
-      });
-    } finally {
-      setIsUploadingHero(false);
-    }
-  };
+    const updatedContent = {
+      homepageHero: {
+        headline,
+        introParagraph,
+        backgroundImageUrl: siteContent.homepageHero.backgroundImageUrl,
+        heroBackgroundImage: heroBackgroundImage || undefined,
+        logoImage: logoImage || undefined,
+      },
+      footer: {
+        address,
+        phoneNumber,
+        email,
+        officeHours,
+        bankAccountNumber,
+        websiteLink,
+      },
+      logoImage: logoImage || undefined,
+      gravesDeclaration: {
+        title: gravesDeclarationTitle,
+        content: gravesDeclarationContent,
+      },
+      prayerForTheDeceased: {
+        title: prayerTitle,
+        content: prayerContent,
+      },
+      cemeteryInformation: {
+        title: cemeteryInfoTitle,
+        content: cemeteryInfoContent,
+      },
+    };
 
-  const handleFooterSave = async () => {
-    if (!siteContent) return;
-
-    setIsUpdatingFooter(true);
-    try {
-      await updateSiteContent.mutateAsync({
-        ...siteContent,
-        footer: {
-          address,
-          phoneNumber,
-          email,
-          officeHours,
-          bankAccountNumber,
-          websiteLink,
-        },
-      });
-    } finally {
-      setIsUpdatingFooter(false);
-    }
-  };
-
-  const handlePrayerSave = async () => {
-    if (!siteContent) return;
-
-    setIsUpdatingPrayer(true);
-    try {
-      await updateSiteContent.mutateAsync({
-        ...siteContent,
-        prayerForTheDeceased: {
-          title: prayerTitle,
-          content: prayerContent,
-        },
-      });
-    } finally {
-      setIsUpdatingPrayer(false);
-    }
-  };
-
-  const handleCemeterySave = async () => {
-    if (!siteContent) return;
-
-    setIsUpdatingCemetery(true);
-    try {
-      await updateSiteContent.mutateAsync({
-        ...siteContent,
-        cemeteryInformation: {
-          title: cemeteryTitle,
-          content: cemeteryContent,
-        },
-      });
-    } finally {
-      setIsUpdatingCemetery(false);
-    }
+    await updateSiteContent.mutateAsync(updatedContent);
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
+      <Card>
+        <CardContent className="py-12 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Logo Section */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <ImageIcon className="h-5 w-5" />
-            Logo Parafii
+            <Church className="h-5 w-5" />
+            Logo parafii
           </CardTitle>
           <CardDescription>
-            Wgraj logo parafii, które będzie wyświetlane w nagłówku strony
+            Logo wyświetlane w nagłówku strony dla wszystkich odwiedzających
           </CardDescription>
         </CardHeader>
         <CardContent>
           <ImageUploadEditor
             label="Logo parafii"
-            currentImage={siteContent?.logoImage}
-            onSave={handleLogoSave}
+            currentImage={logoImage}
+            onSave={handleSaveLogoImage}
             outputWidth={256}
             outputHeight={256}
-            disabled={updateLogoImage.isPending}
           />
         </CardContent>
       </Card>
 
-      <Separator />
-
-      {/* Hero Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Sekcja Główna (Hero)</CardTitle>
-          <CardDescription>
-            Edytuj nagłówek, tekst wprowadzający i zdjęcie tła strony głównej
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="headline">Nagłówek główny</Label>
-              <Input
-                id="headline"
-                value={headline}
-                onChange={(e) => setHeadline(e.target.value)}
-                placeholder="Wieczny odpoczynek"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="introParagraph">Tekst wprowadzający</Label>
-              <Textarea
-                id="introParagraph"
-                value={introParagraph}
-                onChange={(e) => setIntroParagraph(e.target.value)}
-                placeholder="Nasza parafia prowadzi cmentarz katolicki..."
-                rows={4}
-              />
-            </div>
-
-            <Button
-              onClick={handleHeroTextSave}
-              disabled={isUploadingHero}
-              className="w-full"
-            >
-              {isUploadingHero ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Zapisywanie...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Zapisz teksty
-                </>
-              )}
-            </Button>
-          </div>
-
-          <Separator />
-
-          <ImageUploadEditor
-            label="Zdjęcie tła"
-            currentImage={siteContent?.homepageHero.heroBackgroundImage}
-            onSave={handleHeroBackgroundSave}
-            outputWidth={1920}
-            outputHeight={1080}
-            disabled={isUploadingHero}
-          />
-        </CardContent>
-      </Card>
-
-      <Separator />
-
-      {/* Prayer Section */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Heart className="h-5 w-5" />
-            Sekcja: Modlitwa za zmarłych
+            Sekcja Hero (strona główna)
           </CardTitle>
           <CardDescription>
-            Edytuj tytuł i treść sekcji modlitwy za zmarłych. Możesz używać HTML do formatowania (np. &lt;p&gt;, &lt;br&gt;, &lt;strong&gt;, &lt;blockquote&gt;).
+            Główna sekcja powitalna widoczna na stronie głównej
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="headline">Nagłówek</Label>
+            <Input
+              id="headline"
+              value={headline}
+              onChange={(e) => setHeadline(e.target.value)}
+              placeholder="Parafia św. Jana Chrzciciela..."
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="introParagraph">Tekst wprowadzający</Label>
+            <Textarea
+              id="introParagraph"
+              value={introParagraph}
+              onChange={(e) => setIntroParagraph(e.target.value)}
+              placeholder="Nasza parafia prowadzi cmentarz..."
+              rows={4}
+            />
+          </div>
+
+          <ImageUploadEditor
+            label="Obraz tła sekcji hero"
+            currentImage={heroBackgroundImage}
+            onSave={handleSaveHeroBackgroundImage}
+            outputWidth={1920}
+            outputHeight={1080}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Sekcja: Orzeczenie cmentarza parafialnego</CardTitle>
+          <CardDescription>
+            Treść sekcji o orzeczeniu cmentarza (widoczna na stronie publicznej)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="gravesDeclarationTitle">Tytuł sekcji</Label>
+            <Input
+              id="gravesDeclarationTitle"
+              value={gravesDeclarationTitle}
+              onChange={(e) => setGravesDeclarationTitle(e.target.value)}
+              placeholder="Orzeczenie cmentarza parafialnego"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Treść sekcji (HTML)</Label>
+            <ReactQuill
+              theme="snow"
+              value={gravesDeclarationContent}
+              onChange={setGravesDeclarationContent}
+              className="bg-background"
+            />
+          </div>
+
+          <div className="border rounded-lg p-4 bg-muted/30">
+            <p className="text-sm font-medium mb-2">Podgląd:</p>
+            <div
+              className="prose prose-sm max-w-none dark:prose-invert"
+              dangerouslySetInnerHTML={{ __html: gravesDeclarationContent }}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Sekcja: Modlitwa za zmarłych</CardTitle>
+          <CardDescription>
+            Treść sekcji z modlitwą za zmarłych (widoczna na stronie publicznej)
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -276,129 +239,68 @@ export default function SiteContentManager() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="prayerContent">Treść sekcji (HTML)</Label>
-            <Textarea
-              id="prayerContent"
+            <Label>Treść sekcji (HTML)</Label>
+            <ReactQuill
+              theme="snow"
               value={prayerContent}
-              onChange={(e) => setPrayerContent(e.target.value)}
-              placeholder="<p>Wieczny odpoczynek racz im dać, Panie...</p>"
-              rows={10}
-              className="font-mono text-sm"
+              onChange={setPrayerContent}
+              className="bg-background"
             />
-            <p className="text-xs text-muted-foreground">
-              Możesz używać HTML: &lt;p&gt;, &lt;br&gt;, &lt;strong&gt;, &lt;em&gt;, &lt;blockquote&gt;, &lt;ul&gt;, &lt;li&gt;
-            </p>
           </div>
 
-          {/* Preview */}
-          <div className="space-y-2">
-            <Label>Podgląd</Label>
-            <div className="border rounded-lg p-4 bg-muted/30">
-              <div
-                className="prose prose-sm dark:prose-invert max-w-none"
-                dangerouslySetInnerHTML={{ __html: prayerContent || '<p className="text-muted-foreground">Brak treści do wyświetlenia</p>' }}
-              />
-            </div>
+          <div className="border rounded-lg p-4 bg-muted/30">
+            <p className="text-sm font-medium mb-2">Podgląd:</p>
+            <div
+              className="prose prose-sm max-w-none dark:prose-invert"
+              dangerouslySetInnerHTML={{ __html: prayerContent }}
+            />
           </div>
-
-          <Button
-            onClick={handlePrayerSave}
-            disabled={isUpdatingPrayer}
-            className="w-full"
-          >
-            {isUpdatingPrayer ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Zapisywanie...
-              </>
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Zapisz sekcję modlitwy
-              </>
-            )}
-          </Button>
         </CardContent>
       </Card>
 
-      <Separator />
-
-      {/* Cemetery Section */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Church className="h-5 w-5" />
-            Sekcja: Nasz cmentarz
-          </CardTitle>
+          <CardTitle>Sekcja: O naszym cmentarzu</CardTitle>
           <CardDescription>
-            Edytuj tytuł i treść sekcji o cmentarzu parafialnym. Możesz używać HTML do formatowania (np. &lt;p&gt;, &lt;br&gt;, &lt;strong&gt;, &lt;blockquote&gt;).
+            Treść sekcji informacyjnej o cmentarzu (widoczna na stronie publicznej)
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="cemeteryTitle">Tytuł sekcji</Label>
+            <Label htmlFor="cemeteryInfoTitle">Tytuł sekcji</Label>
             <Input
-              id="cemeteryTitle"
-              value={cemeteryTitle}
-              onChange={(e) => setCemeteryTitle(e.target.value)}
-              placeholder="Nasz cmentarz"
+              id="cemeteryInfoTitle"
+              value={cemeteryInfoTitle}
+              onChange={(e) => setCemeteryInfoTitle(e.target.value)}
+              placeholder="O naszym cmentarzu"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="cemeteryContent">Treść sekcji (HTML)</Label>
-            <Textarea
-              id="cemeteryContent"
-              value={cemeteryContent}
-              onChange={(e) => setCemeteryContent(e.target.value)}
-              placeholder="<p>Cmentarz parafialny przy Parafii...</p>"
-              rows={10}
-              className="font-mono text-sm"
+            <Label>Treść sekcji (HTML)</Label>
+            <ReactQuill
+              theme="snow"
+              value={cemeteryInfoContent}
+              onChange={setCemeteryInfoContent}
+              className="bg-background"
             />
-            <p className="text-xs text-muted-foreground">
-              Możesz używać HTML: &lt;p&gt;, &lt;br&gt;, &lt;strong&gt;, &lt;em&gt;, &lt;blockquote&gt;, &lt;ul&gt;, &lt;li&gt;
-            </p>
           </div>
 
-          {/* Preview */}
-          <div className="space-y-2">
-            <Label>Podgląd</Label>
-            <div className="border rounded-lg p-4 bg-muted/30">
-              <div
-                className="prose prose-sm dark:prose-invert max-w-none"
-                dangerouslySetInnerHTML={{ __html: cemeteryContent || '<p className="text-muted-foreground">Brak treści do wyświetlenia</p>' }}
-              />
-            </div>
+          <div className="border rounded-lg p-4 bg-muted/30">
+            <p className="text-sm font-medium mb-2">Podgląd:</p>
+            <div
+              className="prose prose-sm max-w-none dark:prose-invert"
+              dangerouslySetInnerHTML={{ __html: cemeteryInfoContent }}
+            />
           </div>
-
-          <Button
-            onClick={handleCemeterySave}
-            disabled={isUpdatingCemetery}
-            className="w-full"
-          >
-            {isUpdatingCemetery ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Zapisywanie...
-              </>
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Zapisz sekcję o cmentarzu
-              </>
-            )}
-          </Button>
         </CardContent>
       </Card>
 
-      <Separator />
-
-      {/* Footer Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Stopka - Informacje Kontaktowe</CardTitle>
+          <CardTitle>Stopka - Dane kontaktowe</CardTitle>
           <CardDescription>
-            Edytuj dane kontaktowe parafii wyświetlane w stopce strony
+            Informacje kontaktowe wyświetlane w stopce strony
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -409,7 +311,7 @@ export default function SiteContentManager() {
                 id="address"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                placeholder="Zbrosza Duża 57, 05-650 Chynów"
+                placeholder="Zbrosza Duża 57..."
               />
             </div>
 
@@ -430,7 +332,7 @@ export default function SiteContentManager() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="zbroszaduza@archidiecezja.waw.pl"
+                placeholder="kontakt@parafia.pl"
               />
             </div>
 
@@ -440,51 +342,47 @@ export default function SiteContentManager() {
                 id="officeHours"
                 value={officeHours}
                 onChange={(e) => setOfficeHours(e.target.value)}
-                placeholder="Poniedziałek, czwartek i piątek w godz. 16.30-18.00"
+                placeholder="Poniedziałek, czwartek..."
               />
             </div>
 
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-2">
               <Label htmlFor="bankAccountNumber">Numer konta bankowego</Label>
               <Input
                 id="bankAccountNumber"
                 value={bankAccountNumber}
                 onChange={(e) => setBankAccountNumber(e.target.value)}
-                placeholder="Bank Pekao S.A. 06 1240 3259 1111 0010 7422 2925"
+                placeholder="Bank Pekao S.A. 06 1240..."
               />
             </div>
 
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-2">
               <Label htmlFor="websiteLink">Link do strony internetowej</Label>
               <Input
                 id="websiteLink"
                 type="url"
                 value={websiteLink}
                 onChange={(e) => setWebsiteLink(e.target.value)}
-                placeholder="https://zbroszaduza.parafialnastrona.pl/"
+                placeholder="https://parafia.pl"
               />
             </div>
           </div>
-
-          <Button
-            onClick={handleFooterSave}
-            disabled={isUpdatingFooter}
-            className="w-full"
-          >
-            {isUpdatingFooter ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Zapisywanie...
-              </>
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Zapisz dane kontaktowe
-              </>
-            )}
-          </Button>
         </CardContent>
       </Card>
+
+      <div className="flex justify-end">
+        <Button
+          onClick={handleSave}
+          disabled={updateSiteContent.isPending}
+          size="lg"
+        >
+          {updateSiteContent.isPending && (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          )}
+          <Save className="mr-2 h-4 w-4" />
+          Zapisz wszystkie zmiany
+        </Button>
+      </div>
     </div>
   );
 }

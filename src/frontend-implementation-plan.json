@@ -1,97 +1,84 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Homepage navigation tiles as primary entry points + admin editing for Prayer/Our cemetery content",
+  "title": "Frontend performance optimizations for grave search (debounce, indexing, paginated search)",
   "requirements": [
     {
-      "id": "REQ-15",
-      "summary": "Make the 4 homepage tiles the only Map/Search entry points by removing any duplicate Map/Search CTAs from the public homepage UI.",
+      "id": "REQ-1",
+      "summary": "Reduce unnecessary re-filtering and re-rendering during typing in public and admin grave search UIs (debounce + smoother rendering).",
       "acceptanceCriteria": [
-        "The homepage does not render any additional Map/Search CTA buttons outside the 4 main tiles.",
-        "Map access is provided via the Map tile only; Search access is provided via the Search tile only."
+        "Typing in the grave search input does not trigger a full filter operation on every single keystroke (e.g., input is debounced).",
+        "Search results update smoothly for large datasets without noticeable UI jank (no long main-thread stalls during fast typing).",
+        "The optimization applies to both public search (frontend/src/components/GraveSearch.tsx) and admin management search (frontend/src/components/admin/GraveManagement.tsx)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/PublicPage.tsx",
+          "path": "frontend/src/hooks/useDebouncedValue.ts",
+          "operation": "create",
+          "description": "Add a small React hook for debouncing rapidly changing values (e.g., search input) so expensive search work runs less frequently."
+        },
+        {
+          "path": "frontend/src/components/GraveSearch.tsx",
           "operation": "modify",
-          "description": "Refactor the public homepage layout so Map/Search access is only achievable by clicking the corresponding navigation tiles (e.g., do not render Map/Search as default-visible primary content on initial load). Ensure no extra Map/Search CTA buttons are introduced elsewhere on the homepage."
+          "description": "Debounce the search input state before triggering search computation/rendering; ensure derived lists and counts use the debounced query and avoid unnecessary recomputation for fast typing."
+        },
+        {
+          "path": "frontend/src/components/admin/GraveManagement.tsx",
+          "operation": "modify",
+          "description": "Debounce the admin searchTerm before triggering in-memory filtering / remote search; ensure the list and counters update from the debounced query to reduce main-thread churn while typing."
         }
       ]
     },
     {
-      "id": "REQ-16",
-      "summary": "Implement tile click behavior to open the full Map/Search views and to reveal+scroll to Prayer/Our cemetery sections only after clicking their tiles.",
+      "id": "REQ-2",
+      "summary": "Optimize in-memory search by precomputing and reusing normalized searchable strings for grave records (public and admin).",
       "acceptanceCriteria": [
-        "On initial homepage load, the Prayer section is not rendered/visible.",
-        "On initial homepage load, the Our cemetery section is not rendered/visible.",
-        "Clicking the Prayer tile reveals the Prayer section and scrolls the page to it.",
-        "Clicking the Our cemetery tile reveals the Our cemetery section and scrolls the page to it.",
-        "Clicking the Map tile opens the map section as the primary content view (not a small preview).",
-        "Clicking the Search tile opens the search section as the primary content view (not a small preview)."
+        "Admin in-memory search (searchGravesInMemory) avoids repeated per-field lowercase/trim work for unchanged grave records during subsequent searches.",
+        "Public in-memory search (searchPublicGravesInMemory) avoids repeated per-field lowercase/trim work for unchanged public grave records during subsequent searches.",
+        "Search result correctness remains the same as before for equivalent queries (case-insensitive, substring matching as currently implemented)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/PublicPage.tsx",
+          "path": "frontend/src/utils/graveFullTextSearch.ts",
           "operation": "modify",
-          "description": "Update homepage state and rendering so Prayer/About sections are not mounted until their tiles are clicked; on tile click, mount the target section and smooth-scroll to it. For Map/Search, render the corresponding full view as the primary content after click (not a preview), and scroll into view."
+          "description": "Refactor searchGravesInMemory and searchPublicGravesInMemory to reuse precomputed normalized searchable text per record (e.g., cache/index keyed by record identity with change detection) so subsequent searches don't re-normalize every field for every record."
         },
         {
-          "path": "frontend/src/components/PublicSectionsTiles.tsx",
+          "path": "frontend/src/components/GraveSearch.tsx",
           "operation": "modify",
-          "description": "Ensure tile IDs and onSelect wiring remain aligned with the homepage section selection logic so each tile reliably opens the correct full section view."
+          "description": "Update public/admin in-memory search usage to leverage the optimized indexing/caching behavior (e.g., ensure index is created/reused based on the loaded dataset and not rebuilt per keystroke)."
+        },
+        {
+          "path": "frontend/src/components/admin/GraveManagement.tsx",
+          "operation": "modify",
+          "description": "Update admin in-memory filtering flow to leverage the optimized indexing/caching behavior so filtering does not repeatedly normalize the same unchanged records across searches."
         }
       ]
     },
     {
-      "id": "REQ-17",
-      "summary": "Restyle homepage navigation tiles to be large, elegant, rounded, shadowed, and with subtle gold-accent hover animations consistent across light/dark palettes.",
+      "id": "REQ-4",
+      "summary": "When a query is present, fetch paginated search results from the backend instead of filtering all loaded data in memory; keep existing browsing behavior for empty queries.",
       "acceptanceCriteria": [
-        "Tiles are visually large, with rounded corners and a subtle shadow at rest.",
-        "On hover, tiles show a noticeable but subtle brightening and a gold-accent highlight (e.g., border/ring/icon accent).",
-        "Light mode tiles read as stone/parchment with dark text; dark mode tiles read as navy with gold accents and cream text.",
-        "Tiles are centered under the hero section content and keep a clean 1-column to 2-column to 4-column responsive layout."
+        "When the user enters a non-empty query, the UI fetches search results from the backend rather than filtering the entire loaded dataset in memory.",
+        "Search results are paginated and can be incrementally loaded (consistent with the existing 'Load more' pattern in admin where applicable).",
+        "When the query is cleared, the UI returns to the existing non-search loading mode without requiring a full page refresh.",
+        "Public search never requests or displays restricted fields (owner/address/phone/payment)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/PublicSectionsTiles.tsx",
+          "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Adjust tile sizing, spacing, hover/active/focus states, and responsive grid behavior to match the requested large rounded-tile aesthetic with subtle brightening and gold-accent highlight."
+          "description": "Add React Query infinite hooks for paginated grave searching (admin + public) that call the existing backendInterface paginated search functions; include queryKey design that isolates results per query and supports incremental loading."
         },
         {
-          "path": "frontend/src/index.css",
+          "path": "frontend/src/components/GraveSearch.tsx",
           "operation": "modify",
-          "description": "Review and tune the existing light (stone/parchment + graphite/dark-brown) and dark (navy + gold + light-cream) tile design tokens (tile surface/border/accent/icon/text) to ensure consistent readability and contrast across themes."
+          "description": "Switch public search behavior: for non-empty debounced query, use the new public paginated search hook and render only those results; for empty query, keep existing non-search behavior; ensure only public-safe results are requested/displayed."
         },
         {
-          "path": "frontend/tailwind.config.js",
+          "path": "frontend/src/components/admin/GraveManagement.tsx",
           "operation": "modify",
-          "description": "If needed to support the tile hover animation/visual polish (e.g., ring/shadow/transition consistency), extend Tailwind theme tokens that are consumed by the tile classes without introducing new global stylesheet entry points."
-        }
-      ]
-    },
-    {
-      "id": "REQ-18",
-      "summary": "Ensure the logged-in management panel supports rich editing (title + HTML body including quotes) for Prayer and Our cemetery content with in-app save and immediate public reflection.",
-      "acceptanceCriteria": [
-        "A logged-in manager can edit and save the title and body HTML for both Prayer and Our cemetery sections from the management panel UI.",
-        "Edits support quote formatting via HTML (e.g., <blockquote>) and persist correctly.",
-        "Saving completes via in-app state updates (no full page refresh) and the public homepage reflects the updated content after save."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/admin/SiteContentManager.tsx",
-          "operation": "modify",
-          "description": "Enhance the Prayer and Our cemetery editing UI to explicitly support rich HTML editing (including quotes via blockquote) and add an in-panel rendered preview (using the same public prose styling) so managers can validate formatting before saving. Use the existing update flow so saves occur without a full page reload. Verify the component's usage instructions before implementing (authorization)."
-        },
-        {
-          "path": "frontend/src/pages/PublicPage.tsx",
-          "operation": "modify",
-          "description": "Ensure the public Prayer and Our cemetery sections render from the persisted site content and correctly display rich HTML (including blockquote formatting). Confirm the page updates reflect React Query invalidation after a manager save without requiring a full refresh."
-        },
-        {
-          "path": "frontend/src/pages/AdminPanel.tsx",
-          "operation": "modify",
-          "description": "Gate the content-editing area to authorized admins/managers in the UI (e.g., hide/disable the 'Treść' tab or show an access denied state when not permitted) and handle backend authorization errors gracefully. Verify the component's usage instructions before implementing (authorization)."
+          "description": "Switch admin management search behavior: for non-empty debounced query, use the new admin paginated search hook with 'Load more'; for empty query, keep existing paginated browsing list; ensure clearing the query resets to browse mode without refresh."
         }
       ]
     }

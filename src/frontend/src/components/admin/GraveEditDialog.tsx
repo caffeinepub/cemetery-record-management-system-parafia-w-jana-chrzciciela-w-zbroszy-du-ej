@@ -104,7 +104,7 @@ export default function GraveEditDialog({ grave, open, onClose }: GraveEditDialo
             ? BigInt(new Date(paymentValidUntil).getTime() * 1000000)
             : undefined,
         };
-        await updateGrave.mutateAsync({ id: grave!.id, updatedRecord });
+        await updateGrave.mutateAsync(updatedRecord);
       }
       // Only close on success
       onClose();

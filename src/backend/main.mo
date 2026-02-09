@@ -1,12 +1,11 @@
-import Map "mo:core/Map";
 import List "mo:core/List";
+import Map "mo:core/Map";
 import Array "mo:core/Array";
 import Text "mo:core/Text";
 import Time "mo:core/Time";
 import Int "mo:core/Int";
 import Nat "mo:core/Nat";
 import Order "mo:core/Order";
-import Iter "mo:core/Iter";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 import MixinAuthorization "authorization/MixinAuthorization";
@@ -14,9 +13,7 @@ import AccessControl "authorization/access-control";
 import Storage "blob-storage/Storage";
 import MixinStorage "blob-storage/Mixin";
 import Set "mo:core/Set";
-import Migration "migration";
 
-(with migration = Migration.run)
 actor {
   type DeceasedPerson = {
     firstName : Text;
@@ -277,14 +274,14 @@ actor {
 
   // Admin-only persistent section update methods.
   public shared ({ caller }) func updateSiteContent(newContent : SiteContent) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can update site content");
     };
     siteContentState := newContent;
   };
 
   public shared ({ caller }) func updateLogoImage(newLogo : ?Storage.ExternalBlob) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can update logo image");
     };
     siteContentState := { siteContentState with logoImage = newLogo };
@@ -295,7 +292,7 @@ actor {
   };
 
   public shared ({ caller }) func updateHomepageHeroContent(newContent : HomepageHeroContent) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can update homepage content");
     };
 
@@ -313,13 +310,13 @@ actor {
   };
 
   public shared ({ caller }) func updateFooterContent(newFooterContent : FooterContent) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can update footer content");
     };
     siteContentState := { siteContentState with footer = newFooterContent };
   };
 
-  // PUBLIC persistent HTML section getters (used to render the public homepage).
+  // Persistent public section API; non-restricted access
   public query ({ caller }) func getGravesDeclaration() : async PublicHtmlSection {
     siteContentState.gravesDeclaration;
   };
@@ -332,23 +329,23 @@ actor {
     siteContentState.cemeteryInformation;
   };
 
-  // Admin-only public section update methods (called through the management panel).
+  // Admin-only persistent section update methods (called through the management panel).
   public shared ({ caller }) func updateGravesDeclaration(newSection : PublicHtmlSection) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can update persistent section");
     };
     siteContentState := { siteContentState with gravesDeclaration = newSection };
   };
 
   public shared ({ caller }) func updatePrayerForTheDeceased(newSection : PublicHtmlSection) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can update persistent section");
     };
     siteContentState := { siteContentState with prayerForTheDeceased = newSection };
   };
 
   public shared ({ caller }) func updateCemeteryInformation(newSection : PublicHtmlSection) : async () {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can update persistent section");
     };
     siteContentState := { siteContentState with cemeteryInformation = newSection };
@@ -382,7 +379,7 @@ actor {
   };
 
   public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
-    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
+    if (caller != user and not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Can only view your own profile or be an admin");
     };
     userProfiles.get(user);
@@ -580,8 +577,8 @@ actor {
     status : ?GraveStatus,
     locality : ?Text,
   ) : async [GraveRecord] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can access full grave records");
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can access full grave records");
     };
 
     let filtered = graveRecords.values().toArray().filter(
@@ -662,9 +659,84 @@ actor {
     filtered;
   };
 
+  // NEW paginated search query endpoint (for TYPE query, by surname and year of death)
+  public query ({ caller }) func searchGravesPaginated(
+    surname : ?Text,
+    yearOfDeath : ?Int,
+    offset : Nat,
+    pageSize : Nat,
+  ) : async PaginatedGravesResult {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can access full grave records");
+    };
+
+    let filtered = graveRecords.values().toArray().filter(
+      func(grave : GraveRecord) : Bool {
+        var surnameMatch = true;
+        var yearMatch = true;
+
+        switch (surname) {
+          case (?s) {
+            surnameMatch := if (grave.deceasedPersons.size() > 0) {
+              switch (
+                grave.deceasedPersons.find(
+                  func(person : DeceasedPerson) : Bool {
+                    person.lastName.contains(#text s);
+                  }
+                )
+              ) {
+                case (null) { false };
+                case (_) { true };
+              };
+            } else { false };
+          };
+          case (null) {};
+        };
+
+        switch (yearOfDeath) {
+          case (?year) {
+            yearMatch := if (grave.deceasedPersons.size() > 0) {
+              switch (
+                grave.deceasedPersons.find(
+                  func(person : DeceasedPerson) : Bool {
+                    person.yearOfDeath == year;
+                  }
+                )
+              ) {
+                case (null) { false };
+                case (_) { true };
+              };
+            } else { false };
+          };
+          case (null) {};
+        };
+
+        surnameMatch and yearMatch;
+      }
+    );
+
+    let totalGraves = filtered.size();
+
+    let start = offset;
+    let end = Nat.min(start + pageSize, totalGraves);
+
+    let pageGraves = if (start < end) {
+      filtered.sliceToArray(start, end);
+    } else { [] };
+
+    let nextOffset = if (end < totalGraves) { ?end } else { null };
+
+    {
+      graves = pageGraves;
+      totalGraves;
+      pageSize;
+      nextOffset;
+    };
+  };
+
   public query ({ caller }) func getGrave(id : Nat) : async ?GraveRecord {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can access full grave records");
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can access full grave records");
     };
     graveRecords.get(id);
   };
@@ -682,15 +754,15 @@ actor {
   };
 
   public query ({ caller }) func getAllGraves() : async [GraveRecord] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can access full grave records");
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can access full grave records");
     };
     graveRecords.values().toArray().sort();
   };
 
   public query ({ caller }) func getGravesByAlley(alley : Text) : async [GraveRecord] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can access full grave records");
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can access full grave records");
     };
     graveRecords.values().toArray().filter(
       func(grave : GraveRecord) : Bool { grave.alley == alley }
@@ -698,8 +770,8 @@ actor {
   };
 
   public query ({ caller }) func getAvailableGraves() : async [GraveRecord] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can access full grave records");
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can access full grave records");
     };
     graveRecords.values().toArray().filter(
       func(grave : GraveRecord) : Bool { grave.status == #free }
@@ -707,8 +779,8 @@ actor {
   };
 
   public query ({ caller }) func getPaginatedGraves(offset : Nat, pageSize : Nat) : async PaginatedGravesResult {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can access full grave records");
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can access full grave records");
     };
 
     let orderedGraves = graveRecords.values().toArray().sort();
@@ -836,6 +908,78 @@ actor {
         }
       )
     );
+  };
+
+  // NEW: Paginated public grave search endpoint for frontend TYPE searches.
+  public query func searchPublicGravesPaginated(
+    surname : ?Text,
+    yearOfDeath : ?Int,
+    offset : Nat,
+    pageSize : Nat,
+  ) : async {
+    graves : [PublicGraveShape];
+    totalGraves : Nat;
+    pageSize : Nat;
+    nextOffset : ?Nat;
+  } {
+    let allGraves = Array.fromIter(
+      graveRecords.values().flatMap(
+        func(grave) {
+          grave.deceasedPersons.values().flatMap(
+            func(person) {
+              [{ firstName = person.firstName; lastName = person.lastName; yearOfDeath = if (person.yearOfDeath > 0) { ?(person.yearOfDeath) } else { null }; status = grave.status }].values();
+            }
+          );
+        }
+      )
+    );
+
+    let filteredGraves = allGraves.filter(
+      func(publicGrave) {
+        var matches = true;
+
+        switch (surname, yearOfDeath) {
+          case (?name, ?year) {
+            let nameMatches = publicGrave.lastName.contains(#text name);
+            let yearMatches = switch (publicGrave.yearOfDeath) {
+              case (?graveYear) { graveYear == year };
+              case (null) { false };
+            };
+            matches := nameMatches and yearMatches;
+          };
+          case (?name, null) {
+            matches := publicGrave.lastName.contains(#text name);
+          };
+          case (null, ?year) {
+            matches := switch (publicGrave.yearOfDeath) {
+              case (?graveYear) { graveYear == year };
+              case (null) { false };
+            };
+          };
+          case (null, null) { matches := true };
+        };
+
+        matches;
+      }
+    );
+
+    let totalGraves = filteredGraves.size();
+
+    let start = offset;
+    let end = Nat.min(start + pageSize, totalGraves);
+
+    let pageGraves = if (start < end) {
+      filteredGraves.sliceToArray(start, end);
+    } else { [] };
+
+    let nextOffset = if (end < totalGraves) { ?end } else { null };
+
+    {
+      graves = pageGraves;
+      totalGraves;
+      pageSize;
+      nextOffset;
+    };
   };
 
   public query func getPublicTiles() : async [PublicTileData] {

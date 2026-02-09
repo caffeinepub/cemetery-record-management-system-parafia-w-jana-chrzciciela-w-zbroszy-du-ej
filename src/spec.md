@@ -1,15 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Make the four homepage navigation tiles the only primary entry points to Map, Search, Prayer for the deceased, and Our cemetery; ensure tile clicks open full section views; and enable admin editing of Prayer/Our cemetery content.
+**Goal:** Improve overall application performance and make grave searching faster and smoother in both public and admin interfaces.
 
 **Planned changes:**
-- Update the public homepage to remove any duplicate Map/Search call-to-action buttons outside the four main navigation tiles.
-- Implement tile click behavior so each tile opens its corresponding full view/section:
-  - Map tile opens the full map view.
-  - Search tile opens the full grave search view.
-  - Prayer for the deceased and Our cemetery sections are not rendered by default and only appear after clicking their tiles, with the page scrolling to the revealed section.
-- Restyle the four tiles to the requested look (large, readable, rounded corners, subtle shadow, and hover brightening with gold accent), with consistent light/dark mode palette and responsive layout.
-- Extend the management panel (post Internet Identity login) to support editing and saving (without full page reload) the titles and rich HTML bodies (including quotes) for Prayer for the deceased and Our cemetery, and reflect updates on the public homepage.
+- Debounce grave search inputs in both public search and admin management views to avoid full filtering/re-rendering on every keystroke.
+- Optimize in-memory search by precomputing and reusing normalized searchable strings/fields for grave records (public and admin) instead of re-normalizing on each filter run.
+- Add backend paginated, case-insensitive grave search endpoints for public-safe results and for full admin results (matching current substring-search semantics).
+- Update frontend to use backend paginated search when a non-empty query is present, while keeping existing non-search loading/browsing behavior when the query is empty.
 
-**User-visible outcome:** Visitors use the four homepage tiles as the sole entry points to Map/Search and to reveal Prayer/Our cemetery content; managers can edit Prayer and Our cemetery titles and HTML content (including quotes) and save changes without reloading the page.
+**User-visible outcome:** Grave search feels more responsive during typing, avoids UI stalls on large datasets, and returns results faster by using server-side paginated searching when a query is entered (without exposing restricted fields in public search).

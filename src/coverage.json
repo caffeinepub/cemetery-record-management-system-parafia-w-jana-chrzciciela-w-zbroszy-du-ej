@@ -1,84 +1,88 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-05T00:32:45.137Z",
+  "generatedAt": "2026-02-09T07:23:49.852Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
     "total": 4,
-    "implemented": 4,
+    "implemented": 3,
     "items": [
       {
-        "id": "REQ-15",
-        "summary": "Update the public homepage so the four main navigation tiles (Map, Search, Prayer for the deceased, Our cemetery) are the single, primary entry points to their corresponding sections, with no duplicate call-to-action buttons on the homepage for Map or Search.",
+        "id": "REQ-1",
+        "summary": "Improve grave search responsiveness by reducing unnecessary re-filtering and re-rendering during typing in both public and admin search UIs.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/PublicPage.tsx"
+          "frontend/src/hooks/useDebouncedValue.ts",
+          "frontend/src/components/GraveSearch.tsx",
+          "frontend/src/components/admin/GraveManagement.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/PublicPage.tsx"
+          "frontend/src/hooks/useDebouncedValue.ts",
+          "frontend/src/components/GraveSearch.tsx",
+          "frontend/src/components/admin/GraveManagement.tsx"
         ]
       },
       {
-        "id": "REQ-16",
-        "summary": "Implement the tile interaction behavior on the public homepage: clicking each tile must open the corresponding full section view. Map and Search must open their full views; Prayer and Our cemetery must render only after clicking their tiles and must not be visible by default on initial homepage load.",
+        "id": "REQ-2",
+        "summary": "Optimize in-memory search implementation by precomputing and reusing normalized searchable strings/fields for graves, instead of normalizing every field for every record on every filter run.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/PublicPage.tsx",
-          "frontend/src/components/PublicSectionsTiles.tsx"
+          "frontend/src/utils/graveFullTextSearch.ts",
+          "frontend/src/components/GraveSearch.tsx",
+          "frontend/src/components/admin/GraveManagement.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/PublicPage.tsx",
-          "frontend/src/components/PublicSectionsTiles.tsx"
+          "frontend/src/utils/graveFullTextSearch.ts",
+          "frontend/src/components/GraveSearch.tsx",
+          "frontend/src/components/admin/GraveManagement.tsx"
         ]
       },
       {
-        "id": "REQ-17",
-        "summary": "Restyle the four homepage navigation tiles to match the requested visual style: large and readable, rounded corners, subtle shadow, and hover animations that brighten with a gold accent; ensure the look is consistent in both light and dark mode with the specified palette (light: stone/parchment background with graphite/dark-brown text; dark: navy background with gold accents and light-cream text).",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/PublicSectionsTiles.tsx",
-          "frontend/src/index.css",
-          "frontend/tailwind.config.js"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/PublicSectionsTiles.tsx",
-          "frontend/src/index.css"
-        ]
+        "id": "REQ-3",
+        "summary": "Add backend query APIs that support server-side grave searching with pagination so the frontend does not need to load and filter large datasets in memory to search efficiently.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       },
       {
-        "id": "REQ-18",
-        "summary": "Ensure the management panel (available after Internet Identity login) supports full editing of the Prayer for the deceased section and the Our cemetery section, including headings/titles and rich content (including quotes), and saving changes without a full page reload.",
+        "id": "REQ-4",
+        "summary": "Update frontend data-fetching to use the new backend paginated search endpoints when a search query is present, while keeping existing behavior for empty queries (e.g., browsing lists / infinite loading).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/admin/SiteContentManager.tsx",
-          "frontend/src/pages/PublicPage.tsx",
-          "frontend/src/pages/AdminPanel.tsx"
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/GraveSearch.tsx",
+          "frontend/src/components/admin/GraveManagement.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/admin/SiteContentManager.tsx",
-          "frontend/src/pages/PublicPage.tsx"
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/GraveSearch.tsx",
+          "frontend/src/components/admin/GraveManagement.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
     "backend/main.mo",
-    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
-    "frontend/src/components/PublicSectionsTiles.tsx",
+    "frontend/src/components/Footer.tsx",
+    "frontend/src/components/GraveSearch.tsx",
+    "frontend/src/components/admin/GraveEditDialog.tsx",
+    "frontend/src/components/admin/GraveManagement.tsx",
     "frontend/src/components/admin/SiteContentManager.tsx",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
-    "frontend/src/index.css",
-    "frontend/src/pages/PublicPage.tsx",
+    "frontend/src/hooks/useDebouncedValue.ts",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/utils/graveFullTextSearch.ts",
+    "frontend/src/utils/urlParams.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

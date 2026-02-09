@@ -1,27 +1,50 @@
 import { useState, useMemo, lazy, Suspense } from 'react';
-import { useInfinitePaginatedGraves } from '../../hooks/useQueries';
+import { 
+  useInfinitePaginatedGraves,
+  useInfiniteSearchGravesPaginated 
+} from '../../hooks/useQueries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2, Plus, Search } from 'lucide-react';
 import GraveResultsList from '../GraveResultsList';
-import { searchGravesInMemory } from '../../utils/graveFullTextSearch';
+import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 
 // Lazy load the edit dialog only when needed
 const GraveEditDialog = lazy(() => import('./GraveEditDialog'));
 
 export default function GraveManagement() {
   const pageSize = 100;
-  const {
-    data,
-    isLoading,
-    isFetchingNextPage,
-    hasNextPage,
-    fetchNextPage,
-  } = useInfinitePaginatedGraves(pageSize);
-
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebouncedValue(searchTerm, 300);
   const [isCreating, setIsCreating] = useState(false);
+
+  const hasQuery = debouncedSearchTerm.trim().length > 0;
+
+  // Paginated browsing when no query
+  const {
+    data: browseData,
+    isLoading: browseLoading,
+    isFetchingNextPage: browseFetchingNextPage,
+    hasNextPage: browseHasNextPage,
+    fetchNextPage: browseFetchNextPage,
+  } = useInfinitePaginatedGraves(pageSize, hasQuery);
+
+  // Paginated search when query present
+  const {
+    data: searchData,
+    isLoading: searchLoading,
+    isFetchingNextPage: searchFetchingNextPage,
+    hasNextPage: searchHasNextPage,
+    fetchNextPage: searchFetchNextPage,
+  } = useInfiniteSearchGravesPaginated(debouncedSearchTerm, pageSize, !hasQuery);
+
+  // Determine which data source to use
+  const data = hasQuery ? searchData : browseData;
+  const isLoading = hasQuery ? searchLoading : browseLoading;
+  const isFetchingNextPage = hasQuery ? searchFetchingNextPage : browseFetchingNextPage;
+  const hasNextPage = hasQuery ? searchHasNextPage : browseHasNextPage;
+  const fetchNextPage = hasQuery ? searchFetchNextPage : browseFetchNextPage;
 
   // Flatten all loaded pages into a single array
   const allLoadedGraves = useMemo(() => {
@@ -29,14 +52,8 @@ export default function GraveManagement() {
     return data.pages.flatMap((page) => page.graves);
   }, [data]);
 
-  // Apply in-memory search filter
-  const filteredGraves = useMemo(() => {
-    return searchGravesInMemory(allLoadedGraves, searchTerm);
-  }, [allLoadedGraves, searchTerm]);
-
   const totalLoaded = allLoadedGraves.length;
   const totalGraves = data?.pages[0]?.totalGraves ? Number(data.pages[0].totalGraves) : 0;
-  const filteredCount = filteredGraves.length;
 
   if (isLoading) {
     return (
@@ -73,10 +90,13 @@ export default function GraveManagement() {
 
           <div className="flex items-center justify-between text-sm">
             <div className="text-muted-foreground">
-              {searchTerm ? (
+              {hasQuery ? (
                 <>
-                  Wyświetlono <span className="font-semibold text-foreground">{filteredCount}</span> z{' '}
-                  <span className="font-semibold text-foreground">{totalLoaded}</span> załadowanych grobów
+                  Znaleziono <span className="font-semibold text-foreground">{totalLoaded}</span>{' '}
+                  {totalGraves > totalLoaded && (
+                    <>z <span className="font-semibold text-foreground">{totalGraves}</span></>
+                  )}{' '}
+                  grobów
                 </>
               ) : (
                 <>
@@ -106,7 +126,7 @@ export default function GraveManagement() {
         </CardContent>
       </Card>
 
-      <GraveResultsList results={filteredGraves} isAdmin={true} showCount={false} />
+      <GraveResultsList results={allLoadedGraves} isAdmin={true} showCount={false} />
 
       {isCreating && (
         <Suspense fallback={null}>

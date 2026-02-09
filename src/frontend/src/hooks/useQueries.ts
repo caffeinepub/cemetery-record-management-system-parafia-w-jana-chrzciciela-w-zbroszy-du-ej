@@ -272,7 +272,7 @@ export function useGetAllGraves() {
   });
 }
 
-export function useInfinitePaginatedGraves(pageSize: number = 50) {
+export function useInfinitePaginatedGraves(pageSize: number = 50, enabled: boolean = true) {
   const { actor, isFetching: actorFetching } = useActor();
 
   return useInfiniteQuery<PaginatedGravesResult>({
@@ -281,7 +281,67 @@ export function useInfinitePaginatedGraves(pageSize: number = 50) {
       if (!actor) throw new Error('Actor not available');
       return actor.getPaginatedGraves(pageParam as bigint, BigInt(pageSize));
     },
-    enabled: !!actor && !actorFetching,
+    enabled: !!actor && !actorFetching && enabled,
+    initialPageParam: 0n,
+    getNextPageParam: (lastPage) => lastPage.nextOffset ?? undefined,
+    retry: (failureCount, error) => {
+      return isRetryableError(error) && failureCount < RETRY_CONFIG.maxRetries;
+    },
+    retryDelay: RETRY_CONFIG.retryDelay,
+    staleTime: CACHE_CONFIG.graves.staleTime,
+    gcTime: CACHE_CONFIG.graves.gcTime,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+}
+
+// NEW: Paginated admin grave search hook
+export function useInfiniteSearchGravesPaginated(query: string, pageSize: number = 50, enabled: boolean = true) {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  // Parse query to extract surname and year
+  const parsedQuery = query.trim();
+  const yearMatch = parsedQuery.match(/\b(19|20)\d{2}\b/);
+  const yearOfDeath = yearMatch ? BigInt(yearMatch[0]) : null;
+  const surname = parsedQuery.length > 0 ? parsedQuery : null;
+
+  return useInfiniteQuery<PaginatedGravesResult>({
+    queryKey: ['searchGravesPaginated', surname, yearOfDeath?.toString() ?? null, pageSize],
+    queryFn: async ({ pageParam = 0n }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.searchGravesPaginated(surname, yearOfDeath, pageParam as bigint, BigInt(pageSize));
+    },
+    enabled: !!actor && !actorFetching && enabled && parsedQuery.length > 0,
+    initialPageParam: 0n,
+    getNextPageParam: (lastPage) => lastPage.nextOffset ?? undefined,
+    retry: (failureCount, error) => {
+      return isRetryableError(error) && failureCount < RETRY_CONFIG.maxRetries;
+    },
+    retryDelay: RETRY_CONFIG.retryDelay,
+    staleTime: CACHE_CONFIG.graves.staleTime,
+    gcTime: CACHE_CONFIG.graves.gcTime,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+}
+
+// NEW: Paginated public grave search hook
+export function useInfiniteSearchPublicGravesPaginated(query: string, pageSize: number = 50, enabled: boolean = true) {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  // Parse query to extract surname and year
+  const parsedQuery = query.trim();
+  const yearMatch = parsedQuery.match(/\b(19|20)\d{2}\b/);
+  const yearOfDeath = yearMatch ? BigInt(yearMatch[0]) : null;
+  const surname = parsedQuery.length > 0 ? parsedQuery : null;
+
+  return useInfiniteQuery<{ graves: PublicGraveShape[]; totalGraves: bigint; pageSize: bigint; nextOffset?: bigint }>({
+    queryKey: ['searchPublicGravesPaginated', surname, yearOfDeath?.toString() ?? null, pageSize],
+    queryFn: async ({ pageParam = 0n }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.searchPublicGravesPaginated(surname, yearOfDeath, pageParam as bigint, BigInt(pageSize));
+    },
+    enabled: !!actor && !actorFetching && enabled && parsedQuery.length > 0,
     initialPageParam: 0n,
     getNextPageParam: (lastPage) => lastPage.nextOffset ?? undefined,
     retry: (failureCount, error) => {
@@ -498,6 +558,7 @@ export function useAddGrave() {
       queryClient.invalidateQueries({ queryKey: ['cemeteryState'] });
       queryClient.invalidateQueries({ queryKey: ['allGraves'] });
       queryClient.invalidateQueries({ queryKey: ['paginatedGraves'] });
+      queryClient.invalidateQueries({ queryKey: ['searchGravesPaginated'] });
       queryClient.invalidateQueries({ queryKey: ['graveStatistics'] });
       queryClient.invalidateQueries({ queryKey: ['publicTiles'] });
       toast.success('Grób został dodany pomyślnie');
@@ -548,6 +609,7 @@ export function useRemoveGrave() {
       queryClient.invalidateQueries({ queryKey: ['cemeteryState'] });
       queryClient.invalidateQueries({ queryKey: ['allGraves'] });
       queryClient.invalidateQueries({ queryKey: ['paginatedGraves'] });
+      queryClient.invalidateQueries({ queryKey: ['searchGravesPaginated'] });
       queryClient.invalidateQueries({ queryKey: ['graveStatistics'] });
       queryClient.invalidateQueries({ queryKey: ['publicTiles'] });
       toast.success('Grób został usunięty pomyślnie');
@@ -563,13 +625,13 @@ export function useUpdateGrave() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: { id: bigint; updatedRecord: GraveRecord }) => {
+    mutationFn: async (grave: GraveRecord) => {
       if (!actor) {
         throw new Error('Aktor backendu jest niedostępny. Sprawdź połączenie i spróbuj ponownie.');
       }
       
       try {
-        const result: AsyncResult = await actor.updateGrave(params.id, params.updatedRecord);
+        const result: AsyncResult = await actor.updateGrave(grave.id, grave);
         
         // Handle domain errors from backend
         if (result.__kind__ === 'err') {
@@ -585,8 +647,7 @@ export function useUpdateGrave() {
           error.message.includes('nie istnieje') ||
           error.message.includes('nie może') ||
           error.message.includes('integralności') ||
-          error.message.includes('niespójność') ||
-          error.message.includes('niezmienne')
+          error.message.includes('niespójność')
         )) {
           throw error;
         }
@@ -598,7 +659,9 @@ export function useUpdateGrave() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allGraves'] });
       queryClient.invalidateQueries({ queryKey: ['paginatedGraves'] });
+      queryClient.invalidateQueries({ queryKey: ['searchGravesPaginated'] });
       queryClient.invalidateQueries({ queryKey: ['graveStatistics'] });
+      queryClient.invalidateQueries({ queryKey: ['publicGraves'] });
       queryClient.invalidateQueries({ queryKey: ['publicTiles'] });
       toast.success('Grób został zaktualizowany pomyślnie');
     },
@@ -608,29 +671,7 @@ export function useUpdateGrave() {
   });
 }
 
-export function useGetGrave(id: bigint | null) {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<GraveRecord | null>({
-    queryKey: ['grave', id?.toString()],
-    queryFn: async () => {
-      if (!actor || !id) return null;
-      return actor.getGrave(id);
-    },
-    enabled: !!actor && !isFetching && id !== null,
-    retry: (failureCount, error) => {
-      return isRetryableError(error) && failureCount < RETRY_CONFIG.maxRetries;
-    },
-    retryDelay: RETRY_CONFIG.retryDelay,
-    staleTime: CACHE_CONFIG.graves.staleTime,
-    gcTime: CACHE_CONFIG.graves.gcTime,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
-}
-
-// Public queries - no authentication required
-export function useGetPublicGraves() {
+export function useGetPublicGraves(enabled: boolean = true) {
   const { actor, isFetching } = useActor();
 
   return useQuery<PublicGraveShape[]>({
@@ -639,7 +680,7 @@ export function useGetPublicGraves() {
       if (!actor) return [];
       return actor.getPublicGraves();
     },
-    enabled: !!actor && !isFetching,
+    enabled: !!actor && !isFetching && enabled,
     retry: (failureCount, error) => {
       return isRetryableError(error) && failureCount < RETRY_CONFIG.maxRetries;
     },
@@ -672,52 +713,7 @@ export function useGetPublicTiles() {
   });
 }
 
-export function useSearchPublicGraves() {
-  const { actor } = useActor();
-
-  return useMutation({
-    mutationFn: async (params: {
-      surname: string | null;
-      yearOfDeath: bigint | null;
-    }) => {
-      if (!actor) {
-        throw new Error('Aktor backendu jest niedostępny. Sprawdź połączenie i spróbuj ponownie.');
-      }
-      return withRetry(
-        () => actor.searchPublicGraves(params.surname, params.yearOfDeath),
-        'wyszukiwanie publiczne'
-      );
-    },
-    onError: (error: any) => {
-      const message = sanitizeTechnicalError(error);
-      toast.error(`Wyszukiwanie nie powiodło się: ${message}`);
-    },
-  });
-}
-
-// Public site content query - optimized for anonymous visitors
-export function useGetPublicSiteContent() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<SiteContent>({
-    queryKey: ['publicSiteContent'],
-    queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.getSiteContent();
-    },
-    enabled: !!actor && !isFetching,
-    retry: (failureCount, error) => {
-      return isRetryableError(error) && failureCount < RETRY_CONFIG.maxRetries;
-    },
-    retryDelay: RETRY_CONFIG.retryDelay,
-    staleTime: CACHE_CONFIG.publicSiteContent.staleTime,
-    gcTime: CACHE_CONFIG.publicSiteContent.gcTime,
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-  });
-}
-
-// Site content queries (admin)
+// Site content queries
 export function useGetSiteContent() {
   const { actor, isFetching } = useActor();
 
@@ -736,6 +732,28 @@ export function useGetSiteContent() {
     gcTime: CACHE_CONFIG.siteContent.gcTime,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
+  });
+}
+
+// Public site content query optimized for anonymous visitors
+export function useGetPublicSiteContent() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<SiteContent>({
+    queryKey: ['publicSiteContent'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getSiteContent();
+    },
+    enabled: !!actor && !isFetching,
+    retry: (failureCount, error) => {
+      return isRetryableError(error) && failureCount < RETRY_CONFIG.maxRetries;
+    },
+    retryDelay: RETRY_CONFIG.retryDelay,
+    staleTime: CACHE_CONFIG.publicSiteContent.staleTime,
+    gcTime: CACHE_CONFIG.publicSiteContent.gcTime,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 }
 
@@ -765,42 +783,6 @@ export function useUpdateSiteContent() {
   });
 }
 
-export function useUpdateLogoImage() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (logo: ExternalBlob | null) => {
-      if (!actor) {
-        throw new Error('Aktor backendu jest niedostępny. Sprawdź połączenie i spróbuj ponownie.');
-      }
-      return withRetry(
-        () => actor.updateLogoImage(logo),
-        'aktualizacja logo'
-      );
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['siteContent'] });
-      queryClient.invalidateQueries({ queryKey: ['publicSiteContent'] });
-      toast.success('Logo zostało zaktualizowane pomyślnie');
-    },
-    onError: (error: any) => {
-      const message = sanitizeTechnicalError(error);
-      toast.error(`Nie udało się zaktualizować logo: ${message}`);
-    },
-  });
-}
-
-// Deprecated - kept for backward compatibility, use useGetSiteContent instead
-export function useGetHomepageHeroContent() {
-  const { data: siteContent, ...rest } = useGetSiteContent();
-  return {
-    ...rest,
-    data: siteContent?.homepageHero,
-  };
-}
-
-// Deprecated - kept for backward compatibility, use useUpdateSiteContent instead
 export function useUpdateHomepageHeroContent() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
@@ -812,28 +794,19 @@ export function useUpdateHomepageHeroContent() {
       }
       return withRetry(
         () => actor.updateHomepageHeroContent(content),
-        'aktualizacja treści strony głównej'
+        'aktualizacja treści hero'
       );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['siteContent'] });
       queryClient.invalidateQueries({ queryKey: ['publicSiteContent'] });
-      toast.success('Treść strony głównej została zaktualizowana pomyślnie');
+      toast.success('Treść sekcji hero została zaktualizowana pomyślnie');
     },
     onError: (error: any) => {
       const message = sanitizeTechnicalError(error);
-      toast.error(`Nie udało się zaktualizować treści strony głównej: ${message}`);
+      toast.error(`Nie udało się zaktualizować treści hero: ${message}`);
     },
   });
-}
-
-// Footer content queries
-export function useGetFooterContent() {
-  const { data: siteContent, ...rest } = useGetPublicSiteContent();
-  return {
-    ...rest,
-    data: siteContent?.footer,
-  };
 }
 
 export function useUpdateFooterContent() {
@@ -862,21 +835,32 @@ export function useUpdateFooterContent() {
   });
 }
 
-// Authorization helper
-export function useIsCallerAdmin() {
-  const { actor, isFetching } = useActor();
+export function useUpdatePublicHtmlSection() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
 
-  return useQuery<boolean>({
-    queryKey: ['isCallerAdmin'],
-    queryFn: async () => {
-      if (!actor) return false;
-      return actor.isCallerAdmin();
+  return useMutation({
+    mutationFn: async (params: { sectionType: 'gravesDeclaration' | 'prayerForTheDeceased' | 'cemeteryInformation'; content: PublicHtmlSection }) => {
+      if (!actor) {
+        throw new Error('Aktor backendu jest niedostępny. Sprawdź połączenie i spróbuj ponownie.');
+      }
+
+      const updateFn = params.sectionType === 'gravesDeclaration'
+        ? () => actor.updateGravesDeclaration(params.content)
+        : params.sectionType === 'prayerForTheDeceased'
+        ? () => actor.updatePrayerForTheDeceased(params.content)
+        : () => actor.updateCemeteryInformation(params.content);
+
+      return withRetry(updateFn, 'aktualizacja sekcji');
     },
-    enabled: !!actor && !isFetching,
-    retry: false,
-    staleTime: CACHE_CONFIG.userProfile.staleTime,
-    gcTime: CACHE_CONFIG.userProfile.gcTime,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['siteContent'] });
+      queryClient.invalidateQueries({ queryKey: ['publicSiteContent'] });
+      toast.success('Sekcja została zaktualizowana pomyślnie');
+    },
+    onError: (error: any) => {
+      const message = sanitizeTechnicalError(error);
+      toast.error(`Nie udało się zaktualizować sekcji: ${message}`);
+    },
   });
 }

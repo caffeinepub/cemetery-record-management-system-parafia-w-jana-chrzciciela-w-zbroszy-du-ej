@@ -190,7 +190,14 @@ export interface backendInterface {
     removeGrave(id: bigint): Promise<AsyncResult>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     searchGraves(surname: string | null, yearOfDeath: bigint | null, owner: string | null, status: GraveStatus | null, locality: string | null): Promise<Array<GraveRecord>>;
+    searchGravesPaginated(surname: string | null, yearOfDeath: bigint | null, offset: bigint, pageSize: bigint): Promise<PaginatedGravesResult>;
     searchPublicGraves(surname: string | null, yearOfDeath: bigint | null): Promise<Array<PublicGraveShape>>;
+    searchPublicGravesPaginated(surname: string | null, yearOfDeath: bigint | null, offset: bigint, pageSize: bigint): Promise<{
+        graves: Array<PublicGraveShape>;
+        nextOffset?: bigint;
+        pageSize: bigint;
+        totalGraves: bigint;
+    }>;
     updateCemeteryInformation(newSection: PublicHtmlSection): Promise<void>;
     updateFooterContent(newFooterContent: FooterContent): Promise<void>;
     updateGrave(id: bigint, updatedRecord: GraveRecord): Promise<AsyncResult>;

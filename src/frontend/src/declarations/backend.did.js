@@ -223,9 +223,26 @@ export const idlService = IDL.Service({
       [IDL.Vec(GraveRecord)],
       ['query'],
     ),
+  'searchGravesPaginated' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Opt(IDL.Int), IDL.Nat, IDL.Nat],
+      [PaginatedGravesResult],
+      ['query'],
+    ),
   'searchPublicGraves' : IDL.Func(
       [IDL.Opt(IDL.Text), IDL.Opt(IDL.Int)],
       [IDL.Vec(PublicGraveShape)],
+      ['query'],
+    ),
+  'searchPublicGravesPaginated' : IDL.Func(
+      [IDL.Opt(IDL.Text), IDL.Opt(IDL.Int), IDL.Nat, IDL.Nat],
+      [
+        IDL.Record({
+          'graves' : IDL.Vec(PublicGraveShape),
+          'nextOffset' : IDL.Opt(IDL.Nat),
+          'pageSize' : IDL.Nat,
+          'totalGraves' : IDL.Nat,
+        }),
+      ],
       ['query'],
     ),
   'updateCemeteryInformation' : IDL.Func([PublicHtmlSection], [], []),
@@ -460,9 +477,26 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(GraveRecord)],
         ['query'],
       ),
+    'searchGravesPaginated' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Opt(IDL.Int), IDL.Nat, IDL.Nat],
+        [PaginatedGravesResult],
+        ['query'],
+      ),
     'searchPublicGraves' : IDL.Func(
         [IDL.Opt(IDL.Text), IDL.Opt(IDL.Int)],
         [IDL.Vec(PublicGraveShape)],
+        ['query'],
+      ),
+    'searchPublicGravesPaginated' : IDL.Func(
+        [IDL.Opt(IDL.Text), IDL.Opt(IDL.Int), IDL.Nat, IDL.Nat],
+        [
+          IDL.Record({
+            'graves' : IDL.Vec(PublicGraveShape),
+            'nextOffset' : IDL.Opt(IDL.Nat),
+            'pageSize' : IDL.Nat,
+            'totalGraves' : IDL.Nat,
+          }),
+        ],
         ['query'],
       ),
     'updateCemeteryInformation' : IDL.Func([PublicHtmlSection], [], []),

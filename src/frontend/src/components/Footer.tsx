@@ -1,10 +1,10 @@
 import { Heart, ExternalLink } from 'lucide-react';
-import { useGetFooterContent } from '../hooks/useQueries';
+import { useGetPublicSiteContent } from '../hooks/useQueries';
 import { Separator } from '@/components/ui/separator';
 import SiteContentLoadErrorBanner from './SiteContentLoadErrorBanner';
 
 export default function Footer() {
-  const { data: footerContent, isLoading, isError } = useGetFooterContent();
+  const { data: siteContent, isLoading, isError } = useGetPublicSiteContent();
 
   // Fallback content for when data cannot be loaded
   const fallbackContent = {
@@ -16,7 +16,7 @@ export default function Footer() {
     websiteLink: 'https://zbroszaduza.parafialnastrona.pl/',
   };
 
-  const content = footerContent || fallbackContent;
+  const content = siteContent?.footer || fallbackContent;
 
   return (
     <footer className="border-t border-border bg-card/30 backdrop-blur-sm mt-auto">

@@ -12,7 +12,7 @@ export default function ConnectionStatus() {
     if (!isFetching && !actor) {
       const timer = setTimeout(() => {
         setShowWarning(true);
-      }, 3000);
+      }, 5000); // Wait 5 seconds before showing warning to avoid false positives
       return () => clearTimeout(timer);
     } else {
       setShowWarning(false);
@@ -23,7 +23,7 @@ export default function ConnectionStatus() {
     return (
       <Alert className="mb-4">
         <Loader2 className="h-4 w-4 animate-spin" />
-        <AlertDescription>Łączenie z serwerem...</AlertDescription>
+        <AlertDescription>Connecting to server...</AlertDescription>
       </Alert>
     );
   }
@@ -33,7 +33,7 @@ export default function ConnectionStatus() {
       <Alert variant="destructive" className="mb-4">
         <WifiOff className="h-4 w-4" />
         <AlertDescription>
-          Brak połączenia z serwerem. Sprawdź połączenie internetowe i odśwież stronę.
+          Failed to communicate with backend. Please check your internet connection and refresh the page.
         </AlertDescription>
       </Alert>
     );

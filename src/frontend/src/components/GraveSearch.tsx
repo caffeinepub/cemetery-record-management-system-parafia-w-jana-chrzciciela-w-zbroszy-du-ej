@@ -4,9 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { useInfinitePaginatedGraves, useGetPublicGraves } from '../hooks/useQueries';
+import { 
+  useInfinitePaginatedGraves, 
+  useGetPublicGraves,
+  useInfiniteSearchGravesPaginated,
+  useInfiniteSearchPublicGravesPaginated 
+} from '../hooks/useQueries';
 import GraveResultsList from './GraveResultsList';
 import { searchGravesInMemory, searchPublicGravesInMemory } from '../utils/graveFullTextSearch';
+import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import type { GraveRecord, PublicGraveShape } from '../backend';
 
 interface GraveSearchProps {
@@ -15,48 +21,83 @@ interface GraveSearchProps {
 
 export default function GraveSearch({ isAdmin = false }: GraveSearchProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebouncedValue(searchQuery, 300);
   const pageSize = 50;
 
-  // Admin: use paginated full grave records
-  const {
-    data: adminData,
-    isLoading: adminLoading,
-    isFetchingNextPage: adminFetchingNextPage,
-    hasNextPage: adminHasNextPage,
-    fetchNextPage: adminFetchNextPage,
-  } = useInfinitePaginatedGraves(pageSize);
+  const hasQuery = debouncedSearchQuery.trim().length > 0;
 
-  // Public: use public grave shapes
+  // Admin mode: paginated browsing when no query, paginated search when query present
+  const {
+    data: adminBrowseData,
+    isLoading: adminBrowseLoading,
+    isFetchingNextPage: adminBrowseFetchingNextPage,
+    hasNextPage: adminBrowseHasNextPage,
+    fetchNextPage: adminBrowseFetchNextPage,
+  } = useInfinitePaginatedGraves(pageSize, !isAdmin || hasQuery);
+
+  const {
+    data: adminSearchData,
+    isLoading: adminSearchLoading,
+    isFetchingNextPage: adminSearchFetchingNextPage,
+    hasNextPage: adminSearchHasNextPage,
+    fetchNextPage: adminSearchFetchNextPage,
+  } = useInfiniteSearchGravesPaginated(debouncedSearchQuery, pageSize, !isAdmin || !hasQuery);
+
+  // Public mode: load all public graves and filter in memory
   const {
     data: publicGraves = [],
     isLoading: publicLoading,
-  } = useGetPublicGraves();
+  } = useGetPublicGraves(!isAdmin);
 
-  const isLoading = isAdmin ? adminLoading : publicLoading;
-  const isFetchingNextPage = isAdmin ? adminFetchingNextPage : false;
-  const hasNextPage = isAdmin ? adminHasNextPage : false;
-  const fetchNextPage = isAdmin ? adminFetchNextPage : () => {};
+  // Determine which data source to use
+  const isLoading = isAdmin 
+    ? (hasQuery ? adminSearchLoading : adminBrowseLoading)
+    : publicLoading;
+
+  const isFetchingNextPage = isAdmin 
+    ? (hasQuery ? adminSearchFetchingNextPage : adminBrowseFetchingNextPage)
+    : false;
+
+  const hasNextPage = isAdmin 
+    ? (hasQuery ? adminSearchHasNextPage : adminBrowseHasNextPage)
+    : false;
+
+  const fetchNextPage = isAdmin 
+    ? (hasQuery ? adminSearchFetchNextPage : adminBrowseFetchNextPage)
+    : () => {};
 
   // Flatten all loaded pages for admin
-  const allLoadedGraves = useMemo(() => {
+  const allLoadedAdminGraves = useMemo(() => {
     if (!isAdmin) return [];
-    if (!adminData?.pages) return [];
-    return adminData.pages.flatMap((page) => page.graves);
-  }, [isAdmin, adminData]);
+    const data = hasQuery ? adminSearchData : adminBrowseData;
+    if (!data?.pages) return [];
+    return data.pages.flatMap((page) => page.graves);
+  }, [isAdmin, hasQuery, adminSearchData, adminBrowseData]);
 
-  // Apply in-memory search filter
+  // For admin: when using paginated search, results are already filtered by backend
+  // For admin browsing: apply in-memory filter to loaded data
   const filteredAdminGraves = useMemo(() => {
     if (!isAdmin) return [];
-    return searchGravesInMemory(allLoadedGraves, searchQuery);
-  }, [isAdmin, allLoadedGraves, searchQuery]);
+    if (hasQuery) {
+      // Backend already filtered, return as-is
+      return allLoadedAdminGraves;
+    }
+    // No query in browse mode, return all loaded
+    return allLoadedAdminGraves;
+  }, [isAdmin, hasQuery, allLoadedAdminGraves]);
 
+  // For public: always filter in memory
   const filteredPublicGraves = useMemo(() => {
     if (isAdmin) return [];
-    return searchPublicGravesInMemory(publicGraves, searchQuery);
-  }, [isAdmin, publicGraves, searchQuery]);
+    return searchPublicGravesInMemory(publicGraves, debouncedSearchQuery);
+  }, [isAdmin, publicGraves, debouncedSearchQuery]);
 
-  const totalLoaded = isAdmin ? allLoadedGraves.length : publicGraves.length;
-  const totalGraves = isAdmin && adminData?.pages[0]?.totalGraves ? Number(adminData.pages[0].totalGraves) : totalLoaded;
+  const totalLoaded = isAdmin ? allLoadedAdminGraves.length : publicGraves.length;
+  const totalGraves = isAdmin 
+    ? (hasQuery 
+        ? (adminSearchData?.pages[0]?.totalGraves ? Number(adminSearchData.pages[0].totalGraves) : totalLoaded)
+        : (adminBrowseData?.pages[0]?.totalGraves ? Number(adminBrowseData.pages[0].totalGraves) : totalLoaded))
+    : totalLoaded;
   const filteredCount = isAdmin ? filteredAdminGraves.length : filteredPublicGraves.length;
 
   if (isLoading) {
@@ -99,10 +140,18 @@ export default function GraveSearch({ isAdmin = false }: GraveSearchProps) {
 
           <div className="flex items-center justify-between text-sm">
             <div className="text-muted-foreground">
-              {searchQuery ? (
+              {hasQuery && isAdmin ? (
+                <>
+                  Znaleziono <span className="font-semibold text-foreground">{filteredCount}</span>{' '}
+                  {totalGraves > filteredCount && (
+                    <>z <span className="font-semibold text-foreground">{totalGraves}</span></>
+                  )}{' '}
+                  grobów
+                </>
+              ) : hasQuery && !isAdmin ? (
                 <>
                   Wyświetlono <span className="font-semibold text-foreground">{filteredCount}</span> z{' '}
-                  <span className="font-semibold text-foreground">{totalLoaded}</span> załadowanych grobów
+                  <span className="font-semibold text-foreground">{totalLoaded}</span> grobów
                 </>
               ) : (
                 <>
