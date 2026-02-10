@@ -28,6 +28,7 @@ export const Error = IDL.Variant({
     'alley' : IDL.Text,
     'graveId' : IDL.Nat,
   }),
+  'unauthorized' : IDL.Null,
   'alleyNotEmpty' : IDL.Record({ 'alley' : IDL.Text }),
 });
 export const AsyncResult = IDL.Variant({ 'ok' : IDL.Null, 'err' : Error });
@@ -105,6 +106,11 @@ export const PaginatedGravesResult = IDL.Record({
   'pageSize' : IDL.Nat,
   'totalGraves' : IDL.Nat,
 });
+export const PrayerForTheDeceased = IDL.Record({
+  'title' : IDL.Text,
+  'content' : IDL.Text,
+  'memorialPrayer' : IDL.Text,
+});
 export const PublicGraveShape = IDL.Record({
   'status' : GraveStatus,
   'yearOfDeath' : IDL.Opt(IDL.Int),
@@ -121,10 +127,18 @@ export const PublicTileData = IDL.Record({
 export const SiteContent = IDL.Record({
   'logoImage' : IDL.Opt(ExternalBlob),
   'cemeteryInformation' : PublicHtmlSection,
-  'prayerForTheDeceased' : PublicHtmlSection,
+  'prayerForTheDeceased' : PrayerForTheDeceased,
   'gravesDeclaration' : PublicHtmlSection,
   'footer' : FooterContent,
   'homepageHero' : HomepageHeroContent,
+});
+export const PublicGraveResult = IDL.Record({
+  'status' : GraveStatus,
+  'alley' : IDL.Text,
+  'yearOfDeath' : IDL.Opt(IDL.Int),
+  'plotNumber' : IDL.Nat,
+  'lastName' : IDL.Text,
+  'firstName' : IDL.Text,
 });
 
 export const idlService = IDL.Service({
@@ -193,13 +207,8 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getParishContactEmail' : IDL.Func([], [IDL.Text], ['query']),
-  'getPrayerForTheDeceased' : IDL.Func([], [PublicHtmlSection], ['query']),
+  'getPrayerForTheDeceased' : IDL.Func([], [PrayerForTheDeceased], ['query']),
   'getPublicGraves' : IDL.Func([], [IDL.Vec(PublicGraveShape)], ['query']),
-  'getPublicGravesByAlley' : IDL.Func(
-      [IDL.Text],
-      [IDL.Vec(PublicGraveShape)],
-      ['query'],
-    ),
   'getPublicTiles' : IDL.Func([], [IDL.Vec(PublicTileData)], ['query']),
   'getSiteContent' : IDL.Func([], [SiteContent], ['query']),
   'getSurnamesForAutocomplete' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
@@ -223,26 +232,9 @@ export const idlService = IDL.Service({
       [IDL.Vec(GraveRecord)],
       ['query'],
     ),
-  'searchGravesPaginated' : IDL.Func(
-      [IDL.Opt(IDL.Text), IDL.Opt(IDL.Int), IDL.Nat, IDL.Nat],
-      [PaginatedGravesResult],
-      ['query'],
-    ),
-  'searchPublicGraves' : IDL.Func(
+  'searchPublicGravesWithLocation' : IDL.Func(
       [IDL.Opt(IDL.Text), IDL.Opt(IDL.Int)],
-      [IDL.Vec(PublicGraveShape)],
-      ['query'],
-    ),
-  'searchPublicGravesPaginated' : IDL.Func(
-      [IDL.Opt(IDL.Text), IDL.Opt(IDL.Int), IDL.Nat, IDL.Nat],
-      [
-        IDL.Record({
-          'graves' : IDL.Vec(PublicGraveShape),
-          'nextOffset' : IDL.Opt(IDL.Nat),
-          'pageSize' : IDL.Nat,
-          'totalGraves' : IDL.Nat,
-        }),
-      ],
+      [IDL.Vec(PublicGraveResult)],
       ['query'],
     ),
   'updateCemeteryInformation' : IDL.Func([PublicHtmlSection], [], []),
@@ -251,7 +243,7 @@ export const idlService = IDL.Service({
   'updateGravesDeclaration' : IDL.Func([PublicHtmlSection], [], []),
   'updateHomepageHeroContent' : IDL.Func([HomepageHeroContent], [], []),
   'updateLogoImage' : IDL.Func([IDL.Opt(ExternalBlob)], [], []),
-  'updatePrayerForTheDeceased' : IDL.Func([PublicHtmlSection], [], []),
+  'updatePrayerForTheDeceased' : IDL.Func([PrayerForTheDeceased], [], []),
   'updateSiteContent' : IDL.Func([SiteContent], [], []),
 });
 
@@ -278,6 +270,7 @@ export const idlFactory = ({ IDL }) => {
       'alley' : IDL.Text,
       'graveId' : IDL.Nat,
     }),
+    'unauthorized' : IDL.Null,
     'alleyNotEmpty' : IDL.Record({ 'alley' : IDL.Text }),
   });
   const AsyncResult = IDL.Variant({ 'ok' : IDL.Null, 'err' : Error });
@@ -355,6 +348,11 @@ export const idlFactory = ({ IDL }) => {
     'pageSize' : IDL.Nat,
     'totalGraves' : IDL.Nat,
   });
+  const PrayerForTheDeceased = IDL.Record({
+    'title' : IDL.Text,
+    'content' : IDL.Text,
+    'memorialPrayer' : IDL.Text,
+  });
   const PublicGraveShape = IDL.Record({
     'status' : GraveStatus,
     'yearOfDeath' : IDL.Opt(IDL.Int),
@@ -371,10 +369,18 @@ export const idlFactory = ({ IDL }) => {
   const SiteContent = IDL.Record({
     'logoImage' : IDL.Opt(ExternalBlob),
     'cemeteryInformation' : PublicHtmlSection,
-    'prayerForTheDeceased' : PublicHtmlSection,
+    'prayerForTheDeceased' : PrayerForTheDeceased,
     'gravesDeclaration' : PublicHtmlSection,
     'footer' : FooterContent,
     'homepageHero' : HomepageHeroContent,
+  });
+  const PublicGraveResult = IDL.Record({
+    'status' : GraveStatus,
+    'alley' : IDL.Text,
+    'yearOfDeath' : IDL.Opt(IDL.Int),
+    'plotNumber' : IDL.Nat,
+    'lastName' : IDL.Text,
+    'firstName' : IDL.Text,
   });
   
   return IDL.Service({
@@ -447,13 +453,8 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getParishContactEmail' : IDL.Func([], [IDL.Text], ['query']),
-    'getPrayerForTheDeceased' : IDL.Func([], [PublicHtmlSection], ['query']),
+    'getPrayerForTheDeceased' : IDL.Func([], [PrayerForTheDeceased], ['query']),
     'getPublicGraves' : IDL.Func([], [IDL.Vec(PublicGraveShape)], ['query']),
-    'getPublicGravesByAlley' : IDL.Func(
-        [IDL.Text],
-        [IDL.Vec(PublicGraveShape)],
-        ['query'],
-      ),
     'getPublicTiles' : IDL.Func([], [IDL.Vec(PublicTileData)], ['query']),
     'getSiteContent' : IDL.Func([], [SiteContent], ['query']),
     'getSurnamesForAutocomplete' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
@@ -477,26 +478,9 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(GraveRecord)],
         ['query'],
       ),
-    'searchGravesPaginated' : IDL.Func(
-        [IDL.Opt(IDL.Text), IDL.Opt(IDL.Int), IDL.Nat, IDL.Nat],
-        [PaginatedGravesResult],
-        ['query'],
-      ),
-    'searchPublicGraves' : IDL.Func(
+    'searchPublicGravesWithLocation' : IDL.Func(
         [IDL.Opt(IDL.Text), IDL.Opt(IDL.Int)],
-        [IDL.Vec(PublicGraveShape)],
-        ['query'],
-      ),
-    'searchPublicGravesPaginated' : IDL.Func(
-        [IDL.Opt(IDL.Text), IDL.Opt(IDL.Int), IDL.Nat, IDL.Nat],
-        [
-          IDL.Record({
-            'graves' : IDL.Vec(PublicGraveShape),
-            'nextOffset' : IDL.Opt(IDL.Nat),
-            'pageSize' : IDL.Nat,
-            'totalGraves' : IDL.Nat,
-          }),
-        ],
+        [IDL.Vec(PublicGraveResult)],
         ['query'],
       ),
     'updateCemeteryInformation' : IDL.Func([PublicHtmlSection], [], []),
@@ -505,7 +489,7 @@ export const idlFactory = ({ IDL }) => {
     'updateGravesDeclaration' : IDL.Func([PublicHtmlSection], [], []),
     'updateHomepageHeroContent' : IDL.Func([HomepageHeroContent], [], []),
     'updateLogoImage' : IDL.Func([IDL.Opt(ExternalBlob)], [], []),
-    'updatePrayerForTheDeceased' : IDL.Func([PublicHtmlSection], [], []),
+    'updatePrayerForTheDeceased' : IDL.Func([PrayerForTheDeceased], [], []),
     'updateSiteContent' : IDL.Func([SiteContent], [], []),
   });
 };

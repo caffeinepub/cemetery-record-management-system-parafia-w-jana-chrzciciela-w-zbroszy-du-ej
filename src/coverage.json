@@ -1,7 +1,7 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-09T07:23:49.852Z",
+  "generatedAt": "2026-02-10T16:13:28.178Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
@@ -12,54 +12,48 @@
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Improve grave search responsiveness by reducing unnecessary re-filtering and re-rendering during typing in both public and admin search UIs.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useDebouncedValue.ts",
-          "frontend/src/components/GraveSearch.tsx",
-          "frontend/src/components/admin/GraveManagement.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useDebouncedValue.ts",
-          "frontend/src/components/GraveSearch.tsx",
-          "frontend/src/components/admin/GraveManagement.tsx"
-        ]
-      },
-      {
-        "id": "REQ-2",
-        "summary": "Optimize in-memory search implementation by precomputing and reusing normalized searchable strings/fields for graves, instead of normalizing every field for every record on every filter run.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/utils/graveFullTextSearch.ts",
-          "frontend/src/components/GraveSearch.tsx",
-          "frontend/src/components/admin/GraveManagement.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/utils/graveFullTextSearch.ts",
-          "frontend/src/components/GraveSearch.tsx",
-          "frontend/src/components/admin/GraveManagement.tsx"
-        ]
-      },
-      {
-        "id": "REQ-3",
-        "summary": "Add backend query APIs that support server-side grave searching with pagination so the frontend does not need to load and filter large datasets in memory to search efficiently.",
+        "summary": "Update the backend public search result shape so public grave search results include grave location (alley and plot/grave number) in addition to the existing deceased name and grave status.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-4",
-        "summary": "Update frontend data-fetching to use the new backend paginated search endpoints when a search query is present, while keeping existing behavior for empty queries (e.g., browsing lists / infinite loading).",
+        "id": "REQ-2",
+        "summary": "Update the public grave search results UI to display, for each found grave, the deceased person’s first and last name, the grave status (paid/unpaid/reserved/free), and the grave location (alley + grave/plot number).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/GraveResultsList.tsx",
           "frontend/src/components/GraveSearch.tsx",
-          "frontend/src/components/admin/GraveManagement.tsx"
+          "frontend/src/hooks/useQueries.ts"
         ],
         "matchedFiles": [
-          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/GraveResultsList.tsx",
           "frontend/src/components/GraveSearch.tsx",
-          "frontend/src/components/admin/GraveManagement.tsx"
+          "frontend/src/hooks/useQueries.ts"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Ensure the in-memory search index builder for public graves is updated (if needed) to accommodate the extended public result shape without breaking search filtering or rendering.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/utils/graveFullTextSearch.ts",
+          "frontend/src/components/GraveSearch.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/utils/graveFullTextSearch.ts",
+          "frontend/src/components/GraveSearch.tsx"
+        ]
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Update the admin grave search results UI so each found grave clearly surfaces the same key summary fields at a glance: deceased name (at least one), grave status, and location (alley + plot/grave number).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/GraveResultsList.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/GraveResultsList.tsx"
         ]
       }
     ]
@@ -72,17 +66,12 @@
     "frontend-implementation-plan.json",
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
-    "frontend/src/components/Footer.tsx",
+    "frontend/src/components/GraveResultsList.tsx",
     "frontend/src/components/GraveSearch.tsx",
-    "frontend/src/components/admin/GraveEditDialog.tsx",
-    "frontend/src/components/admin/GraveManagement.tsx",
-    "frontend/src/components/admin/SiteContentManager.tsx",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useDebouncedValue.ts",
     "frontend/src/hooks/useQueries.ts",
     "frontend/src/utils/graveFullTextSearch.ts",
-    "frontend/src/utils/urlParams.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

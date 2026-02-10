@@ -102,6 +102,20 @@ export default function PublicPage() {
                     'Wieczny odpoczynek racz im dać, Panie, a światłość wiekuista niechaj im świeci.\n\nNiech odpoczywają w pokoju wiecznym. Amen.'
                 }}
               />
+              
+              {siteContent?.prayerForTheDeceased.memorialPrayer && 
+               siteContent.prayerForTheDeceased.memorialPrayer.trim() !== '' && (
+                <div className="mt-8 pt-8 border-t-2 border-border">
+                  <h3 className="text-xl font-semibold text-foreground mb-4">
+                    Modlitwa wypominkowa
+                  </h3>
+                  <div className="bg-muted/30 rounded-lg p-6 max-h-96 overflow-y-auto">
+                    <p className="text-base text-foreground whitespace-pre-wrap leading-relaxed">
+                      {siteContent.prayerForTheDeceased.memorialPrayer}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </section>

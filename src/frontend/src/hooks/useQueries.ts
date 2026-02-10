@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { GraveRecord, UserProfile, GraveStatus, CemeteryView, AsyncResult, AsyncResult_1, PaginatedGravesResult, PublicGraveShape, PublicTileData, HomepageHeroContent, FooterContent, SiteContent, PublicHtmlSection } from '../backend';
+import type { GraveRecord, UserProfile, GraveStatus, CemeteryView, AsyncResult, AsyncResult_1, PaginatedGravesResult, PublicGraveShape, PublicGraveResult, PublicTileData, HomepageHeroContent, FooterContent, SiteContent, PublicHtmlSection, PrayerForTheDeceased } from '../backend';
 import { ExternalBlob } from '../backend';
 import { toast } from 'sonner';
 
@@ -61,6 +61,12 @@ function isRetryableError(error: any): boolean {
   );
 }
 
+// Helper function to check if error is Boss-lock
+function isBossLockError(error: any): boolean {
+  const errorMessage = error?.message?.toLowerCase() || '';
+  return errorMessage.includes('only the boss can perform this action');
+}
+
 // Helper function to wait with exponential backoff
 async function waitWithBackoff(attemptIndex: number): Promise<void> {
   const delay = RETRY_CONFIG.retryDelay(attemptIndex);
@@ -79,6 +85,11 @@ async function withRetry<T>(
       return await fn();
     } catch (error: any) {
       lastError = error;
+
+      // Don't retry Boss-lock errors
+      if (isBossLockError(error)) {
+        throw error;
+      }
 
       // Don't retry if error is not retryable
       if (!isRetryableError(error)) {
@@ -102,83 +113,34 @@ async function withRetry<T>(
   throw lastError;
 }
 
-// Helper to format domain errors from backend
-function formatDomainError(error: any): string {
-  if (error.__kind__ === 'duplicateAlley') {
-    return `Alejka "${error.duplicateAlley.alley}" już istnieje. Proszę wybrać inną nazwę.`;
+// Helper to sanitize error messages for user display
+function sanitizeErrorMessage(error: any): string {
+  const message = error?.message || 'Nieznany błąd';
+
+  // Boss-lock error
+  if (isBossLockError(error)) {
+    return 'Brak uprawnień: tylko administrator może wykonać tę operację';
   }
-  if (error.__kind__ === 'alleyNotFound') {
-    return `Alejka "${error.alleyNotFound.alley}" nie istnieje.`;
+
+  // Network errors
+  if (message.toLowerCase().includes('actor not available')) {
+    return 'Połączenie z serwerem jest niedostępne. Sprawdź połączenie internetowe.';
   }
-  if (error.__kind__ === 'alleyNotEmpty') {
-    return `Alejka "${error.alleyNotEmpty.alley}" zawiera groby i nie może zostać usunięta.`;
+
+  if (message.toLowerCase().includes('network') || message.toLowerCase().includes('fetch')) {
+    return 'Błąd połączenia sieciowego. Sprawdź połączenie internetowe.';
   }
-  if (error.__kind__ === 'graveNotFound') {
-    return `Grób o ID ${error.graveNotFound.graveId} nie został znaleziony.`;
+
+  // Timeout errors
+  if (message.toLowerCase().includes('timeout')) {
+    return 'Przekroczono limit czasu operacji. Spróbuj ponownie.';
   }
-  if (error.__kind__ === 'invariantViolation') {
-    const field = error.invariantViolation.field;
-    if (field === 'alley') {
-      return `Nie można zmienić alejki istniejącego grobu. To pole jest niezmienne.`;
-    }
-    if (field === 'plotNumber') {
-      return `Nie można zmienić numeru miejsca istniejącego grobu. To pole jest niezmienne.`;
-    }
-    if (field === 'id') {
-      return `Nie można zmienić ID grobu. To pole jest niezmienne.`;
-    }
-    if (field === 'status') {
-      return `Nie można usunąć grobu, który nie jest wolny. Tylko wolne groby mogą być usunięte.`;
-    }
-    return `Naruszenie integralności danych: pole "${field}" nie może być zmodyfikowane.`;
-  }
-  if (error.__kind__ === 'inconsistentAlleyGraves') {
-    return `Wykryto niespójność danych: Grób ${error.inconsistentAlleyGraves.graveId} nie jest prawidłowo powiązany z alejką "${error.inconsistentAlleyGraves.alley}". Proszę skontaktować się z pomocą techniczną.`;
-  }
-  return 'Wystąpił nieznany błąd domenowy.';
+
+  // Return original message if no specific pattern matched
+  return message;
 }
 
-// Helper to sanitize technical/authorization errors
-function sanitizeTechnicalError(error: any): string {
-  const errorMessage = error?.message || '';
-  
-  // Check for authorization errors (traps from backend)
-  if (errorMessage.includes('Unauthorized') || errorMessage.includes('Only admins')) {
-    return 'Nie masz uprawnień do wykonania tej operacji. Wymagany dostęp administratora.';
-  }
-  
-  if (errorMessage.includes('Only users')) {
-    return 'Musisz być zalogowany, aby wykonać tę operację.';
-  }
-  
-  // Network/connection errors
-  if (errorMessage.includes('actor not available') || errorMessage.includes('Actor not available')) {
-    return 'Połączenie z backendem niedostępne. Sprawdź połączenie i spróbuj ponownie.';
-  }
-  
-  if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
-    return 'Wystąpił błąd sieci. Sprawdź połączenie i spróbuj ponownie.';
-  }
-  
-  // Return sanitized generic message for other technical errors
-  return 'Wystąpił nieoczekiwany błąd. Spróbuj ponownie.';
-}
-
-// Helper to sanitize site content load errors for public display
-function sanitizeSiteContentError(error: any): string {
-  const errorMessage = error?.message || '';
-  
-  if (errorMessage.includes('actor not available') || errorMessage.includes('Actor not available')) {
-    return 'Nie można połączyć się z serwerem. Treść strony może być nieaktualna.';
-  }
-  
-  if (errorMessage.includes('network') || errorMessage.includes('fetch') || errorMessage.includes('timeout')) {
-    return 'Wystąpił problem z połączeniem. Treść strony może być nieaktualna.';
-  }
-  
-  return 'Nie można załadować treści strony. Wyświetlane są domyślne informacje.';
-}
-
+// User Profile Queries
 export function useGetCallerUserProfile() {
   const { actor, isFetching: actorFetching } = useActor();
 
@@ -189,16 +151,11 @@ export function useGetCallerUserProfile() {
       return actor.getCallerUserProfile();
     },
     enabled: !!actor && !actorFetching,
-    retry: (failureCount, error) => {
-      return isRetryableError(error) && failureCount < RETRY_CONFIG.maxRetries;
-    },
-    retryDelay: RETRY_CONFIG.retryDelay,
-    staleTime: CACHE_CONFIG.userProfile.staleTime,
-    gcTime: CACHE_CONFIG.userProfile.gcTime,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    retry: false,
+    ...CACHE_CONFIG.userProfile,
   });
 
+  // Return custom state that properly reflects actor dependency
   return {
     ...query,
     isLoading: actorFetching || query.isLoading,
@@ -212,24 +169,24 @@ export function useSaveCallerUserProfile() {
 
   return useMutation({
     mutationFn: async (profile: UserProfile) => {
-      if (!actor) {
-        throw new Error('Aktor backendu jest niedostępny. Sprawdź połączenie i spróbuj ponownie.');
-      }
-      return withRetry(
+      if (!actor) throw new Error('Actor not available');
+      await withRetry(
         () => actor.saveCallerUserProfile(profile),
-        'zapisywanie profilu'
+        'zapisywania profilu'
       );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
+      toast.success('Profil został zapisany');
     },
     onError: (error: any) => {
-      const message = sanitizeTechnicalError(error);
+      const message = sanitizeErrorMessage(error);
       toast.error(`Nie udało się zapisać profilu: ${message}`);
     },
   });
 }
 
+// Cemetery State Queries
 export function useGetCemeteryState() {
   const { actor, isFetching } = useActor();
 
@@ -237,239 +194,45 @@ export function useGetCemeteryState() {
     queryKey: ['cemeteryState'],
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
-      return actor.getCemeteryStateWithoutVerification();
+      return actor.getCemeteryState();
     },
     enabled: !!actor && !isFetching,
-    retry: (failureCount, error) => {
-      return isRetryableError(error) && failureCount < RETRY_CONFIG.maxRetries;
+    retry: (failureCount, error: any) => {
+      if (isBossLockError(error)) return false;
+      return failureCount < RETRY_CONFIG.maxRetries && isRetryableError(error);
     },
-    retryDelay: RETRY_CONFIG.retryDelay,
-    staleTime: CACHE_CONFIG.cemeteryState.staleTime,
-    gcTime: CACHE_CONFIG.cemeteryState.gcTime,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    ...CACHE_CONFIG.cemeteryState,
   });
 }
 
-export function useGetAllGraves() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<GraveRecord[]>({
-    queryKey: ['allGraves'],
-    queryFn: async () => {
-      if (!actor) return [];
-      return actor.getAllGraves();
-    },
-    enabled: !!actor && !isFetching,
-    retry: (failureCount, error) => {
-      return isRetryableError(error) && failureCount < RETRY_CONFIG.maxRetries;
-    },
-    retryDelay: RETRY_CONFIG.retryDelay,
-    staleTime: CACHE_CONFIG.graves.staleTime,
-    gcTime: CACHE_CONFIG.graves.gcTime,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
-}
-
-export function useInfinitePaginatedGraves(pageSize: number = 50, enabled: boolean = true) {
-  const { actor, isFetching: actorFetching } = useActor();
-
-  return useInfiniteQuery<PaginatedGravesResult>({
-    queryKey: ['paginatedGraves', pageSize],
-    queryFn: async ({ pageParam = 0n }) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.getPaginatedGraves(pageParam as bigint, BigInt(pageSize));
-    },
-    enabled: !!actor && !actorFetching && enabled,
-    initialPageParam: 0n,
-    getNextPageParam: (lastPage) => lastPage.nextOffset ?? undefined,
-    retry: (failureCount, error) => {
-      return isRetryableError(error) && failureCount < RETRY_CONFIG.maxRetries;
-    },
-    retryDelay: RETRY_CONFIG.retryDelay,
-    staleTime: CACHE_CONFIG.graves.staleTime,
-    gcTime: CACHE_CONFIG.graves.gcTime,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
-}
-
-// NEW: Paginated admin grave search hook
-export function useInfiniteSearchGravesPaginated(query: string, pageSize: number = 50, enabled: boolean = true) {
-  const { actor, isFetching: actorFetching } = useActor();
-
-  // Parse query to extract surname and year
-  const parsedQuery = query.trim();
-  const yearMatch = parsedQuery.match(/\b(19|20)\d{2}\b/);
-  const yearOfDeath = yearMatch ? BigInt(yearMatch[0]) : null;
-  const surname = parsedQuery.length > 0 ? parsedQuery : null;
-
-  return useInfiniteQuery<PaginatedGravesResult>({
-    queryKey: ['searchGravesPaginated', surname, yearOfDeath?.toString() ?? null, pageSize],
-    queryFn: async ({ pageParam = 0n }) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.searchGravesPaginated(surname, yearOfDeath, pageParam as bigint, BigInt(pageSize));
-    },
-    enabled: !!actor && !actorFetching && enabled && parsedQuery.length > 0,
-    initialPageParam: 0n,
-    getNextPageParam: (lastPage) => lastPage.nextOffset ?? undefined,
-    retry: (failureCount, error) => {
-      return isRetryableError(error) && failureCount < RETRY_CONFIG.maxRetries;
-    },
-    retryDelay: RETRY_CONFIG.retryDelay,
-    staleTime: CACHE_CONFIG.graves.staleTime,
-    gcTime: CACHE_CONFIG.graves.gcTime,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
-}
-
-// NEW: Paginated public grave search hook
-export function useInfiniteSearchPublicGravesPaginated(query: string, pageSize: number = 50, enabled: boolean = true) {
-  const { actor, isFetching: actorFetching } = useActor();
-
-  // Parse query to extract surname and year
-  const parsedQuery = query.trim();
-  const yearMatch = parsedQuery.match(/\b(19|20)\d{2}\b/);
-  const yearOfDeath = yearMatch ? BigInt(yearMatch[0]) : null;
-  const surname = parsedQuery.length > 0 ? parsedQuery : null;
-
-  return useInfiniteQuery<{ graves: PublicGraveShape[]; totalGraves: bigint; pageSize: bigint; nextOffset?: bigint }>({
-    queryKey: ['searchPublicGravesPaginated', surname, yearOfDeath?.toString() ?? null, pageSize],
-    queryFn: async ({ pageParam = 0n }) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.searchPublicGravesPaginated(surname, yearOfDeath, pageParam as bigint, BigInt(pageSize));
-    },
-    enabled: !!actor && !actorFetching && enabled && parsedQuery.length > 0,
-    initialPageParam: 0n,
-    getNextPageParam: (lastPage) => lastPage.nextOffset ?? undefined,
-    retry: (failureCount, error) => {
-      return isRetryableError(error) && failureCount < RETRY_CONFIG.maxRetries;
-    },
-    retryDelay: RETRY_CONFIG.retryDelay,
-    staleTime: CACHE_CONFIG.graves.staleTime,
-    gcTime: CACHE_CONFIG.graves.gcTime,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
-}
-
-export function useSearchGraves() {
-  const { actor } = useActor();
-
-  return useMutation({
-    mutationFn: async (params: {
-      surname: string | null;
-      yearOfDeath: bigint | null;
-      owner: string | null;
-      status: GraveStatus | null;
-      locality: string | null;
-    }) => {
-      if (!actor) {
-        throw new Error('Aktor backendu jest niedostępny. Sprawdź połączenie i spróbuj ponownie.');
-      }
-      return withRetry(
-        () =>
-          actor.searchGraves(
-            params.surname,
-            params.yearOfDeath,
-            params.owner,
-            params.status,
-            params.locality
-          ),
-        'wyszukiwanie'
-      );
-    },
-    onError: (error: any) => {
-      const message = sanitizeTechnicalError(error);
-      toast.error(`Wyszukiwanie nie powiodło się: ${message}`);
-    },
-  });
-}
-
-export function useGetSurnamesForAutocomplete() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<string[]>({
-    queryKey: ['surnames'],
-    queryFn: async () => {
-      if (!actor) return [];
-      return actor.getSurnamesForAutocomplete();
-    },
-    enabled: !!actor && !isFetching,
-    retry: (failureCount, error) => {
-      return isRetryableError(error) && failureCount < RETRY_CONFIG.maxRetries;
-    },
-    retryDelay: RETRY_CONFIG.retryDelay,
-    staleTime: CACHE_CONFIG.surnames.staleTime,
-    gcTime: CACHE_CONFIG.surnames.gcTime,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
-}
-
-export function useGetGraveStatistics() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery({
-    queryKey: ['graveStatistics'],
-    queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.getGraveStatistics();
-    },
-    enabled: !!actor && !isFetching,
-    retry: (failureCount, error) => {
-      return isRetryableError(error) && failureCount < RETRY_CONFIG.maxRetries;
-    },
-    retryDelay: RETRY_CONFIG.retryDelay,
-    staleTime: CACHE_CONFIG.statistics.staleTime,
-    gcTime: CACHE_CONFIG.statistics.gcTime,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
-}
-
+// Alley Management Mutations
 export function useAddAlley() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (name: string) => {
-      if (!actor) {
-        throw new Error('Aktor backendu jest niedostępny. Sprawdź połączenie i spróbuj ponownie.');
-      }
-      
-      try {
-        const result: AsyncResult = await actor.addAlley(name);
-        
-        // Handle domain errors from backend
-        if (result.__kind__ === 'err') {
-          const errorMessage = formatDomainError(result.err);
-          throw new Error(errorMessage);
+      if (!actor) throw new Error('Actor not available');
+      const result = await withRetry(
+        () => actor.addAlley(name),
+        'dodawania alei'
+      );
+
+      if (result.__kind__ === 'err') {
+        const error = result.err;
+        if (error.__kind__ === 'duplicateAlley') {
+          throw new Error(`Aleja "${error.duplicateAlley.alley}" już istnieje`);
         }
-        
-        return result.ok;
-      } catch (error: any) {
-        // Check if it's already a formatted domain error
-        if (error.message && (
-          error.message.includes('już istnieje') ||
-          error.message.includes('nie istnieje') ||
-          error.message.includes('nie może')
-        )) {
-          throw error;
-        }
-        // Otherwise sanitize technical/authorization errors
-        const sanitized = sanitizeTechnicalError(error);
-        throw new Error(sanitized);
+        throw new Error('Nie udało się dodać alei');
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cemeteryState'] });
-      toast.success('Alejka została dodana pomyślnie');
+      toast.success('Aleja została dodana');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Nie udało się dodać alejki');
+      const message = sanitizeErrorMessage(error);
+      toast.error(message);
     },
   });
 }
@@ -480,91 +243,66 @@ export function useRemoveAlley() {
 
   return useMutation({
     mutationFn: async (name: string) => {
-      if (!actor) {
-        throw new Error('Aktor backendu jest niedostępny. Sprawdź połączenie i spróbuj ponownie.');
-      }
-      
-      try {
-        const result: AsyncResult = await actor.removeAlley(name);
-        
-        // Handle domain errors from backend
-        if (result.__kind__ === 'err') {
-          const errorMessage = formatDomainError(result.err);
-          throw new Error(errorMessage);
+      if (!actor) throw new Error('Actor not available');
+      const result = await withRetry(
+        () => actor.removeAlley(name),
+        'usuwania alei'
+      );
+
+      if (result.__kind__ === 'err') {
+        const error = result.err;
+        if (error.__kind__ === 'alleyNotEmpty') {
+          throw new Error(`Aleja "${error.alleyNotEmpty.alley}" nie jest pusta`);
         }
-        
-        return result.ok;
-      } catch (error: any) {
-        // Check if it's already a formatted domain error
-        if (error.message && (
-          error.message.includes('już istnieje') ||
-          error.message.includes('nie istnieje') ||
-          error.message.includes('nie może')
-        )) {
-          throw error;
+        if (error.__kind__ === 'alleyNotFound') {
+          throw new Error(`Aleja "${error.alleyNotFound.alley}" nie została znaleziona`);
         }
-        // Otherwise sanitize technical/authorization errors
-        const sanitized = sanitizeTechnicalError(error);
-        throw new Error(sanitized);
+        throw new Error('Nie udało się usunąć alei');
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cemeteryState'] });
-      toast.success('Alejka została usunięta pomyślnie');
+      toast.success('Aleja została usunięta');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Nie udało się usunąć alejki');
+      const message = sanitizeErrorMessage(error);
+      toast.error(message);
     },
   });
 }
 
+// Grave Management Mutations
 export function useAddGrave() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: { alley: string; plotNumber: bigint }) => {
-      if (!actor) {
-        throw new Error('Aktor backendu jest niedostępny. Sprawdź połączenie i spróbuj ponownie.');
-      }
-      
-      try {
-        const result: AsyncResult_1 = await actor.addGrave(params.alley, params.plotNumber);
-        
-        // Handle domain errors from backend
-        if (result.__kind__ === 'err') {
-          const errorMessage = formatDomainError(result.err);
-          throw new Error(errorMessage);
+    mutationFn: async ({ alley, plotNumber }: { alley: string; plotNumber: bigint }) => {
+      if (!actor) throw new Error('Actor not available');
+      const result = await withRetry(
+        () => actor.addGrave(alley, plotNumber),
+        'dodawania grobu'
+      );
+
+      if (result.__kind__ === 'err') {
+        const error = result.err;
+        if (error.__kind__ === 'alleyNotFound') {
+          throw new Error(`Aleja "${error.alleyNotFound.alley}" nie została znaleziona`);
         }
-        
-        return result.ok;
-      } catch (error: any) {
-        // Check if it's already a formatted domain error
-        if (error.message && (
-          error.message.includes('już istnieje') ||
-          error.message.includes('nie istnieje') ||
-          error.message.includes('nie może') ||
-          error.message.includes('integralności') ||
-          error.message.includes('niespójność')
-        )) {
-          throw error;
-        }
-        // Otherwise sanitize technical/authorization errors
-        const sanitized = sanitizeTechnicalError(error);
-        throw new Error(sanitized);
+        throw new Error('Nie udało się dodać grobu');
       }
+
+      return result.ok;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cemeteryState'] });
-      queryClient.invalidateQueries({ queryKey: ['allGraves'] });
-      queryClient.invalidateQueries({ queryKey: ['paginatedGraves'] });
-      queryClient.invalidateQueries({ queryKey: ['searchGravesPaginated'] });
-      queryClient.invalidateQueries({ queryKey: ['graveStatistics'] });
+      queryClient.invalidateQueries({ queryKey: ['graves'] });
       queryClient.invalidateQueries({ queryKey: ['publicTiles'] });
-      toast.success('Grób został dodany pomyślnie');
+      toast.success('Grób został dodany');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Nie udało się dodać grobu');
+      const message = sanitizeErrorMessage(error);
+      toast.error(message);
     },
   });
 }
@@ -575,47 +313,32 @@ export function useRemoveGrave() {
 
   return useMutation({
     mutationFn: async (id: bigint) => {
-      if (!actor) {
-        throw new Error('Aktor backendu jest niedostępny. Sprawdź połączenie i spróbuj ponownie.');
-      }
-      
-      try {
-        const result: AsyncResult = await actor.removeGrave(id);
-        
-        // Handle domain errors from backend
-        if (result.__kind__ === 'err') {
-          const errorMessage = formatDomainError(result.err);
-          throw new Error(errorMessage);
+      if (!actor) throw new Error('Actor not available');
+      const result = await withRetry(
+        () => actor.removeGrave(id),
+        'usuwania grobu'
+      );
+
+      if (result.__kind__ === 'err') {
+        const error = result.err;
+        if (error.__kind__ === 'graveNotFound') {
+          throw new Error(`Grób o ID ${error.graveNotFound.graveId} nie został znaleziony`);
         }
-        
-        return result.ok;
-      } catch (error: any) {
-        // Check if it's already a formatted domain error
-        if (error.message && (
-          error.message.includes('już istnieje') ||
-          error.message.includes('nie istnieje') ||
-          error.message.includes('nie może') ||
-          error.message.includes('integralności') ||
-          error.message.includes('niespójność')
-        )) {
-          throw error;
+        if (error.__kind__ === 'invariantViolation') {
+          throw new Error('Nie można usunąć grobu, który nie jest wolny');
         }
-        // Otherwise sanitize technical/authorization errors
-        const sanitized = sanitizeTechnicalError(error);
-        throw new Error(sanitized);
+        throw new Error('Nie udało się usunąć grobu');
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cemeteryState'] });
-      queryClient.invalidateQueries({ queryKey: ['allGraves'] });
-      queryClient.invalidateQueries({ queryKey: ['paginatedGraves'] });
-      queryClient.invalidateQueries({ queryKey: ['searchGravesPaginated'] });
-      queryClient.invalidateQueries({ queryKey: ['graveStatistics'] });
+      queryClient.invalidateQueries({ queryKey: ['graves'] });
       queryClient.invalidateQueries({ queryKey: ['publicTiles'] });
-      toast.success('Grób został usunięty pomyślnie');
+      toast.success('Grób został usunięty');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Nie udało się usunąć grobu');
+      const message = sanitizeErrorMessage(error);
+      toast.error(message);
     },
   });
 }
@@ -625,70 +348,127 @@ export function useUpdateGrave() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (grave: GraveRecord) => {
-      if (!actor) {
-        throw new Error('Aktor backendu jest niedostępny. Sprawdź połączenie i spróbuj ponownie.');
-      }
-      
-      try {
-        const result: AsyncResult = await actor.updateGrave(grave.id, grave);
-        
-        // Handle domain errors from backend
-        if (result.__kind__ === 'err') {
-          const errorMessage = formatDomainError(result.err);
-          throw new Error(errorMessage);
+    mutationFn: async (updatedRecord: GraveRecord) => {
+      if (!actor) throw new Error('Actor not available');
+      const result = await withRetry(
+        () => actor.updateGrave(updatedRecord.id, updatedRecord),
+        'aktualizacji grobu'
+      );
+
+      if (result.__kind__ === 'err') {
+        const error = result.err;
+        if (error.__kind__ === 'graveNotFound') {
+          throw new Error(`Grób o ID ${error.graveNotFound.graveId} nie został znaleziony`);
         }
-        
-        return result.ok;
-      } catch (error: any) {
-        // Check if it's already a formatted domain error
-        if (error.message && (
-          error.message.includes('już istnieje') ||
-          error.message.includes('nie istnieje') ||
-          error.message.includes('nie może') ||
-          error.message.includes('integralności') ||
-          error.message.includes('niespójność')
-        )) {
-          throw error;
+        if (error.__kind__ === 'invariantViolation') {
+          throw new Error(`Nieprawidłowe dane: pole "${error.invariantViolation.field}" nie może być zmienione`);
         }
-        // Otherwise sanitize technical/authorization errors
-        const sanitized = sanitizeTechnicalError(error);
-        throw new Error(sanitized);
+        throw new Error('Nie udało się zaktualizować grobu');
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['allGraves'] });
-      queryClient.invalidateQueries({ queryKey: ['paginatedGraves'] });
-      queryClient.invalidateQueries({ queryKey: ['searchGravesPaginated'] });
-      queryClient.invalidateQueries({ queryKey: ['graveStatistics'] });
-      queryClient.invalidateQueries({ queryKey: ['publicGraves'] });
+      queryClient.invalidateQueries({ queryKey: ['graves'] });
       queryClient.invalidateQueries({ queryKey: ['publicTiles'] });
-      toast.success('Grób został zaktualizowany pomyślnie');
+      queryClient.invalidateQueries({ queryKey: ['publicGravesWithLocation'] });
+      toast.success('Grób został zaktualizowany');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Nie udało się zaktualizować grobu');
+      const message = sanitizeErrorMessage(error);
+      toast.error(message);
     },
   });
 }
 
-export function useGetPublicGraves(enabled: boolean = true) {
+// Grave Queries
+export function useGetAllGraves() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<GraveRecord[]>({
+    queryKey: ['graves', 'all'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getAllGraves();
+    },
+    enabled: !!actor && !isFetching,
+    retry: (failureCount, error: any) => {
+      if (isBossLockError(error)) return false;
+      return failureCount < RETRY_CONFIG.maxRetries && isRetryableError(error);
+    },
+    ...CACHE_CONFIG.graves,
+  });
+}
+
+export function useInfinitePaginatedGraves(pageSize: number = 50) {
+  const { actor, isFetching } = useActor();
+
+  return useInfiniteQuery<PaginatedGravesResult>({
+    queryKey: ['graves', 'paginated', pageSize],
+    queryFn: async ({ pageParam = 0n }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getPaginatedGraves(pageParam as bigint, BigInt(pageSize));
+    },
+    getNextPageParam: (lastPage) => lastPage.nextOffset ?? undefined,
+    initialPageParam: 0n,
+    enabled: !!actor && !isFetching,
+    retry: (failureCount, error: any) => {
+      if (isBossLockError(error)) return false;
+      return failureCount < RETRY_CONFIG.maxRetries && isRetryableError(error);
+    },
+    ...CACHE_CONFIG.graves,
+  });
+}
+
+export function useGetGrave(id: bigint | null) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<GraveRecord | null>({
+    queryKey: ['graves', id?.toString()],
+    queryFn: async () => {
+      if (!actor || id === null) return null;
+      return actor.getGrave(id);
+    },
+    enabled: !!actor && !isFetching && id !== null,
+    retry: (failureCount, error: any) => {
+      if (isBossLockError(error)) return false;
+      return failureCount < RETRY_CONFIG.maxRetries && isRetryableError(error);
+    },
+    ...CACHE_CONFIG.graves,
+  });
+}
+
+// Public Grave Queries
+export function useGetPublicGraves() {
   const { actor, isFetching } = useActor();
 
   return useQuery<PublicGraveShape[]>({
     queryKey: ['publicGraves'],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor) throw new Error('Actor not available');
       return actor.getPublicGraves();
     },
-    enabled: !!actor && !isFetching && enabled,
-    retry: (failureCount, error) => {
-      return isRetryableError(error) && failureCount < RETRY_CONFIG.maxRetries;
+    enabled: !!actor && !isFetching,
+    retry: (failureCount, error: any) => {
+      return failureCount < RETRY_CONFIG.maxRetries && isRetryableError(error);
     },
-    retryDelay: RETRY_CONFIG.retryDelay,
-    staleTime: CACHE_CONFIG.graves.staleTime,
-    gcTime: CACHE_CONFIG.graves.gcTime,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    ...CACHE_CONFIG.graves,
+  });
+}
+
+// New hook for public graves with location
+export function useGetPublicGravesWithLocation() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<PublicGraveResult[]>({
+    queryKey: ['publicGravesWithLocation'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.searchPublicGravesWithLocation(null, null);
+    },
+    enabled: !!actor && !isFetching,
+    retry: (failureCount, error: any) => {
+      return failureCount < RETRY_CONFIG.maxRetries && isRetryableError(error);
+    },
+    ...CACHE_CONFIG.graves,
   });
 }
 
@@ -698,22 +478,60 @@ export function useGetPublicTiles() {
   return useQuery<PublicTileData[]>({
     queryKey: ['publicTiles'],
     queryFn: async () => {
-      if (!actor) return [];
+      if (!actor) throw new Error('Actor not available');
       return actor.getPublicTiles();
     },
     enabled: !!actor && !isFetching,
-    retry: (failureCount, error) => {
-      return isRetryableError(error) && failureCount < RETRY_CONFIG.maxRetries;
+    retry: (failureCount, error: any) => {
+      return failureCount < RETRY_CONFIG.maxRetries && isRetryableError(error);
     },
-    retryDelay: RETRY_CONFIG.retryDelay,
-    staleTime: CACHE_CONFIG.graves.staleTime,
-    gcTime: CACHE_CONFIG.graves.gcTime,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    ...CACHE_CONFIG.graves,
   });
 }
 
-// Site content queries
+// Statistics Query
+export function useGetGraveStatistics() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<{
+    total: bigint;
+    paid: bigint;
+    unpaid: bigint;
+    free: bigint;
+    reserved: bigint;
+  }>({
+    queryKey: ['graveStatistics'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getGraveStatistics();
+    },
+    enabled: !!actor && !isFetching,
+    retry: (failureCount, error: any) => {
+      return failureCount < RETRY_CONFIG.maxRetries && isRetryableError(error);
+    },
+    ...CACHE_CONFIG.statistics,
+  });
+}
+
+// Surnames Query
+export function useGetSurnamesForAutocomplete() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<string[]>({
+    queryKey: ['surnames'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getSurnamesForAutocomplete();
+    },
+    enabled: !!actor && !isFetching,
+    retry: (failureCount, error: any) => {
+      return failureCount < RETRY_CONFIG.maxRetries && isRetryableError(error);
+    },
+    ...CACHE_CONFIG.surnames,
+  });
+}
+
+// Site Content Queries (Admin)
 export function useGetSiteContent() {
   const { actor, isFetching } = useActor();
 
@@ -724,18 +542,15 @@ export function useGetSiteContent() {
       return actor.getSiteContent();
     },
     enabled: !!actor && !isFetching,
-    retry: (failureCount, error) => {
-      return isRetryableError(error) && failureCount < RETRY_CONFIG.maxRetries;
+    retry: (failureCount, error: any) => {
+      if (isBossLockError(error)) return false;
+      return failureCount < RETRY_CONFIG.maxRetries && isRetryableError(error);
     },
-    retryDelay: RETRY_CONFIG.retryDelay,
-    staleTime: CACHE_CONFIG.siteContent.staleTime,
-    gcTime: CACHE_CONFIG.siteContent.gcTime,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    ...CACHE_CONFIG.siteContent,
   });
 }
 
-// Public site content query optimized for anonymous visitors
+// Public Site Content Query (for anonymous users)
 export function useGetPublicSiteContent() {
   const { actor, isFetching } = useActor();
 
@@ -746,14 +561,12 @@ export function useGetPublicSiteContent() {
       return actor.getSiteContent();
     },
     enabled: !!actor && !isFetching,
-    retry: (failureCount, error) => {
-      return isRetryableError(error) && failureCount < RETRY_CONFIG.maxRetries;
+    retry: (failureCount, error: any) => {
+      return failureCount < RETRY_CONFIG.maxRetries && isRetryableError(error);
     },
-    retryDelay: RETRY_CONFIG.retryDelay,
-    staleTime: CACHE_CONFIG.publicSiteContent.staleTime,
-    gcTime: CACHE_CONFIG.publicSiteContent.gcTime,
-    refetchOnWindowFocus: true,
     refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    ...CACHE_CONFIG.publicSiteContent,
   });
 }
 
@@ -762,23 +575,21 @@ export function useUpdateSiteContent() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (content: SiteContent) => {
-      if (!actor) {
-        throw new Error('Aktor backendu jest niedostępny. Sprawdź połączenie i spróbuj ponownie.');
-      }
-      return withRetry(
-        () => actor.updateSiteContent(content),
-        'aktualizacja treści strony'
+    mutationFn: async (newContent: SiteContent) => {
+      if (!actor) throw new Error('Actor not available');
+      await withRetry(
+        () => actor.updateSiteContent(newContent),
+        'aktualizacji treści strony'
       );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['siteContent'] });
       queryClient.invalidateQueries({ queryKey: ['publicSiteContent'] });
-      toast.success('Treść strony została zaktualizowana pomyślnie');
+      toast.success('Treść strony została zaktualizowana');
     },
     onError: (error: any) => {
-      const message = sanitizeTechnicalError(error);
-      toast.error(`Nie udało się zaktualizować treści strony: ${message}`);
+      const message = sanitizeErrorMessage(error);
+      toast.error(`Nie udało się zaktualizować treści: ${message}`);
     },
   });
 }
@@ -788,24 +599,39 @@ export function useUpdateHomepageHeroContent() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (content: HomepageHeroContent) => {
-      if (!actor) {
-        throw new Error('Aktor backendu jest niedostępny. Sprawdź połączenie i spróbuj ponownie.');
-      }
-      return withRetry(
-        () => actor.updateHomepageHeroContent(content),
-        'aktualizacja treści hero'
+    mutationFn: async (newContent: HomepageHeroContent) => {
+      if (!actor) throw new Error('Actor not available');
+      await withRetry(
+        () => actor.updateHomepageHeroContent(newContent),
+        'aktualizacji treści hero'
       );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['siteContent'] });
       queryClient.invalidateQueries({ queryKey: ['publicSiteContent'] });
-      toast.success('Treść sekcji hero została zaktualizowana pomyślnie');
+      toast.success('Treść sekcji hero została zaktualizowana');
     },
     onError: (error: any) => {
-      const message = sanitizeTechnicalError(error);
+      const message = sanitizeErrorMessage(error);
       toast.error(`Nie udało się zaktualizować treści hero: ${message}`);
     },
+  });
+}
+
+export function useGetFooterContent() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<FooterContent>({
+    queryKey: ['footerContent'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getFooterContent();
+    },
+    enabled: !!actor && !isFetching,
+    retry: (failureCount, error: any) => {
+      return failureCount < RETRY_CONFIG.maxRetries && isRetryableError(error);
+    },
+    ...CACHE_CONFIG.publicSiteContent,
   });
 }
 
@@ -814,53 +640,118 @@ export function useUpdateFooterContent() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (content: FooterContent) => {
-      if (!actor) {
-        throw new Error('Aktor backendu jest niedostępny. Sprawdź połączenie i spróbuj ponownie.');
-      }
-      return withRetry(
-        () => actor.updateFooterContent(content),
-        'aktualizacja stopki'
+    mutationFn: async (newFooterContent: FooterContent) => {
+      if (!actor) throw new Error('Actor not available');
+      await withRetry(
+        () => actor.updateFooterContent(newFooterContent),
+        'aktualizacji stopki'
       );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['siteContent'] });
       queryClient.invalidateQueries({ queryKey: ['publicSiteContent'] });
-      toast.success('Stopka została zaktualizowana pomyślnie');
+      queryClient.invalidateQueries({ queryKey: ['footerContent'] });
+      toast.success('Stopka została zaktualizowana');
     },
     onError: (error: any) => {
-      const message = sanitizeTechnicalError(error);
+      const message = sanitizeErrorMessage(error);
       toast.error(`Nie udało się zaktualizować stopki: ${message}`);
     },
   });
 }
 
-export function useUpdatePublicHtmlSection() {
+export function useUpdateLogoImage() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: { sectionType: 'gravesDeclaration' | 'prayerForTheDeceased' | 'cemeteryInformation'; content: PublicHtmlSection }) => {
-      if (!actor) {
-        throw new Error('Aktor backendu jest niedostępny. Sprawdź połączenie i spróbuj ponownie.');
-      }
-
-      const updateFn = params.sectionType === 'gravesDeclaration'
-        ? () => actor.updateGravesDeclaration(params.content)
-        : params.sectionType === 'prayerForTheDeceased'
-        ? () => actor.updatePrayerForTheDeceased(params.content)
-        : () => actor.updateCemeteryInformation(params.content);
-
-      return withRetry(updateFn, 'aktualizacja sekcji');
+    mutationFn: async (newLogo: ExternalBlob | null) => {
+      if (!actor) throw new Error('Actor not available');
+      await withRetry(
+        () => actor.updateLogoImage(newLogo),
+        'aktualizacji logo'
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['siteContent'] });
       queryClient.invalidateQueries({ queryKey: ['publicSiteContent'] });
-      toast.success('Sekcja została zaktualizowana pomyślnie');
+      toast.success('Logo zostało zaktualizowane');
     },
     onError: (error: any) => {
-      const message = sanitizeTechnicalError(error);
-      toast.error(`Nie udało się zaktualizować sekcji: ${message}`);
+      const message = sanitizeErrorMessage(error);
+      toast.error(`Nie udało się zaktualizować logo: ${message}`);
+    },
+  });
+}
+
+export function useUpdatePrayerForTheDeceased() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (newSection: PrayerForTheDeceased) => {
+      if (!actor) throw new Error('Actor not available');
+      await withRetry(
+        () => actor.updatePrayerForTheDeceased(newSection),
+        'aktualizacji modlitwy'
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['siteContent'] });
+      queryClient.invalidateQueries({ queryKey: ['publicSiteContent'] });
+      toast.success('Modlitwa została zaktualizowana');
+    },
+    onError: (error: any) => {
+      const message = sanitizeErrorMessage(error);
+      toast.error(`Nie udało się zaktualizować modlitwy: ${message}`);
+    },
+  });
+}
+
+export function useUpdateCemeteryInformation() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (newSection: PublicHtmlSection) => {
+      if (!actor) throw new Error('Actor not available');
+      await withRetry(
+        () => actor.updateCemeteryInformation(newSection),
+        'aktualizacji informacji o cmentarzu'
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['siteContent'] });
+      queryClient.invalidateQueries({ queryKey: ['publicSiteContent'] });
+      toast.success('Informacje o cmentarzu zostały zaktualizowane');
+    },
+    onError: (error: any) => {
+      const message = sanitizeErrorMessage(error);
+      toast.error(`Nie udało się zaktualizować informacji: ${message}`);
+    },
+  });
+}
+
+export function useUpdateGravesDeclaration() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (newSection: PublicHtmlSection) => {
+      if (!actor) throw new Error('Actor not available');
+      await withRetry(
+        () => actor.updateGravesDeclaration(newSection),
+        'aktualizacji orzeczenia'
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['siteContent'] });
+      queryClient.invalidateQueries({ queryKey: ['publicSiteContent'] });
+      toast.success('Orzeczenie zostało zaktualizowane');
+    },
+    onError: (error: any) => {
+      const message = sanitizeErrorMessage(error);
+      toast.error(`Nie udało się zaktualizować orzeczenia: ${message}`);
     },
   });
 }

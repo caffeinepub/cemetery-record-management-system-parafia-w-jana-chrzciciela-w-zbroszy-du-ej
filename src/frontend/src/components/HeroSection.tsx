@@ -35,6 +35,7 @@ export default function HeroSection() {
                   src={backgroundImage}
                   alt="Kościół parafialny"
                   className="w-full h-full object-cover"
+                  loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
               </>

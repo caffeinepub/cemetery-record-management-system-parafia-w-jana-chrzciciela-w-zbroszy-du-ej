@@ -1,12 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Improve overall application performance and make grave searching faster and smoother in both public and admin interfaces.
+**Goal:** Show grave location (alley + plot/grave number) alongside status and deceased name in both public and admin grave search results.
 
 **Planned changes:**
-- Debounce grave search inputs in both public search and admin management views to avoid full filtering/re-rendering on every keystroke.
-- Optimize in-memory search by precomputing and reusing normalized searchable strings/fields for grave records (public and admin) instead of re-normalizing on each filter run.
-- Add backend paginated, case-insensitive grave search endpoints for public-safe results and for full admin results (matching current substring-search semantics).
-- Update frontend to use backend paginated search when a non-empty query is present, while keeping existing non-search loading/browsing behavior when the query is empty.
+- Extend the backend public grave search result type and API response to include location fields (alley and plot/grave number) in addition to existing name and status.
+- Update the public grave search results UI to display name, status badge, and a clear location line (alley + grave/plot number) for each result.
+- Adjust the public in-memory search index builder (if needed) to handle the extended result shape without breaking filtering or rendering.
+- Update the admin grave search results UI to prominently show location and status plus at least one deceased person’s name; show a clear placeholder when no deceased persons exist.
 
-**User-visible outcome:** Grave search feels more responsive during typing, avoids UI stalls on large datasets, and returns results faster by using server-side paginated searching when a query is entered (without exposing restricted fields in public search).
+**User-visible outcome:** When searching for graves (public or admin), each result shows the deceased name, grave status, and the grave’s location (alley and plot/grave number) at a glance.

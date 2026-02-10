@@ -14,6 +14,11 @@ export class ExternalBlob {
     static fromBytes(blob: Uint8Array<ArrayBuffer>): ExternalBlob;
     withUploadProgress(onProgress: (percentage: number) => void): ExternalBlob;
 }
+export interface PrayerForTheDeceased {
+    title: string;
+    content: string;
+    memorialPrayer: string;
+}
 export type Time = bigint;
 export interface PublicHtmlSection {
     title: string;
@@ -34,6 +39,26 @@ export interface GraveRecord {
     paymentValidUntil?: Time;
     owner?: GraveOwner;
     plotNumber: bigint;
+}
+export interface PublicGraveResult {
+    status: GraveStatus;
+    alley: string;
+    yearOfDeath?: bigint;
+    plotNumber: bigint;
+    lastName: string;
+    firstName: string;
+}
+export interface PaginatedGravesResult {
+    graves: Array<GraveRecord>;
+    nextOffset?: bigint;
+    pageSize: bigint;
+    totalGraves: bigint;
+}
+export interface GraveOwner {
+    address: string;
+    phone?: string;
+    lastName: string;
+    firstName: string;
 }
 export type Error_ = {
     __kind__: "duplicateAlley";
@@ -62,23 +87,14 @@ export type Error_ = {
         graveId: bigint;
     };
 } | {
+    __kind__: "unauthorized";
+    unauthorized: null;
+} | {
     __kind__: "alleyNotEmpty";
     alleyNotEmpty: {
         alley: string;
     };
 };
-export interface PaginatedGravesResult {
-    graves: Array<GraveRecord>;
-    nextOffset?: bigint;
-    pageSize: bigint;
-    totalGraves: bigint;
-}
-export interface GraveOwner {
-    address: string;
-    phone?: string;
-    lastName: string;
-    firstName: string;
-}
 export interface DeceasedPerson {
     placeOfDeath: string;
     yearOfDeath: bigint;
@@ -129,7 +145,7 @@ export type AsyncResult_1 = {
 export interface SiteContent {
     logoImage?: ExternalBlob;
     cemeteryInformation: PublicHtmlSection;
-    prayerForTheDeceased: PublicHtmlSection;
+    prayerForTheDeceased: PrayerForTheDeceased;
     gravesDeclaration: PublicHtmlSection;
     footer: FooterContent;
     homepageHero: HomepageHeroContent;
@@ -178,9 +194,8 @@ export interface backendInterface {
     getHomepageHeroContent(): Promise<HomepageHeroContent>;
     getPaginatedGraves(offset: bigint, pageSize: bigint): Promise<PaginatedGravesResult>;
     getParishContactEmail(): Promise<string>;
-    getPrayerForTheDeceased(): Promise<PublicHtmlSection>;
+    getPrayerForTheDeceased(): Promise<PrayerForTheDeceased>;
     getPublicGraves(): Promise<Array<PublicGraveShape>>;
-    getPublicGravesByAlley(alley: string): Promise<Array<PublicGraveShape>>;
     getPublicTiles(): Promise<Array<PublicTileData>>;
     getSiteContent(): Promise<SiteContent>;
     getSurnamesForAutocomplete(): Promise<Array<string>>;
@@ -190,20 +205,13 @@ export interface backendInterface {
     removeGrave(id: bigint): Promise<AsyncResult>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     searchGraves(surname: string | null, yearOfDeath: bigint | null, owner: string | null, status: GraveStatus | null, locality: string | null): Promise<Array<GraveRecord>>;
-    searchGravesPaginated(surname: string | null, yearOfDeath: bigint | null, offset: bigint, pageSize: bigint): Promise<PaginatedGravesResult>;
-    searchPublicGraves(surname: string | null, yearOfDeath: bigint | null): Promise<Array<PublicGraveShape>>;
-    searchPublicGravesPaginated(surname: string | null, yearOfDeath: bigint | null, offset: bigint, pageSize: bigint): Promise<{
-        graves: Array<PublicGraveShape>;
-        nextOffset?: bigint;
-        pageSize: bigint;
-        totalGraves: bigint;
-    }>;
+    searchPublicGravesWithLocation(surname: string | null, yearOfDeath: bigint | null): Promise<Array<PublicGraveResult>>;
     updateCemeteryInformation(newSection: PublicHtmlSection): Promise<void>;
     updateFooterContent(newFooterContent: FooterContent): Promise<void>;
     updateGrave(id: bigint, updatedRecord: GraveRecord): Promise<AsyncResult>;
     updateGravesDeclaration(newSection: PublicHtmlSection): Promise<void>;
     updateHomepageHeroContent(newContent: HomepageHeroContent): Promise<void>;
     updateLogoImage(newLogo: ExternalBlob | null): Promise<void>;
-    updatePrayerForTheDeceased(newSection: PublicHtmlSection): Promise<void>;
+    updatePrayerForTheDeceased(newSection: PrayerForTheDeceased): Promise<void>;
     updateSiteContent(newContent: SiteContent): Promise<void>;
 }

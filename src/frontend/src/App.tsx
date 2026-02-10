@@ -3,11 +3,13 @@ import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
 import { useInternetIdentity } from './hooks/useInternetIdentity';
 import { useGetCallerUserProfile } from './hooks/useQueries';
+import { isBossLockError } from './utils/authErrors';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ProfileSetupModal from './components/ProfileSetupModal';
 import ConnectionStatus from './components/ConnectionStatus';
 import FloatingLoginControl from './components/FloatingLoginControl';
+import AccessDeniedScreen from './components/AccessDeniedScreen';
 import { Loader2 } from 'lucide-react';
 
 // Lazy load heavy components for better performance
@@ -24,17 +26,31 @@ function LoadingFallback() {
 
 export default function App() {
   const { identity, loginStatus } = useInternetIdentity();
-  const { data: userProfile, isLoading: profileLoading, isFetched } = useGetCallerUserProfile();
+  const { 
+    data: userProfile, 
+    isLoading: profileLoading, 
+    isFetched,
+    error: profileError 
+  } = useGetCallerUserProfile();
 
   const isAuthenticated = !!identity;
   const isInitializing = loginStatus === 'initializing';
   
-  // Only show profile setup when we're sure the user is authenticated and has no profile
+  // Check if the authenticated user is locked out (not the Boss)
+  const isBossLocked = isAuthenticated && 
+                       !isInitializing && 
+                       !profileLoading && 
+                       isFetched && 
+                       profileError && 
+                       isBossLockError(profileError);
+  
+  // Only show profile setup when we're sure the user is authenticated, is the Boss, and has no profile
   // Avoid showing it during initialization to prevent flash
   const showProfileSetup = isAuthenticated && 
                           !isInitializing && 
                           !profileLoading && 
                           isFetched && 
+                          !isBossLocked &&
                           userProfile === null;
 
   return (
@@ -44,7 +60,9 @@ export default function App() {
         <main className="flex-1">
           <div className="container mx-auto px-4 py-6">
             <ConnectionStatus />
-            {showProfileSetup ? (
+            {isBossLocked ? (
+              <AccessDeniedScreen />
+            ) : showProfileSetup ? (
               <ProfileSetupModal />
             ) : (
               <Suspense fallback={<LoadingFallback />}>

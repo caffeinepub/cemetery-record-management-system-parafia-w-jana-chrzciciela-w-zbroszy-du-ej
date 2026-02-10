@@ -2,34 +2,12 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-improve-grave-search-responsiveness-by-reducing-unnecessary-re-filtering-and-re-rendering-during-typing-in-both-public-and-admin-search-uis",
-      "featureTitle": "Improve grave search responsiveness by reducing unnecessary re-filtering and re-rendering during typing in both public and admin search UIs.",
+      "featureId": "feature-update-the-public-grave-search-results-ui-to-display-for-each-found-grave-the-deceased-person-s-first-and-last-name-the-grave-status-paid-unpaid-reserved-free-and-the-grave-location-alley-grave-plot-number",
+      "featureTitle": "Update the public grave search results UI to display, for each found grave, the deceased person’s first and last name, the grave status (paid/unpaid/reserved/free), and the grave location (alley + grave/plot number).",
       "files": [
+        "frontend/src/components/GraveResultsList.tsx",
         "frontend/src/components/GraveSearch.tsx",
-        "frontend/src/components/admin/GraveManagement.tsx",
-        "frontend/src/hooks/useDebouncedValue.ts"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "blob-storage@4.0.0"
-      ],
-      "testIds": [
-        "REQ-1"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-optimize-in-memory-search-implementation-by-precomputing-and-reusing-normalized-searchable-strings-fields-for-graves-instead-of-normalizing-every-field-for-every-record-on-every-filter-run",
-      "featureTitle": "Optimize in-memory search implementation by precomputing and reusing normalized searchable strings/fields for graves, instead of normalizing every field for every record on every filter run.",
-      "files": [
-        "frontend/src/components/GraveSearch.tsx",
-        "frontend/src/components/admin/GraveManagement.tsx",
-        "frontend/src/utils/graveFullTextSearch.ts"
+        "frontend/src/hooks/useQueries.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -46,12 +24,31 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-update-frontend-data-fetching-to-use-the-new-backend-paginated-search-endpoints-when-a-search-query-is-present-while-keeping-existing-behavior-for-empty-queries-e-g-browsing-lists-infinite-loading",
-      "featureTitle": "Update frontend data-fetching to use the new backend paginated search endpoints when a search query is present, while keeping existing behavior for empty queries (e.g., browsing lists / infinite loading).",
+      "featureId": "feature-ensure-the-in-memory-search-index-builder-for-public-graves-is-updated-if-needed-to-accommodate-the-extended-public-result-shape-without-breaking-search-filtering-or-rendering",
+      "featureTitle": "Ensure the in-memory search index builder for public graves is updated (if needed) to accommodate the extended public result shape without breaking search filtering or rendering.",
       "files": [
         "frontend/src/components/GraveSearch.tsx",
-        "frontend/src/components/admin/GraveManagement.tsx",
-        "frontend/src/hooks/useQueries.ts"
+        "frontend/src/utils/graveFullTextSearch.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-update-the-admin-grave-search-results-ui-so-each-found-grave-clearly-surfaces-the-same-key-summary-fields-at-a-glance-deceased-name-at-least-one-grave-status-and-location-alley-plot-grave-number",
+      "featureTitle": "Update the admin grave search results UI so each found grave clearly surfaces the same key summary fields at a glance: deceased name (at least one), grave status, and location (alley + plot/grave number).",
+      "files": [
+        "frontend/src/components/GraveResultsList.tsx"
       ],
       "components": [
         "authorization@4.0.0",

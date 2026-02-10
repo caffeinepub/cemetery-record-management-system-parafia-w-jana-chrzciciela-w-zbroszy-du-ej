@@ -89,6 +89,11 @@ export class ExternalBlob {
         return this;
     }
 }
+export interface PrayerForTheDeceased {
+    title: string;
+    content: string;
+    memorialPrayer: string;
+}
 export type Time = bigint;
 export interface PublicHtmlSection {
     title: string;
@@ -101,6 +106,9 @@ export interface PublicTileData {
     alley: string;
     plotNumber: bigint;
 }
+export interface _CaffeineStorageRefillInformation {
+    proposed_top_up_amount?: bigint;
+}
 export interface GraveRecord {
     id: bigint;
     deceasedPersons: Array<DeceasedPerson>;
@@ -110,8 +118,29 @@ export interface GraveRecord {
     owner?: GraveOwner;
     plotNumber: bigint;
 }
-export interface _CaffeineStorageRefillInformation {
-    proposed_top_up_amount?: bigint;
+export interface PublicGraveResult {
+    status: GraveStatus;
+    alley: string;
+    yearOfDeath?: bigint;
+    plotNumber: bigint;
+    lastName: string;
+    firstName: string;
+}
+export interface _CaffeineStorageCreateCertificateResult {
+    method: string;
+    blob_hash: string;
+}
+export interface PaginatedGravesResult {
+    graves: Array<GraveRecord>;
+    nextOffset?: bigint;
+    pageSize: bigint;
+    totalGraves: bigint;
+}
+export interface GraveOwner {
+    address: string;
+    phone?: string;
+    lastName: string;
+    firstName: string;
 }
 export type Error_ = {
     __kind__: "duplicateAlley";
@@ -140,27 +169,14 @@ export type Error_ = {
         graveId: bigint;
     };
 } | {
+    __kind__: "unauthorized";
+    unauthorized: null;
+} | {
     __kind__: "alleyNotEmpty";
     alleyNotEmpty: {
         alley: string;
     };
 };
-export interface _CaffeineStorageCreateCertificateResult {
-    method: string;
-    blob_hash: string;
-}
-export interface PaginatedGravesResult {
-    graves: Array<GraveRecord>;
-    nextOffset?: bigint;
-    pageSize: bigint;
-    totalGraves: bigint;
-}
-export interface GraveOwner {
-    address: string;
-    phone?: string;
-    lastName: string;
-    firstName: string;
-}
 export interface DeceasedPerson {
     placeOfDeath: string;
     yearOfDeath: bigint;
@@ -211,7 +227,7 @@ export type AsyncResult_1 = {
 export interface SiteContent {
     logoImage?: ExternalBlob;
     cemeteryInformation: PublicHtmlSection;
-    prayerForTheDeceased: PublicHtmlSection;
+    prayerForTheDeceased: PrayerForTheDeceased;
     gravesDeclaration: PublicHtmlSection;
     footer: FooterContent;
     homepageHero: HomepageHeroContent;
@@ -271,9 +287,8 @@ export interface backendInterface {
     getHomepageHeroContent(): Promise<HomepageHeroContent>;
     getPaginatedGraves(offset: bigint, pageSize: bigint): Promise<PaginatedGravesResult>;
     getParishContactEmail(): Promise<string>;
-    getPrayerForTheDeceased(): Promise<PublicHtmlSection>;
+    getPrayerForTheDeceased(): Promise<PrayerForTheDeceased>;
     getPublicGraves(): Promise<Array<PublicGraveShape>>;
-    getPublicGravesByAlley(alley: string): Promise<Array<PublicGraveShape>>;
     getPublicTiles(): Promise<Array<PublicTileData>>;
     getSiteContent(): Promise<SiteContent>;
     getSurnamesForAutocomplete(): Promise<Array<string>>;
@@ -283,24 +298,17 @@ export interface backendInterface {
     removeGrave(id: bigint): Promise<AsyncResult>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     searchGraves(surname: string | null, yearOfDeath: bigint | null, owner: string | null, status: GraveStatus | null, locality: string | null): Promise<Array<GraveRecord>>;
-    searchGravesPaginated(surname: string | null, yearOfDeath: bigint | null, offset: bigint, pageSize: bigint): Promise<PaginatedGravesResult>;
-    searchPublicGraves(surname: string | null, yearOfDeath: bigint | null): Promise<Array<PublicGraveShape>>;
-    searchPublicGravesPaginated(surname: string | null, yearOfDeath: bigint | null, offset: bigint, pageSize: bigint): Promise<{
-        graves: Array<PublicGraveShape>;
-        nextOffset?: bigint;
-        pageSize: bigint;
-        totalGraves: bigint;
-    }>;
+    searchPublicGravesWithLocation(surname: string | null, yearOfDeath: bigint | null): Promise<Array<PublicGraveResult>>;
     updateCemeteryInformation(newSection: PublicHtmlSection): Promise<void>;
     updateFooterContent(newFooterContent: FooterContent): Promise<void>;
     updateGrave(id: bigint, updatedRecord: GraveRecord): Promise<AsyncResult>;
     updateGravesDeclaration(newSection: PublicHtmlSection): Promise<void>;
     updateHomepageHeroContent(newContent: HomepageHeroContent): Promise<void>;
     updateLogoImage(newLogo: ExternalBlob | null): Promise<void>;
-    updatePrayerForTheDeceased(newSection: PublicHtmlSection): Promise<void>;
+    updatePrayerForTheDeceased(newSection: PrayerForTheDeceased): Promise<void>;
     updateSiteContent(newContent: SiteContent): Promise<void>;
 }
-import type { AsyncResult as _AsyncResult, AsyncResult_1 as _AsyncResult_1, DeceasedPerson as _DeceasedPerson, Error as _Error, ExternalBlob as _ExternalBlob, FooterContent as _FooterContent, GraveOwner as _GraveOwner, GraveRecord as _GraveRecord, GraveStatus as _GraveStatus, HomepageHeroContent as _HomepageHeroContent, PaginatedGravesResult as _PaginatedGravesResult, PublicGraveShape as _PublicGraveShape, PublicHtmlSection as _PublicHtmlSection, PublicTileData as _PublicTileData, SiteContent as _SiteContent, Time as _Time, UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
+import type { AsyncResult as _AsyncResult, AsyncResult_1 as _AsyncResult_1, DeceasedPerson as _DeceasedPerson, Error as _Error, ExternalBlob as _ExternalBlob, FooterContent as _FooterContent, GraveOwner as _GraveOwner, GraveRecord as _GraveRecord, GraveStatus as _GraveStatus, HomepageHeroContent as _HomepageHeroContent, PaginatedGravesResult as _PaginatedGravesResult, PrayerForTheDeceased as _PrayerForTheDeceased, PublicGraveResult as _PublicGraveResult, PublicGraveShape as _PublicGraveShape, PublicHtmlSection as _PublicHtmlSection, PublicTileData as _PublicTileData, SiteContent as _SiteContent, Time as _Time, UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _caffeineStorageBlobIsLive(arg0: Uint8Array): Promise<boolean> {
@@ -659,7 +667,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async getPrayerForTheDeceased(): Promise<PublicHtmlSection> {
+    async getPrayerForTheDeceased(): Promise<PrayerForTheDeceased> {
         if (this.processError) {
             try {
                 const result = await this.actor.getPrayerForTheDeceased();
@@ -684,20 +692,6 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.getPublicGraves();
-            return from_candid_vec_n41(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async getPublicGravesByAlley(arg0: string): Promise<Array<PublicGraveShape>> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getPublicGravesByAlley(arg0);
-                return from_candid_vec_n41(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getPublicGravesByAlley(arg0);
             return from_candid_vec_n41(this._uploadFile, this._downloadFile, result);
         }
     }
@@ -827,51 +821,18 @@ export class Backend implements backendInterface {
             return from_candid_vec_n16(this._uploadFile, this._downloadFile, result);
         }
     }
-    async searchGravesPaginated(arg0: string | null, arg1: bigint | null, arg2: bigint, arg3: bigint): Promise<PaginatedGravesResult> {
+    async searchPublicGravesWithLocation(arg0: string | null, arg1: bigint | null): Promise<Array<PublicGraveResult>> {
         if (this.processError) {
             try {
-                const result = await this.actor.searchGravesPaginated(to_candid_opt_n52(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n53(this._uploadFile, this._downloadFile, arg1), arg2, arg3);
-                return from_candid_PaginatedGravesResult_n39(this._uploadFile, this._downloadFile, result);
+                const result = await this.actor.searchPublicGravesWithLocation(to_candid_opt_n52(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n53(this._uploadFile, this._downloadFile, arg1));
+                return from_candid_vec_n57(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.searchGravesPaginated(to_candid_opt_n52(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n53(this._uploadFile, this._downloadFile, arg1), arg2, arg3);
-            return from_candid_PaginatedGravesResult_n39(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async searchPublicGraves(arg0: string | null, arg1: bigint | null): Promise<Array<PublicGraveShape>> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.searchPublicGraves(to_candid_opt_n52(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n53(this._uploadFile, this._downloadFile, arg1));
-                return from_candid_vec_n41(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.searchPublicGraves(to_candid_opt_n52(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n53(this._uploadFile, this._downloadFile, arg1));
-            return from_candid_vec_n41(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async searchPublicGravesPaginated(arg0: string | null, arg1: bigint | null, arg2: bigint, arg3: bigint): Promise<{
-        graves: Array<PublicGraveShape>;
-        nextOffset?: bigint;
-        pageSize: bigint;
-        totalGraves: bigint;
-    }> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.searchPublicGravesPaginated(to_candid_opt_n52(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n53(this._uploadFile, this._downloadFile, arg1), arg2, arg3);
-                return from_candid_record_n57(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.searchPublicGravesPaginated(to_candid_opt_n52(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n53(this._uploadFile, this._downloadFile, arg1), arg2, arg3);
-            return from_candid_record_n57(this._uploadFile, this._downloadFile, result);
+            const result = await this.actor.searchPublicGravesWithLocation(to_candid_opt_n52(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n53(this._uploadFile, this._downloadFile, arg1));
+            return from_candid_vec_n57(this._uploadFile, this._downloadFile, result);
         }
     }
     async updateCemeteryInformation(arg0: PublicHtmlSection): Promise<void> {
@@ -905,14 +866,14 @@ export class Backend implements backendInterface {
     async updateGrave(arg0: bigint, arg1: GraveRecord): Promise<AsyncResult> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateGrave(arg0, to_candid_GraveRecord_n58(this._uploadFile, this._downloadFile, arg1));
+                const result = await this.actor.updateGrave(arg0, to_candid_GraveRecord_n60(this._uploadFile, this._downloadFile, arg1));
                 return from_candid_AsyncResult_n8(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateGrave(arg0, to_candid_GraveRecord_n58(this._uploadFile, this._downloadFile, arg1));
+            const result = await this.actor.updateGrave(arg0, to_candid_GraveRecord_n60(this._uploadFile, this._downloadFile, arg1));
             return from_candid_AsyncResult_n8(this._uploadFile, this._downloadFile, result);
         }
     }
@@ -933,32 +894,32 @@ export class Backend implements backendInterface {
     async updateHomepageHeroContent(arg0: HomepageHeroContent): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateHomepageHeroContent(await to_candid_HomepageHeroContent_n65(this._uploadFile, this._downloadFile, arg0));
+                const result = await this.actor.updateHomepageHeroContent(await to_candid_HomepageHeroContent_n67(this._uploadFile, this._downloadFile, arg0));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateHomepageHeroContent(await to_candid_HomepageHeroContent_n65(this._uploadFile, this._downloadFile, arg0));
+            const result = await this.actor.updateHomepageHeroContent(await to_candid_HomepageHeroContent_n67(this._uploadFile, this._downloadFile, arg0));
             return result;
         }
     }
     async updateLogoImage(arg0: ExternalBlob | null): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateLogoImage(await to_candid_opt_n68(this._uploadFile, this._downloadFile, arg0));
+                const result = await this.actor.updateLogoImage(await to_candid_opt_n70(this._uploadFile, this._downloadFile, arg0));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateLogoImage(await to_candid_opt_n68(this._uploadFile, this._downloadFile, arg0));
+            const result = await this.actor.updateLogoImage(await to_candid_opt_n70(this._uploadFile, this._downloadFile, arg0));
             return result;
         }
     }
-    async updatePrayerForTheDeceased(arg0: PublicHtmlSection): Promise<void> {
+    async updatePrayerForTheDeceased(arg0: PrayerForTheDeceased): Promise<void> {
         if (this.processError) {
             try {
                 const result = await this.actor.updatePrayerForTheDeceased(arg0);
@@ -975,14 +936,14 @@ export class Backend implements backendInterface {
     async updateSiteContent(arg0: SiteContent): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateSiteContent(await to_candid_SiteContent_n69(this._uploadFile, this._downloadFile, arg0));
+                const result = await this.actor.updateSiteContent(await to_candid_SiteContent_n71(this._uploadFile, this._downloadFile, arg0));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateSiteContent(await to_candid_SiteContent_n69(this._uploadFile, this._downloadFile, arg0));
+            const result = await this.actor.updateSiteContent(await to_candid_SiteContent_n71(this._uploadFile, this._downloadFile, arg0));
             return result;
         }
     }
@@ -1016,6 +977,9 @@ async function from_candid_HomepageHeroContent_n35(_uploadFile: (file: ExternalB
 }
 function from_candid_PaginatedGravesResult_n39(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _PaginatedGravesResult): PaginatedGravesResult {
     return from_candid_record_n40(_uploadFile, _downloadFile, value);
+}
+function from_candid_PublicGraveResult_n58(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _PublicGraveResult): PublicGraveResult {
+    return from_candid_record_n59(_uploadFile, _downloadFile, value);
 }
 function from_candid_PublicGraveShape_n42(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _PublicGraveShape): PublicGraveShape {
     return from_candid_record_n43(_uploadFile, _downloadFile, value);
@@ -1221,14 +1185,14 @@ function from_candid_record_n47(_uploadFile: (file: ExternalBlob) => Promise<Uin
 async function from_candid_record_n49(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     logoImage: [] | [_ExternalBlob];
     cemeteryInformation: _PublicHtmlSection;
-    prayerForTheDeceased: _PublicHtmlSection;
+    prayerForTheDeceased: _PrayerForTheDeceased;
     gravesDeclaration: _PublicHtmlSection;
     footer: _FooterContent;
     homepageHero: _HomepageHeroContent;
 }): Promise<{
     logoImage?: ExternalBlob;
     cemeteryInformation: PublicHtmlSection;
-    prayerForTheDeceased: PublicHtmlSection;
+    prayerForTheDeceased: PrayerForTheDeceased;
     gravesDeclaration: PublicHtmlSection;
     footer: FooterContent;
     homepageHero: HomepageHeroContent;
@@ -1254,22 +1218,28 @@ function from_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint
         topped_up_amount: record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.topped_up_amount))
     };
 }
-function from_candid_record_n57(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    graves: Array<_PublicGraveShape>;
-    nextOffset: [] | [bigint];
-    pageSize: bigint;
-    totalGraves: bigint;
+function from_candid_record_n59(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    status: _GraveStatus;
+    alley: string;
+    yearOfDeath: [] | [bigint];
+    plotNumber: bigint;
+    lastName: string;
+    firstName: string;
 }): {
-    graves: Array<PublicGraveShape>;
-    nextOffset?: bigint;
-    pageSize: bigint;
-    totalGraves: bigint;
+    status: GraveStatus;
+    alley: string;
+    yearOfDeath?: bigint;
+    plotNumber: bigint;
+    lastName: string;
+    firstName: string;
 } {
     return {
-        graves: from_candid_vec_n41(_uploadFile, _downloadFile, value.graves),
-        nextOffset: record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.nextOffset)),
-        pageSize: value.pageSize,
-        totalGraves: value.totalGraves
+        status: from_candid_GraveStatus_n23(_uploadFile, _downloadFile, value.status),
+        alley: value.alley,
+        yearOfDeath: record_opt_to_undefined(from_candid_opt_n44(_uploadFile, _downloadFile, value.yearOfDeath)),
+        plotNumber: value.plotNumber,
+        lastName: value.lastName,
+        firstName: value.firstName
     };
 }
 function from_candid_variant_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
@@ -1293,6 +1263,8 @@ function from_candid_variant_n11(_uploadFile: (file: ExternalBlob) => Promise<Ui
         alley: string;
         graveId: bigint;
     };
+} | {
+    unauthorized: null;
 } | {
     alleyNotEmpty: {
         alley: string;
@@ -1324,6 +1296,9 @@ function from_candid_variant_n11(_uploadFile: (file: ExternalBlob) => Promise<Ui
         graveId: bigint;
     };
 } | {
+    __kind__: "unauthorized";
+    unauthorized: null;
+} | {
     __kind__: "alleyNotEmpty";
     alleyNotEmpty: {
         alley: string;
@@ -1344,6 +1319,9 @@ function from_candid_variant_n11(_uploadFile: (file: ExternalBlob) => Promise<Ui
     } : "inconsistentAlleyGraves" in value ? {
         __kind__: "inconsistentAlleyGraves",
         inconsistentAlleyGraves: value.inconsistentAlleyGraves
+    } : "unauthorized" in value ? {
+        __kind__: "unauthorized",
+        unauthorized: value.unauthorized
     } : "alleyNotEmpty" in value ? {
         __kind__: "alleyNotEmpty",
         alleyNotEmpty: value.alleyNotEmpty
@@ -1419,26 +1397,29 @@ function from_candid_vec_n41(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
 function from_candid_vec_n45(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_PublicTileData>): Array<PublicTileData> {
     return value.map((x)=>from_candid_PublicTileData_n46(_uploadFile, _downloadFile, x));
 }
-function to_candid_DeceasedPerson_n61(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: DeceasedPerson): _DeceasedPerson {
-    return to_candid_record_n62(_uploadFile, _downloadFile, value);
+function from_candid_vec_n57(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_PublicGraveResult>): Array<PublicGraveResult> {
+    return value.map((x)=>from_candid_PublicGraveResult_n58(_uploadFile, _downloadFile, x));
 }
-async function to_candid_ExternalBlob_n67(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ExternalBlob): Promise<_ExternalBlob> {
-    return await _uploadFile(value);
-}
-function to_candid_GraveOwner_n63(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: GraveOwner): _GraveOwner {
+function to_candid_DeceasedPerson_n63(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: DeceasedPerson): _DeceasedPerson {
     return to_candid_record_n64(_uploadFile, _downloadFile, value);
 }
-function to_candid_GraveRecord_n58(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: GraveRecord): _GraveRecord {
-    return to_candid_record_n59(_uploadFile, _downloadFile, value);
+async function to_candid_ExternalBlob_n69(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ExternalBlob): Promise<_ExternalBlob> {
+    return await _uploadFile(value);
+}
+function to_candid_GraveOwner_n65(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: GraveOwner): _GraveOwner {
+    return to_candid_record_n66(_uploadFile, _downloadFile, value);
+}
+function to_candid_GraveRecord_n60(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: GraveRecord): _GraveRecord {
+    return to_candid_record_n61(_uploadFile, _downloadFile, value);
 }
 function to_candid_GraveStatus_n55(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: GraveStatus): _GraveStatus {
     return to_candid_variant_n56(_uploadFile, _downloadFile, value);
 }
-async function to_candid_HomepageHeroContent_n65(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: HomepageHeroContent): Promise<_HomepageHeroContent> {
-    return await to_candid_record_n66(_uploadFile, _downloadFile, value);
+async function to_candid_HomepageHeroContent_n67(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: HomepageHeroContent): Promise<_HomepageHeroContent> {
+    return await to_candid_record_n68(_uploadFile, _downloadFile, value);
 }
-async function to_candid_SiteContent_n69(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: SiteContent): Promise<_SiteContent> {
-    return await to_candid_record_n70(_uploadFile, _downloadFile, value);
+async function to_candid_SiteContent_n71(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: SiteContent): Promise<_SiteContent> {
+    return await to_candid_record_n72(_uploadFile, _downloadFile, value);
 }
 function to_candid_UserProfile_n50(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserProfile): _UserProfile {
     return to_candid_record_n51(_uploadFile, _downloadFile, value);
@@ -1461,8 +1442,8 @@ function to_candid_opt_n53(_uploadFile: (file: ExternalBlob) => Promise<Uint8Arr
 function to_candid_opt_n54(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: GraveStatus | null): [] | [_GraveStatus] {
     return value === null ? candid_none() : candid_some(to_candid_GraveStatus_n55(_uploadFile, _downloadFile, value));
 }
-async function to_candid_opt_n68(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ExternalBlob | null): Promise<[] | [_ExternalBlob]> {
-    return value === null ? candid_none() : candid_some(await to_candid_ExternalBlob_n67(_uploadFile, _downloadFile, value));
+async function to_candid_opt_n70(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ExternalBlob | null): Promise<[] | [_ExternalBlob]> {
+    return value === null ? candid_none() : candid_some(await to_candid_ExternalBlob_n69(_uploadFile, _downloadFile, value));
 }
 function to_candid_record_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     proposed_top_up_amount?: bigint;
@@ -1485,7 +1466,7 @@ function to_candid_record_n51(_uploadFile: (file: ExternalBlob) => Promise<Uint8
         email: value.email ? candid_some(value.email) : candid_none()
     };
 }
-function to_candid_record_n59(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function to_candid_record_n61(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     id: bigint;
     deceasedPersons: Array<DeceasedPerson>;
     status: GraveStatus;
@@ -1504,15 +1485,15 @@ function to_candid_record_n59(_uploadFile: (file: ExternalBlob) => Promise<Uint8
 } {
     return {
         id: value.id,
-        deceasedPersons: to_candid_vec_n60(_uploadFile, _downloadFile, value.deceasedPersons),
+        deceasedPersons: to_candid_vec_n62(_uploadFile, _downloadFile, value.deceasedPersons),
         status: to_candid_GraveStatus_n55(_uploadFile, _downloadFile, value.status),
         alley: value.alley,
         paymentValidUntil: value.paymentValidUntil ? candid_some(value.paymentValidUntil) : candid_none(),
-        owner: value.owner ? candid_some(to_candid_GraveOwner_n63(_uploadFile, _downloadFile, value.owner)) : candid_none(),
+        owner: value.owner ? candid_some(to_candid_GraveOwner_n65(_uploadFile, _downloadFile, value.owner)) : candid_none(),
         plotNumber: value.plotNumber
     };
 }
-function to_candid_record_n62(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function to_candid_record_n64(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     placeOfDeath: string;
     yearOfDeath: bigint;
     dateOfDeath?: Time;
@@ -1533,7 +1514,7 @@ function to_candid_record_n62(_uploadFile: (file: ExternalBlob) => Promise<Uint8
         firstName: value.firstName
     };
 }
-function to_candid_record_n64(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function to_candid_record_n66(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     address: string;
     phone?: string;
     lastName: string;
@@ -1551,7 +1532,7 @@ function to_candid_record_n64(_uploadFile: (file: ExternalBlob) => Promise<Uint8
         firstName: value.firstName
     };
 }
-async function to_candid_record_n66(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+async function to_candid_record_n68(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     backgroundImageUrl: string;
     logoImage?: ExternalBlob;
     headline: string;
@@ -1566,34 +1547,34 @@ async function to_candid_record_n66(_uploadFile: (file: ExternalBlob) => Promise
 }> {
     return {
         backgroundImageUrl: value.backgroundImageUrl,
-        logoImage: value.logoImage ? candid_some(await to_candid_ExternalBlob_n67(_uploadFile, _downloadFile, value.logoImage)) : candid_none(),
+        logoImage: value.logoImage ? candid_some(await to_candid_ExternalBlob_n69(_uploadFile, _downloadFile, value.logoImage)) : candid_none(),
         headline: value.headline,
-        heroBackgroundImage: value.heroBackgroundImage ? candid_some(await to_candid_ExternalBlob_n67(_uploadFile, _downloadFile, value.heroBackgroundImage)) : candid_none(),
+        heroBackgroundImage: value.heroBackgroundImage ? candid_some(await to_candid_ExternalBlob_n69(_uploadFile, _downloadFile, value.heroBackgroundImage)) : candid_none(),
         introParagraph: value.introParagraph
     };
 }
-async function to_candid_record_n70(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+async function to_candid_record_n72(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     logoImage?: ExternalBlob;
     cemeteryInformation: PublicHtmlSection;
-    prayerForTheDeceased: PublicHtmlSection;
+    prayerForTheDeceased: PrayerForTheDeceased;
     gravesDeclaration: PublicHtmlSection;
     footer: FooterContent;
     homepageHero: HomepageHeroContent;
 }): Promise<{
     logoImage: [] | [_ExternalBlob];
     cemeteryInformation: _PublicHtmlSection;
-    prayerForTheDeceased: _PublicHtmlSection;
+    prayerForTheDeceased: _PrayerForTheDeceased;
     gravesDeclaration: _PublicHtmlSection;
     footer: _FooterContent;
     homepageHero: _HomepageHeroContent;
 }> {
     return {
-        logoImage: value.logoImage ? candid_some(await to_candid_ExternalBlob_n67(_uploadFile, _downloadFile, value.logoImage)) : candid_none(),
+        logoImage: value.logoImage ? candid_some(await to_candid_ExternalBlob_n69(_uploadFile, _downloadFile, value.logoImage)) : candid_none(),
         cemeteryInformation: value.cemeteryInformation,
         prayerForTheDeceased: value.prayerForTheDeceased,
         gravesDeclaration: value.gravesDeclaration,
         footer: value.footer,
-        homepageHero: await to_candid_HomepageHeroContent_n65(_uploadFile, _downloadFile, value.homepageHero)
+        homepageHero: await to_candid_HomepageHeroContent_n67(_uploadFile, _downloadFile, value.homepageHero)
     };
 }
 function to_candid_variant_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): {
@@ -1630,8 +1611,8 @@ function to_candid_variant_n56(_uploadFile: (file: ExternalBlob) => Promise<Uint
         unpaid: null
     } : value;
 }
-function to_candid_vec_n60(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<DeceasedPerson>): Array<_DeceasedPerson> {
-    return value.map((x)=>to_candid_DeceasedPerson_n61(_uploadFile, _downloadFile, x));
+function to_candid_vec_n62(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<DeceasedPerson>): Array<_DeceasedPerson> {
+    return value.map((x)=>to_candid_DeceasedPerson_n63(_uploadFile, _downloadFile, x));
 }
 export interface CreateActorOptions {
     agent?: Agent;

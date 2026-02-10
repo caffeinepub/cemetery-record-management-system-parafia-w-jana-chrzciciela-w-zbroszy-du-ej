@@ -1,30 +1,32 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "New project",
+  "summary": "Cemetery/grave management app with login/admin lock; search works but needs richer result details (alley/grave and status).",
   "architectural_notes": [],
-  "known_issues": [],
-  "isFixRequest": false,
+  "known_issues": [
+    "Search returns results but does not show location (alley/grave) or grave status in the UI."
+  ],
+  "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-improve-grave-search-responsiveness-by-reducing-unnecessary-re-filtering-and-re-rendering-during-typing-in-both-public-and-admin-search-uis",
-      "title": "Improve grave search responsiveness by reducing unnecessary re-filtering and re-rendering during typing in both public and admin search UIs.",
-      "reqIds": [
-        "REQ-1"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-optimize-in-memory-search-implementation-by-precomputing-and-reusing-normalized-searchable-strings-fields-for-graves-instead-of-normalizing-every-field-for-every-record-on-every-filter-run",
-      "title": "Optimize in-memory search implementation by precomputing and reusing normalized searchable strings/fields for graves, instead of normalizing every field for every record on every filter run.",
+      "id": "feature-update-the-public-grave-search-results-ui-to-display-for-each-found-grave-the-deceased-person-s-first-and-last-name-the-grave-status-paid-unpaid-reserved-free-and-the-grave-location-alley-grave-plot-number",
+      "title": "Update the public grave search results UI to display, for each found grave, the deceased person’s first and last name, the grave status (paid/unpaid/reserved/free), and the grave location (alley + grave/plot number).",
       "reqIds": [
         "REQ-2"
       ],
       "version": 1
     },
     {
-      "id": "feature-update-frontend-data-fetching-to-use-the-new-backend-paginated-search-endpoints-when-a-search-query-is-present-while-keeping-existing-behavior-for-empty-queries-e-g-browsing-lists-infinite-loading",
-      "title": "Update frontend data-fetching to use the new backend paginated search endpoints when a search query is present, while keeping existing behavior for empty queries (e.g., browsing lists / infinite loading).",
+      "id": "feature-ensure-the-in-memory-search-index-builder-for-public-graves-is-updated-if-needed-to-accommodate-the-extended-public-result-shape-without-breaking-search-filtering-or-rendering",
+      "title": "Ensure the in-memory search index builder for public graves is updated (if needed) to accommodate the extended public result shape without breaking search filtering or rendering.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-admin-grave-search-results-ui-so-each-found-grave-clearly-surfaces-the-same-key-summary-fields-at-a-glance-deceased-name-at-least-one-grave-status-and-location-alley-plot-grave-number",
+      "title": "Update the admin grave search results UI so each found grave clearly surfaces the same key summary fields at a glance: deceased name (at least one), grave status, and location (alley + plot/grave number).",
       "reqIds": [
         "REQ-4"
       ],
@@ -34,20 +36,20 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Improve overall app performance and increase search speed",
+      "summary": "Enhance search results to display grave details: first/last name, grave status (paid/unpaid/reserved), and location (alley + grave number).",
       "reqIds": [],
       "status": "pending"
     },
     {
-      "id": "AR-4",
-      "summary": "Add backend query APIs that support server-side grave searching with pagination so the frontend does not need to load and filter large datasets in memory to search efficiently.",
+      "id": "AR-2",
+      "summary": "Update the backend public search result shape so public grave search results include grave location (alley and plot/grave number) in addition to the existing deceased name and grave status.",
       "reqIds": [
-        "REQ-3"
+        "REQ-1"
       ],
       "status": "pending"
     }
   ],
-  "projectName": "Improve overall app performance and speed up grave search",
+  "projectName": "Show grave location and status in search results (alley + plot number)",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

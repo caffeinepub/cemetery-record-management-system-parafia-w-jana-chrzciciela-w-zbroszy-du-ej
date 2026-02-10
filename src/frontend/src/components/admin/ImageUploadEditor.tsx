@@ -1,17 +1,20 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
-import { Upload, Loader2, Check, X } from 'lucide-react';
-import { fileToDataUrl, resizeImage } from './imageEditing';
+import { Upload, Loader2, X } from 'lucide-react';
 import { ExternalBlob } from '../../backend';
+import { resizeImage, fileToDataUrl } from './imageEditing';
+import { Progress } from '@/components/ui/progress';
 
 interface ImageUploadEditorProps {
   label: string;
-  currentImage?: ExternalBlob | null | undefined;
-  onSave: (blob: ExternalBlob) => Promise<void>;
+  currentImage?: ExternalBlob | null;
+  onSave: (blob: ExternalBlob | null) => Promise<void>;
   outputWidth?: number;
   outputHeight?: number;
+  aspectRatio?: string;
   disabled?: boolean;
 }
 
@@ -19,190 +22,161 @@ export default function ImageUploadEditor({
   label,
   currentImage,
   onSave,
-  outputWidth = 800,
-  outputHeight = 600,
+  outputWidth = 1200,
+  outputHeight = 800,
+  aspectRatio,
   disabled = false,
 }: ImageUploadEditorProps) {
-  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        alert('Proszę wybrać plik graficzny');
-        return;
-      }
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Plik jest za duży. Maksymalny rozmiar to 5MB');
-        return;
-      }
-
-      try {
-        const dataUrl = await fileToDataUrl(file);
-        setImageSrc(dataUrl);
-      } catch (error) {
-        console.error('Błąd podczas wczytywania pliku:', error);
-        alert('Nie można wczytać pliku');
-      }
-    }
+    setSelectedFile(file);
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
   };
 
   const handleSave = async () => {
-    if (!imageSrc) return;
+    if (!selectedFile) return;
 
     setIsSaving(true);
     setUploadProgress(0);
 
     try {
-      const resizedImageBytes = await resizeImage(
-        imageSrc,
-        outputWidth,
-        outputHeight
-      );
-
-      // Cast to the expected type for ExternalBlob.fromBytes
-      const typedArray = new Uint8Array(resizedImageBytes.buffer) as Uint8Array<ArrayBuffer>;
+      // Convert file to data URL first
+      const dataUrl = await fileToDataUrl(selectedFile);
       
-      const blob = ExternalBlob.fromBytes(typedArray).withUploadProgress(
-        (percentage) => {
-          setUploadProgress(percentage);
-        }
-      );
+      // Resize image to fit within max dimensions
+      const resizedBytes = await resizeImage(dataUrl, outputWidth, outputHeight);
+
+      // Create ExternalBlob with upload progress tracking
+      // Cast to Uint8Array<ArrayBuffer> to satisfy type requirements
+      const blob = ExternalBlob.fromBytes(resizedBytes as Uint8Array<ArrayBuffer>).withUploadProgress((percentage) => {
+        setUploadProgress(percentage);
+      });
 
       await onSave(blob);
-      
-      // Reset state after successful save
-      setImageSrc(null);
-      setUploadProgress(0);
+
+      // Clear selection after successful save
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     } catch (error) {
-      console.error('Błąd podczas zapisywania:', error);
-      alert('Nie można zapisać obrazu');
+      console.error('Failed to save image:', error);
+    } finally {
+      setIsSaving(false);
+      setUploadProgress(0);
+    }
+  };
+
+  const handleRemove = async () => {
+    setIsSaving(true);
+    try {
+      await onSave(null);
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error) {
+      console.error('Failed to remove image:', error);
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleCancel = () => {
-    setImageSrc(null);
-    setUploadProgress(0);
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
+
+  const currentImageUrl = currentImage?.getDirectURL();
+  const displayUrl = previewUrl || currentImageUrl;
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label>{label}</Label>
-        
-        {/* Current image preview */}
-        {!imageSrc && currentImage && (
-          <div className="relative h-48 rounded-lg overflow-hidden border border-border bg-muted">
-            <img
-              src={currentImage.getDirectURL()}
-              alt="Obecny obraz"
-              className="w-full h-full object-cover"
-            />
-          </div>
-        )}
+      <Label>{label}</Label>
 
-        {/* File upload button */}
-        {!imageSrc && (
-          <div>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileSelect}
-              disabled={disabled || isSaving}
-              className="hidden"
-              id={`file-upload-${label.replace(/\s+/g, '-')}`}
-            />
-            <label htmlFor={`file-upload-${label.replace(/\s+/g, '-')}`}>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={disabled || isSaving}
-                className="w-full"
-                asChild
-              >
-                <span className="flex items-center gap-2 cursor-pointer">
-                  <Upload className="h-4 w-4" />
-                  Wybierz nowy obraz
-                </span>
-              </Button>
-            </label>
-            <p className="text-xs text-muted-foreground mt-2">
-              Obsługiwane formaty: JPG, PNG, GIF. Maksymalny rozmiar: 5MB
-            </p>
-          </div>
-        )}
+      {displayUrl && (
+        <Card>
+          <CardContent className="p-4">
+            <div className={`relative ${aspectRatio ? `aspect-${aspectRatio}` : 'max-h-64'} overflow-hidden rounded-md`}>
+              <img
+                src={displayUrl}
+                alt="Preview"
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-        {/* Preview and save interface */}
-        {imageSrc && (
-          <Card>
-            <CardContent className="p-4 space-y-4">
-              <div className="relative h-96 bg-muted rounded-lg overflow-hidden">
-                <img
-                  src={imageSrc}
-                  alt="Podgląd"
-                  className="w-full h-full object-contain"
-                />
-              </div>
+      <div className="flex gap-2">
+        <Input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileSelect}
+          disabled={isSaving || disabled}
+          className="flex-1"
+        />
 
-              <p className="text-sm text-muted-foreground">
-                Obraz zostanie automatycznie przeskalowany do {outputWidth}x{outputHeight}px
-              </p>
-
-              {isSaving && uploadProgress > 0 && (
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm text-muted-foreground">
-                    <span>Przesyłanie...</span>
-                    <span>{Math.round(uploadProgress)}%</span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div
-                      className="bg-primary h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${uploadProgress}%` }}
-                    />
-                  </div>
-                </div>
+        {selectedFile && (
+          <>
+            <Button onClick={handleSave} disabled={isSaving || disabled}>
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Zapisywanie...
+                </>
+              ) : (
+                <>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Zapisz
+                </>
               )}
+            </Button>
+            <Button variant="outline" onClick={handleCancel} disabled={isSaving || disabled}>
+              Anuluj
+            </Button>
+          </>
+        )}
 
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  className="flex items-center gap-2 flex-1"
-                >
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Zapisywanie...
-                    </>
-                  ) : (
-                    <>
-                      <Check className="h-4 w-4" />
-                      Zapisz obraz
-                    </>
-                  )}
-                </Button>
-                <Button
-                  onClick={handleCancel}
-                  variant="outline"
-                  disabled={isSaving}
-                  className="flex items-center gap-2"
-                >
-                  <X className="h-4 w-4" />
-                  Anuluj
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        {!selectedFile && currentImageUrl && (
+          <Button variant="destructive" onClick={handleRemove} disabled={isSaving || disabled}>
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <X className="h-4 w-4" />
+            )}
+          </Button>
         )}
       </div>
+
+      {isSaving && uploadProgress > 0 && (
+        <div className="space-y-2">
+          <Progress value={uploadProgress} className="w-full" />
+          <p className="text-sm text-muted-foreground text-center">
+            Przesyłanie: {uploadProgress}%
+          </p>
+        </div>
+      )}
+
+      <p className="text-xs text-muted-foreground">
+        Maksymalne wymiary: {outputWidth}x{outputHeight}px. Obraz zostanie automatycznie przeskalowany.
+      </p>
     </div>
   );
 }

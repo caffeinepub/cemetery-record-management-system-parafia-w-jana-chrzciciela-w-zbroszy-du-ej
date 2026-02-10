@@ -32,16 +32,17 @@ export default function Header() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img 
+            <img
               src={logoSrc}
-              alt="Logo Parafii św. Jana Chrzciciela" 
+              alt="Logo parafii"
               className="h-12 w-12 object-contain"
+              loading="eager"
             />
             <div>
               <h1 className="text-xl font-bold text-foreground">
                 Parafia św. Jana Chrzciciela
               </h1>
-              <p className="text-sm text-muted-foreground">w Zbroszy Dużej</p>
+              <p className="text-sm text-muted-foreground">Zbrosza Duża</p>
             </div>
           </div>
 
@@ -50,7 +51,7 @@ export default function Header() {
               variant="ghost"
               size="icon"
               onClick={toggleTheme}
-              className="rounded-full"
+              aria-label="Toggle theme"
             >
               {theme === 'dark' ? (
                 <Sun className="h-5 w-5" />
@@ -60,11 +61,7 @@ export default function Header() {
             </Button>
 
             {isAuthenticated && (
-              <Button
-                onClick={handleLogout}
-                variant="outline"
-                className="font-medium"
-              >
+              <Button variant="outline" onClick={handleLogout}>
                 Wyloguj
               </Button>
             )}

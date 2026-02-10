@@ -1,73 +1,52 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-09T07:23:49.849Z",
-  "summary": "Frontend improvements for search responsiveness were added (debounced inputs in admin/public UIs) and in-memory search indexing/caching was implemented. However, server-side paginated search APIs in the backend are not evidenced in the provided backend diff, and the public search UI still appears to rely on loading all public graves and filtering in memory rather than using backend paginated search when a query is present. Additionally, several unrelated site-content management and UI features were introduced that are not part of the performance/search BuildRequest.",
+  "generatedAt": "2026-02-10T16:13:28.176Z",
+  "summary": "Diff implements the new PublicGraveResult type with alley/plotNumber and updates the public search UI and in-memory search indexing to use the extended shape. However, the backend method that returns public graves with these new fields is not visible in the truncated backend diff, and the admin-results “at a glance” summary/placeholder behavior is not fully verifiable due to truncation. Several unrelated content-management and prayer/footer/hero changes were introduced that are outside the BuildRequest.",
   "missing_requirements": [
     {
-      "id": "REQ-3",
-      "requirement": "Add backend query APIs that support server-side grave searching with pagination for both public-safe and admin searches (case-insensitive substring semantics).",
-      "reason": "The backend diff snippet shows added/changed types (e.g., PaginatedGravesResult, SiteContent changes), but does not show any new query methods for grave searching (public-safe or admin) with pagination. With only the truncated excerpt, there is insufficient evidence the required backend search query APIs were implemented.",
+      "id": "REQ-1",
+      "requirement": "Existing public API that returns public graves (used by the public search UI) returns the new location fields (alley + plot/grave number) for each result.",
+      "reason": "backend/main.mo shows the updated public type (PublicGraveResult includes alley and plotNumber), but the diff excerpt is truncated before any public query method implementation; there is no visible evidence that the actual public-graves API now returns these fields.",
       "evidence": [
         "backend/main.mo (truncated)"
       ]
     },
     {
       "id": "REQ-4",
-      "requirement": "Update frontend data-fetching to use new backend paginated search endpoints when a search query is present, while keeping existing behavior for empty queries; public search must not request restricted fields.",
-      "reason": "In the updated public search component, public mode still calls useGetPublicGraves and performs in-memory filtering via searchPublicGravesInMemory. There is no evidence that public-mode non-empty queries switch to backend paginated search (even though a hook name useInfiniteSearchPublicGravesPaginated is imported).",
+      "requirement": "Admin grave search results list includes a prominent summary showing location and status plus at least one deceased person name (or a placeholder when none) without scrolling into the detailed section.",
+      "reason": "frontend/src/components/GraveResultsList.tsx excerpt clearly shows the public rendering changes, but the admin-mode rendering section is not included in the truncated content, so the prominent summary and zero-deceased placeholder cannot be confirmed from the provided diff text.",
       "evidence": [
-        "frontend/src/components/GraveSearch.tsx (truncated)"
+        "frontend/src/components/GraveResultsList.tsx (truncated)"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Added/expanded site content management (new SiteContent fields/HTML sections, admin content manager UI with WYSIWYG editor, and dynamic header/footer driven by public site content).",
-      "reason": "The BuildRequest is focused on performance and grave search. These content-management changes are not requested and are unrelated to REQ-1..REQ-4.",
+      "description": "Backend and frontend changes to site content models and UI (homepage hero/footer/site content), including a new PrayerForTheDeceased.memorialPrayer field and related public-page rendering.",
+      "reason": "BuildRequest is limited to displaying grave location/status in search results; content management/prayer/footer/hero changes are not requested.",
       "evidence": [
-        "backend/main.mo (truncated) (SiteContent/PublicHtmlSection additions)",
-        "frontend/src/components/admin/SiteContentManager.tsx (truncated)",
-        "frontend/src/components/Footer.tsx",
-        "frontend-file-summaries.txt (multiple entries referencing new content tab/sections)"
+        "backend/main.mo (adds PrayerForTheDeceased.memorialPrayer comment/field in truncated excerpt)",
+        "frontend-file-summaries.txt (PublicPage.tsx memorial prayer block; AdminPanel content tab; Footer/Hero/Header content changes)"
       ]
     },
     {
-      "description": "New URL/session parameter utility module for persisting and clearing URL/hash parameters.",
-      "reason": "Not requested by the BuildRequest; unrelated to grave search performance/pagination requirements.",
+      "description": "New/expanded React Query retry/backoff logic and multiple additional hooks unrelated to grave search (e.g., footer content, logo image updates).",
+      "reason": "BuildRequest does not ask for retry logic changes or additional site content hooks; only search-result display/index updates were requested.",
       "evidence": [
-        "frontend/src/utils/urlParams.ts (truncated)"
-      ]
-    },
-    {
-      "description": "Admin GraveEditDialog behavior changes (state reset logic, dialog stays open on errors, title changes) and lazy-loading of dialog.",
-      "reason": "Not part of the stated search performance requirements; these are functional/UI changes beyond REQ-1..REQ-4.",
-      "evidence": [
-        "frontend/src/components/admin/GraveEditDialog.tsx (truncated)",
-        "frontend/src/components/admin/GraveManagement.tsx (truncated)"
-      ]
-    },
-    {
-      "description": "Public cemetery map/tiles behavior and styling changes (per file summary).",
-      "reason": "Not requested in the BuildRequest; unrelated to implementing debounced search, in-memory indexing, or backend paginated search.",
-      "evidence": [
-        "frontend-file-summaries.txt (GraveTileMap summary)"
+        "frontend/src/hooks/useQueries.ts (truncated: adds retry/backoff utilities and extensive error handling not mentioned in requirements)",
+        "frontend-file-summaries.txt (mentions added useGetFooterContent, useUpdateLogoImage, and other content-related hooks)"
       ]
     }
   ],
-  "confidence": 0.72,
+  "confidence": 0.62,
   "changed_files": [
     "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/Footer.tsx",
+    "frontend/src/components/GraveResultsList.tsx",
     "frontend/src/components/GraveSearch.tsx",
-    "frontend/src/components/admin/GraveEditDialog.tsx",
-    "frontend/src/components/admin/GraveManagement.tsx",
-    "frontend/src/components/admin/SiteContentManager.tsx",
-    "frontend/src/hooks/useDebouncedValue.ts",
     "frontend/src/hooks/useQueries.ts",
     "frontend/src/utils/graveFullTextSearch.ts",
-    "frontend/src/utils/urlParams.ts",
     "project_state.json"
   ]
 }

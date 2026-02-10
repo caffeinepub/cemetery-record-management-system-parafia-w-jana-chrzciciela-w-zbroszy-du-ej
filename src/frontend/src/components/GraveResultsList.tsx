@@ -1,21 +1,25 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, User, Calendar, Phone, Home } from 'lucide-react';
-import type { GraveRecord, PublicGraveShape } from '../backend';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { MapPin, User, Calendar, Phone, Home, ChevronDown } from 'lucide-react';
+import type { GraveRecord, PublicGraveResult } from '../backend';
+import { useState, useMemo } from 'react';
 import GraveEditDialog from './admin/GraveEditDialog';
 
 interface GraveResultsListProps {
   results?: GraveRecord[];
-  publicResults?: PublicGraveShape[];
+  publicResults?: PublicGraveResult[];
   isAdmin?: boolean;
   showCount?: boolean;
 }
 
+const INITIAL_VISIBLE_COUNT = 30;
+const LOAD_MORE_INCREMENT = 30;
+
 export default function GraveResultsList({ results = [], publicResults = [], isAdmin = false, showCount = true }: GraveResultsListProps) {
   const [editingGrave, setEditingGrave] = useState<GraveRecord | null>(null);
+  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string }> = {
@@ -36,6 +40,21 @@ export default function GraveResultsList({ results = [], publicResults = [], isA
 
   const totalResults = isAdmin ? results.length : publicResults.length;
 
+  // Slice results to only render visible items
+  const visibleResults = useMemo(() => {
+    return isAdmin ? results.slice(0, visibleCount) : [];
+  }, [isAdmin, results, visibleCount]);
+
+  const visiblePublicResults = useMemo(() => {
+    return isAdmin ? [] : publicResults.slice(0, visibleCount);
+  }, [isAdmin, publicResults, visibleCount]);
+
+  const hasMore = visibleCount < totalResults;
+
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => Math.min(prev + LOAD_MORE_INCREMENT, totalResults));
+  };
+
   if (totalResults === 0) {
     return (
       <Card>
@@ -47,7 +66,7 @@ export default function GraveResultsList({ results = [], publicResults = [], isA
   }
 
   // Render public results
-  if (!isAdmin && publicResults.length > 0) {
+  if (!isAdmin && visiblePublicResults.length > 0) {
     return (
       <div className="space-y-4">
         {showCount && (
@@ -56,33 +75,48 @@ export default function GraveResultsList({ results = [], publicResults = [], isA
           </h3>
         )}
 
-        {publicResults.map((publicGrave, idx) => (
+        {visiblePublicResults.map((publicGrave, idx) => (
           <Card key={idx}>
             <CardHeader>
               <div className="flex items-start justify-between">
-                <div className="space-y-1">
+                <div className="space-y-2 flex-1">
                   <CardTitle className="flex items-center gap-2">
                     <User className="h-5 w-5 text-muted-foreground" />
                     {publicGrave.firstName} {publicGrave.lastName}
                   </CardTitle>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {getStatusBadge(publicGrave.status)}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <MapPin className="h-4 w-4" />
+                    <span className="font-medium">
+                      Aleja {publicGrave.alley}, Grób nr {publicGrave.plotNumber.toString()}
+                    </span>
                   </div>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {publicGrave.yearOfDeath && (
+            {publicGrave.yearOfDeath && (
+              <CardContent>
                 <div className="text-sm">
                   <span className="text-muted-foreground flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
-                    Year of death: {publicGrave.yearOfDeath.toString()}
+                    Rok śmierci: {publicGrave.yearOfDeath.toString()}
                   </span>
                 </div>
-              )}
-            </CardContent>
+              </CardContent>
+            )}
           </Card>
         ))}
+
+        {hasMore && (
+          <div className="flex justify-center pt-4">
+            <Button onClick={handleLoadMore} variant="outline" size="lg">
+              <ChevronDown className="mr-2 h-4 w-4" />
+              Załaduj więcej ({visibleCount} z {totalResults})
+            </Button>
+          </div>
+        )}
       </div>
     );
   }
@@ -97,18 +131,37 @@ export default function GraveResultsList({ results = [], publicResults = [], isA
           </h3>
         )}
 
-        {results.map((grave) => (
+        {visibleResults.map((grave) => (
           <Card key={grave.id.toString()}>
             <CardHeader>
               <div className="flex items-start justify-between">
-                <div className="space-y-1">
+                <div className="space-y-2 flex-1">
                   <CardTitle className="flex items-center gap-2">
                     <MapPin className="h-5 w-5 text-muted-foreground" />
                     Aleja {grave.alley}, Grób nr {grave.plotNumber.toString()}
                   </CardTitle>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {getStatusBadge(grave.status)}
                   </div>
+                  {grave.deceasedPersons.length > 0 ? (
+                    <div className="text-sm">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <User className="h-4 w-4" />
+                        <span className="font-medium">
+                          {grave.deceasedPersons[0].firstName} {grave.deceasedPersons[0].lastName}
+                        </span>
+                        {grave.deceasedPersons.length > 1 && (
+                          <span className="text-muted-foreground">
+                            {' '}i {grave.deceasedPersons.length - 1} {grave.deceasedPersons.length === 2 ? 'inna osoba' : 'inne osoby'}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground italic">
+                      Brak osób spoczywających
+                    </div>
+                  )}
                 </div>
                 {isAdmin && (
                   <Button variant="outline" size="sm" onClick={() => setEditingGrave(grave)}>
@@ -177,6 +230,15 @@ export default function GraveResultsList({ results = [], publicResults = [], isA
             </CardContent>
           </Card>
         ))}
+
+        {hasMore && (
+          <div className="flex justify-center pt-4">
+            <Button onClick={handleLoadMore} variant="outline" size="lg">
+              <ChevronDown className="mr-2 h-4 w-4" />
+              Załaduj więcej ({visibleCount} z {totalResults})
+            </Button>
+          </div>
+        )}
       </div>
 
       {editingGrave && (

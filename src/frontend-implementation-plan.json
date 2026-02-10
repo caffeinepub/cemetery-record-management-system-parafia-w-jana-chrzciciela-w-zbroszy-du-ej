@@ -1,84 +1,66 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Frontend performance optimizations for grave search (debounce, indexing, paginated search)",
+  "title": "Show grave location and status in search results (public + admin)",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Reduce unnecessary re-filtering and re-rendering during typing in public and admin grave search UIs (debounce + smoother rendering).",
+      "id": "REQ-2",
+      "summary": "Update the public grave search results UI to display name, status, and location (alley + plot/grave number) per result.",
       "acceptanceCriteria": [
-        "Typing in the grave search input does not trigger a full filter operation on every single keystroke (e.g., input is debounced).",
-        "Search results update smoothly for large datasets without noticeable UI jank (no long main-thread stalls during fast typing).",
-        "The optimization applies to both public search (frontend/src/components/GraveSearch.tsx) and admin management search (frontend/src/components/admin/GraveManagement.tsx)."
+        "In the public search tab, each result card shows: (1) first + last name, (2) a status badge, and (3) a visible location line such as “Aleja X, Grób nr Y” (wording consistent with the app’s language/style).",
+        "The location shown for public results matches the backend-provided alley and plot/grave number fields.",
+        "No changes are made to immutable frontend paths listed in SYSTEM_CONTEXT."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useDebouncedValue.ts",
-          "operation": "create",
-          "description": "Add a small React hook for debouncing rapidly changing values (e.g., search input) so expensive search work runs less frequently."
+          "path": "frontend/src/components/GraveResultsList.tsx",
+          "operation": "modify",
+          "description": "Extend the public-results card rendering to show a dedicated location line (alley + plot/grave number) using the backend-provided fields when present, while preserving existing name/status display."
         },
         {
           "path": "frontend/src/components/GraveSearch.tsx",
           "operation": "modify",
-          "description": "Debounce the search input state before triggering search computation/rendering; ensure derived lists and counts use the debounced query and avoid unnecessary recomputation for fast typing."
+          "description": "Switch the public search data source from the older public grave shape to the location-enabled public results (as exposed by the backend interface), and pass the updated results into GraveResultsList for rendering."
         },
         {
-          "path": "frontend/src/components/admin/GraveManagement.tsx",
+          "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Debounce the admin searchTerm before triggering in-memory filtering / remote search; ensure the list and counters update from the debounced query to reduce main-thread churn while typing."
+          "description": "Add or update a public query hook to load the location-enabled public grave results (via existing backend capability), and expose a stable return type for the public search UI."
         }
       ]
     },
     {
-      "id": "REQ-2",
-      "summary": "Optimize in-memory search by precomputing and reusing normalized searchable strings for grave records (public and admin).",
+      "id": "REQ-3",
+      "summary": "Update the public in-memory search index builder to tolerate the extended public result shape without breaking filtering or rendering.",
       "acceptanceCriteria": [
-        "Admin in-memory search (searchGravesInMemory) avoids repeated per-field lowercase/trim work for unchanged grave records during subsequent searches.",
-        "Public in-memory search (searchPublicGravesInMemory) avoids repeated per-field lowercase/trim work for unchanged public grave records during subsequent searches.",
-        "Search result correctness remains the same as before for equivalent queries (case-insensitive, substring matching as currently implemented)."
+        "Public grave search does not crash after the backend adds location fields to the public result shape.",
+        "Search filtering continues to work as before for name/year-based queries."
       ],
       "file_operations": [
         {
           "path": "frontend/src/utils/graveFullTextSearch.ts",
           "operation": "modify",
-          "description": "Refactor searchGravesInMemory and searchPublicGravesInMemory to reuse precomputed normalized searchable text per record (e.g., cache/index keyed by record identity with change detection) so subsequent searches don't re-normalize every field for every record."
+          "description": "Update public-search indexing helpers to accept the extended public result shape (including optional location fields) without requiring location fields for filtering; keep name/year search behavior unchanged."
         },
         {
           "path": "frontend/src/components/GraveSearch.tsx",
           "operation": "modify",
-          "description": "Update public/admin in-memory search usage to leverage the optimized indexing/caching behavior (e.g., ensure index is created/reused based on the loaded dataset and not rebuilt per keystroke)."
-        },
-        {
-          "path": "frontend/src/components/admin/GraveManagement.tsx",
-          "operation": "modify",
-          "description": "Update admin in-memory filtering flow to leverage the optimized indexing/caching behavior so filtering does not repeatedly normalize the same unchanged records across searches."
+          "description": "Adjust public search index memoization/typing to align with the updated public results shape so filtering remains stable and does not throw when additional fields are present."
         }
       ]
     },
     {
       "id": "REQ-4",
-      "summary": "When a query is present, fetch paginated search results from the backend instead of filtering all loaded data in memory; keep existing browsing behavior for empty queries.",
+      "summary": "Update the admin grave search results UI to prominently show deceased summary, status, and location at a glance (with a placeholder if no deceased persons).",
       "acceptanceCriteria": [
-        "When the user enters a non-empty query, the UI fetches search results from the backend rather than filtering the entire loaded dataset in memory.",
-        "Search results are paginated and can be incrementally loaded (consistent with the existing 'Load more' pattern in admin where applicable).",
-        "When the query is cleared, the UI returns to the existing non-search loading mode without requiring a full page refresh.",
-        "Public search never requests or displays restricted fields (owner/address/phone/payment)."
+        "In the admin search results list, each result includes a prominent summary showing: location and status, plus at least one deceased person’s first/last name (when available) without requiring scrolling into the detailed “deceased persons” section.",
+        "If a grave has zero deceased persons, the UI shows a clear placeholder (e.g., “No deceased persons”) while still showing location and status."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useQueries.ts",
+          "path": "frontend/src/components/GraveResultsList.tsx",
           "operation": "modify",
-          "description": "Add React Query infinite hooks for paginated grave searching (admin + public) that call the existing backendInterface paginated search functions; include queryKey design that isolates results per query and supports incremental loading."
-        },
-        {
-          "path": "frontend/src/components/GraveSearch.tsx",
-          "operation": "modify",
-          "description": "Switch public search behavior: for non-empty debounced query, use the new public paginated search hook and render only those results; for empty query, keep existing non-search behavior; ensure only public-safe results are requested/displayed."
-        },
-        {
-          "path": "frontend/src/components/admin/GraveManagement.tsx",
-          "operation": "modify",
-          "description": "Switch admin management search behavior: for non-empty debounced query, use the new admin paginated search hook with 'Load more'; for empty query, keep existing paginated browsing list; ensure clearing the query resets to browse mode without refresh."
+          "description": "Enhance the admin result card header/summary to include at least one deceased person’s name when available, and render an explicit placeholder when deceasedPersons is empty, while keeping location and status prominent."
         }
       ]
     }

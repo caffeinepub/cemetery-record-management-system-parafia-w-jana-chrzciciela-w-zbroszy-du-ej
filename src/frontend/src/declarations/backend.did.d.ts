@@ -32,6 +32,7 @@ export type Error = { 'duplicateAlley' : { 'alley' : string } } |
   { 'invariantViolation' : { 'field' : string } } |
   { 'alleyNotFound' : { 'alley' : string } } |
   { 'inconsistentAlleyGraves' : { 'alley' : string, 'graveId' : bigint } } |
+  { 'unauthorized' : null } |
   { 'alleyNotEmpty' : { 'alley' : string } };
 export type ExternalBlob = Uint8Array;
 export interface FooterContent {
@@ -74,6 +75,19 @@ export interface PaginatedGravesResult {
   'pageSize' : bigint,
   'totalGraves' : bigint,
 }
+export interface PrayerForTheDeceased {
+  'title' : string,
+  'content' : string,
+  'memorialPrayer' : string,
+}
+export interface PublicGraveResult {
+  'status' : GraveStatus,
+  'alley' : string,
+  'yearOfDeath' : [] | [bigint],
+  'plotNumber' : bigint,
+  'lastName' : string,
+  'firstName' : string,
+}
 export interface PublicGraveShape {
   'status' : GraveStatus,
   'yearOfDeath' : [] | [bigint],
@@ -91,7 +105,7 @@ export interface PublicTileData {
 export interface SiteContent {
   'logoImage' : [] | [ExternalBlob],
   'cemeteryInformation' : PublicHtmlSection,
-  'prayerForTheDeceased' : PublicHtmlSection,
+  'prayerForTheDeceased' : PrayerForTheDeceased,
   'gravesDeclaration' : PublicHtmlSection,
   'footer' : FooterContent,
   'homepageHero' : HomepageHeroContent,
@@ -156,9 +170,8 @@ export interface _SERVICE {
   'getHomepageHeroContent' : ActorMethod<[], HomepageHeroContent>,
   'getPaginatedGraves' : ActorMethod<[bigint, bigint], PaginatedGravesResult>,
   'getParishContactEmail' : ActorMethod<[], string>,
-  'getPrayerForTheDeceased' : ActorMethod<[], PublicHtmlSection>,
+  'getPrayerForTheDeceased' : ActorMethod<[], PrayerForTheDeceased>,
   'getPublicGraves' : ActorMethod<[], Array<PublicGraveShape>>,
-  'getPublicGravesByAlley' : ActorMethod<[string], Array<PublicGraveShape>>,
   'getPublicTiles' : ActorMethod<[], Array<PublicTileData>>,
   'getSiteContent' : ActorMethod<[], SiteContent>,
   'getSurnamesForAutocomplete' : ActorMethod<[], Array<string>>,
@@ -177,22 +190,9 @@ export interface _SERVICE {
     ],
     Array<GraveRecord>
   >,
-  'searchGravesPaginated' : ActorMethod<
-    [[] | [string], [] | [bigint], bigint, bigint],
-    PaginatedGravesResult
-  >,
-  'searchPublicGraves' : ActorMethod<
+  'searchPublicGravesWithLocation' : ActorMethod<
     [[] | [string], [] | [bigint]],
-    Array<PublicGraveShape>
-  >,
-  'searchPublicGravesPaginated' : ActorMethod<
-    [[] | [string], [] | [bigint], bigint, bigint],
-    {
-      'graves' : Array<PublicGraveShape>,
-      'nextOffset' : [] | [bigint],
-      'pageSize' : bigint,
-      'totalGraves' : bigint,
-    }
+    Array<PublicGraveResult>
   >,
   'updateCemeteryInformation' : ActorMethod<[PublicHtmlSection], undefined>,
   'updateFooterContent' : ActorMethod<[FooterContent], undefined>,
@@ -200,7 +200,7 @@ export interface _SERVICE {
   'updateGravesDeclaration' : ActorMethod<[PublicHtmlSection], undefined>,
   'updateHomepageHeroContent' : ActorMethod<[HomepageHeroContent], undefined>,
   'updateLogoImage' : ActorMethod<[[] | [ExternalBlob]], undefined>,
-  'updatePrayerForTheDeceased' : ActorMethod<[PublicHtmlSection], undefined>,
+  'updatePrayerForTheDeceased' : ActorMethod<[PrayerForTheDeceased], undefined>,
   'updateSiteContent' : ActorMethod<[SiteContent], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
