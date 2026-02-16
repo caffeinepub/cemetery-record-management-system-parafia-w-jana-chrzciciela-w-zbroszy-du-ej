@@ -1,66 +1,98 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Show grave location and status in search results (public + admin)",
+  "title": "Cemetery Portal: reliable backend connectivity checks and banner UX",
   "requirements": [
     {
-      "id": "REQ-2",
-      "summary": "Update the public grave search results UI to display name, status, and location (alley + plot/grave number) per result.",
+      "id": "REQ-1",
+      "summary": "Use a real backend health-check call to confirm connectivity and avoid false “server unavailable” warnings during actor initialization delays.",
       "acceptanceCriteria": [
-        "In the public search tab, each result card shows: (1) first + last name, (2) a status badge, and (3) a visible location line such as “Aleja X, Grób nr Y” (wording consistent with the app’s language/style).",
-        "The location shown for public results matches the backend-provided alley and plot/grave number fields.",
-        "No changes are made to immutable frontend paths listed in SYSTEM_CONTEXT."
+        "Backend exposes a public query health-check method (e.g., ping/health) that is safe for anonymous users and returns quickly.",
+        "Frontend performs a periodic or on-mount health-check and treats the backend as “connected” only when the health-check succeeds.",
+        "The connection warning is not shown if the health-check succeeds, even if actor initialization was briefly delayed."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/GraveResultsList.tsx",
-          "operation": "modify",
-          "description": "Extend the public-results card rendering to show a dedicated location line (alley + plot/grave number) using the backend-provided fields when present, while preserving existing name/status display."
+          "path": "frontend/src/hooks/useBackendHealthCheck.ts",
+          "operation": "create",
+          "description": "Create a lightweight hook that calls the backend's existing health-check capability (backendInterface.healthCheck) and exposes explicit states (checking/connected/disconnected), plus a manual recheck trigger."
         },
         {
-          "path": "frontend/src/components/GraveSearch.tsx",
+          "path": "frontend/src/hooks/useActor.ts",
           "operation": "modify",
-          "description": "Switch the public search data source from the older public grave shape to the location-enabled public results (as exposed by the backend interface), and pass the updated results into GraveResultsList for rendering."
+          "description": "Expose a user-invokable refetch/recreate mechanism (e.g., a reconnect function that re-runs actor creation) so health-check and UI controls can force a fresh connectivity attempt without a full page refresh."
         },
         {
-          "path": "frontend/src/hooks/useQueries.ts",
+          "path": "frontend/src/components/ConnectionStatus.tsx",
           "operation": "modify",
-          "description": "Add or update a public query hook to load the location-enabled public grave results (via existing backend capability), and expose a stable return type for the public search UI."
+          "description": "Update connectivity determination to rely on the health-check result (via the new useBackendHealthCheck hook) rather than actor presence alone; keep actor initialization delay from triggering a false disconnected state."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Improve the connection banner UX with a neutral connecting state, an explicit retry control, and English messaging.",
+      "acceptanceCriteria": [
+        "`ConnectionStatus` shows a neutral “Connecting to server…” state while initial connection checks are in progress and does not switch to an error state prematurely.",
+        "If connection checks fail, the banner includes a user-actionable “Retry” control that re-runs the actor/health-check logic without requiring a full page refresh.",
+        "User-facing banner text is in English (e.g., “Unable to reach the server. Please retry or refresh.”)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/ConnectionStatus.tsx",
+          "operation": "modify",
+          "description": "Revise banner state machine to: (1) show a neutral connecting state while actor creation + health-check are pending, (2) only show an error after health-check failure, and (3) include an English Retry action that invokes actor reconnect + health recheck."
         }
       ]
     },
     {
       "id": "REQ-3",
-      "summary": "Update the public in-memory search index builder to tolerate the extended public result shape without breaking filtering or rendering.",
+      "summary": "Standardize end-user connectivity error strings to English while preserving authorization/Boss-lock detection and behavior.",
       "acceptanceCriteria": [
-        "Public grave search does not crash after the backend adds location fields to the public result shape.",
-        "Search filtering continues to work as before for name/year-based queries."
+        "Connectivity-related error strings surfaced from query/mutation error handling use English wording for “actor not available / network / fetch / timeout” scenarios.",
+        "Boss/authorization errors remain correctly detected (do not introduce retries or masking for authorization failures)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/utils/graveFullTextSearch.ts",
+          "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Update public-search indexing helpers to accept the extended public result shape (including optional location fields) without requiring location fields for filtering; keep name/year search behavior unchanged."
+          "description": "Update retry/sanitize logic so connectivity failures produce consistent English messaging aligned with ConnectionStatus wording; ensure retryable-error detection does not treat authorization/Boss-lock failures as retryable and does not mask them with connectivity text."
         },
         {
-          "path": "frontend/src/components/GraveSearch.tsx",
+          "path": "frontend/src/utils/authErrors.ts",
           "operation": "modify",
-          "description": "Adjust public search index memoization/typing to align with the updated public results shape so filtering remains stable and does not throw when additional fields are present."
+          "description": "Extend/align authorization error detection helpers so query/mutation error handling can reliably distinguish authorization failures from connectivity failures and keep existing Boss-lock behavior intact."
         }
       ]
     },
     {
       "id": "REQ-4",
-      "summary": "Update the admin grave search results UI to prominently show deceased summary, status, and location at a glance (with a placeholder if no deceased persons).",
+      "summary": "Ensure the updated connectivity logic compiles cleanly and does not regress Public/Admin page loading behavior.",
       "acceptanceCriteria": [
-        "In the admin search results list, each result includes a prominent summary showing: location and status, plus at least one deceased person’s first/last name (when available) without requiring scrolling into the detailed “deceased persons” section.",
-        "If a grave has zero deceased persons, the UI shows a clear placeholder (e.g., “No deceased persons”) while still showing location and status."
+        "Application builds without TypeScript errors and Motoko compilation errors.",
+        "Public page loads with hero + tiles and can navigate to Search and Map sections without showing the false backend-unavailable warning when backend is reachable.",
+        "Admin panel (when authorized) still loads and can fetch cemetery state and graves without new connection-related regressions."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/GraveResultsList.tsx",
+          "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Enhance the admin result card header/summary to include at least one deceased person’s name when available, and render an explicit placeholder when deceasedPersons is empty, while keeping location and status prominent."
+          "description": "Verify ConnectionStatus integration remains correct after changes (no premature error banner during initial load) and that routing/gating between Public and Admin experiences is unaffected."
+        },
+        {
+          "path": "frontend/src/components/ConnectionStatus.tsx",
+          "operation": "modify",
+          "description": "Finalize banner rendering and state transitions to avoid regressions across PublicPage/AdminPanel navigation and initial loads (including slow actor initialization)."
+        },
+        {
+          "path": "frontend/src/pages/PublicPage.tsx",
+          "operation": "modify",
+          "description": "Confirm PublicPage remains resilient with the updated connectivity/health-check approach (no new user-facing connectivity regressions when backend is reachable)."
+        },
+        {
+          "path": "frontend/src/pages/AdminPanel.tsx",
+          "operation": "modify",
+          "description": "Confirm AdminPanel remains resilient with the updated connectivity/health-check approach (no new user-facing connectivity regressions when authorized and backend is reachable)."
         }
       ]
     }

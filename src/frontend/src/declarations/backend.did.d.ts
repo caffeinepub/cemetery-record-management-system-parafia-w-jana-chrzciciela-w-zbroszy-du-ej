@@ -176,6 +176,7 @@ export interface _SERVICE {
   'getSiteContent' : ActorMethod<[], SiteContent>,
   'getSurnamesForAutocomplete' : ActorMethod<[], Array<string>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'healthCheck' : ActorMethod<[], undefined>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'removeAlley' : ActorMethod<[string], AsyncResult>,
   'removeGrave' : ActorMethod<[bigint], AsyncResult>,

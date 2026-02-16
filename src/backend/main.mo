@@ -412,18 +412,25 @@ actor {
     };
   };
 
+  // User profile functions - allow any authenticated user (not just Boss)
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
-    assertPermanentBoss(caller);
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view profiles");
+    };
     userProfiles.get(caller);
   };
 
   public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
-    assertPermanentBoss(caller);
+    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Can only view your own profile");
+    };
     userProfiles.get(user);
   };
 
   public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
-    assertPermanentBoss(caller);
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can save profiles");
+    };
     userProfiles.add(caller, profile);
   };
 
@@ -865,5 +872,9 @@ actor {
         };
       }
     );
+  };
+
+  public query func healthCheck() : async () {
+    ();
   };
 };

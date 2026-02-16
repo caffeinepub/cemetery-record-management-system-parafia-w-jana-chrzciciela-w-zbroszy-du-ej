@@ -3,6 +3,7 @@ import { useActor } from './useActor';
 import type { GraveRecord, UserProfile, GraveStatus, CemeteryView, AsyncResult, AsyncResult_1, PaginatedGravesResult, PublicGraveShape, PublicGraveResult, PublicTileData, HomepageHeroContent, FooterContent, SiteContent, PublicHtmlSection, PrayerForTheDeceased } from '../backend';
 import { ExternalBlob } from '../backend';
 import { toast } from 'sonner';
+import { isBossLockError, isAuthorizationError } from '../utils/authErrors';
 
 // Cache configuration for optimal performance
 const CACHE_CONFIG = {
@@ -49,8 +50,13 @@ const RETRY_CONFIG = {
   retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 10000),
 };
 
-// Helper function to check if error is retryable
+// Helper function to check if error is retryable (connectivity issues only)
 function isRetryableError(error: any): boolean {
+  // Never retry authorization errors
+  if (isAuthorizationError(error)) {
+    return false;
+  }
+
   const errorMessage = error?.message?.toLowerCase() || '';
   return (
     errorMessage.includes('actor not available') ||
@@ -59,12 +65,6 @@ function isRetryableError(error: any): boolean {
     errorMessage.includes('connection') ||
     errorMessage.includes('fetch')
   );
-}
-
-// Helper function to check if error is Boss-lock
-function isBossLockError(error: any): boolean {
-  const errorMessage = error?.message?.toLowerCase() || '';
-  return errorMessage.includes('only the boss can perform this action');
 }
 
 // Helper function to wait with exponential backoff
@@ -86,8 +86,8 @@ async function withRetry<T>(
     } catch (error: any) {
       lastError = error;
 
-      // Don't retry Boss-lock errors
-      if (isBossLockError(error)) {
+      // Don't retry authorization errors
+      if (isAuthorizationError(error)) {
         throw error;
       }
 
@@ -102,7 +102,7 @@ async function withRetry<T>(
       }
 
       // Show retry notification
-      toast.info(`Ponowna próba ${operationName}... (${attempt + 1}/${RETRY_CONFIG.maxRetries})`);
+      toast.info(`Retrying ${operationName}... (${attempt + 1}/${RETRY_CONFIG.maxRetries})`);
 
       // Wait before retrying
       await waitWithBackoff(attempt);
@@ -115,25 +115,29 @@ async function withRetry<T>(
 
 // Helper to sanitize error messages for user display
 function sanitizeErrorMessage(error: any): string {
-  const message = error?.message || 'Nieznany błąd';
+  const message = error?.message || 'Unknown error';
 
-  // Boss-lock error
+  // Authorization errors - keep Polish for these as they're business logic
   if (isBossLockError(error)) {
     return 'Brak uprawnień: tylko administrator może wykonać tę operację';
   }
 
-  // Network errors
+  if (isAuthorizationError(error)) {
+    return 'Brak uprawnień do wykonania tej operacji';
+  }
+
+  // Network/connectivity errors - use English
   if (message.toLowerCase().includes('actor not available')) {
-    return 'Połączenie z serwerem jest niedostępne. Sprawdź połączenie internetowe.';
+    return 'Unable to reach the server. Please check your connection.';
   }
 
   if (message.toLowerCase().includes('network') || message.toLowerCase().includes('fetch')) {
-    return 'Błąd połączenia sieciowego. Sprawdź połączenie internetowe.';
+    return 'Network error. Please check your connection.';
   }
 
-  // Timeout errors
+  // Timeout errors - use English
   if (message.toLowerCase().includes('timeout')) {
-    return 'Przekroczono limit czasu operacji. Spróbuj ponownie.';
+    return 'Operation timed out. Please try again.';
   }
 
   // Return original message if no specific pattern matched
@@ -172,7 +176,7 @@ export function useSaveCallerUserProfile() {
       if (!actor) throw new Error('Actor not available');
       await withRetry(
         () => actor.saveCallerUserProfile(profile),
-        'zapisywania profilu'
+        'profile save'
       );
     },
     onSuccess: () => {
@@ -198,7 +202,7 @@ export function useGetCemeteryState() {
     },
     enabled: !!actor && !isFetching,
     retry: (failureCount, error: any) => {
-      if (isBossLockError(error)) return false;
+      if (isAuthorizationError(error)) return false;
       return failureCount < RETRY_CONFIG.maxRetries && isRetryableError(error);
     },
     ...CACHE_CONFIG.cemeteryState,
@@ -215,7 +219,7 @@ export function useAddAlley() {
       if (!actor) throw new Error('Actor not available');
       const result = await withRetry(
         () => actor.addAlley(name),
-        'dodawania alei'
+        'alley addition'
       );
 
       if (result.__kind__ === 'err') {
@@ -246,7 +250,7 @@ export function useRemoveAlley() {
       if (!actor) throw new Error('Actor not available');
       const result = await withRetry(
         () => actor.removeAlley(name),
-        'usuwania alei'
+        'alley removal'
       );
 
       if (result.__kind__ === 'err') {
@@ -281,7 +285,7 @@ export function useAddGrave() {
       if (!actor) throw new Error('Actor not available');
       const result = await withRetry(
         () => actor.addGrave(alley, plotNumber),
-        'dodawania grobu'
+        'grave addition'
       );
 
       if (result.__kind__ === 'err') {
@@ -316,7 +320,7 @@ export function useRemoveGrave() {
       if (!actor) throw new Error('Actor not available');
       const result = await withRetry(
         () => actor.removeGrave(id),
-        'usuwania grobu'
+        'grave removal'
       );
 
       if (result.__kind__ === 'err') {
@@ -352,7 +356,7 @@ export function useUpdateGrave() {
       if (!actor) throw new Error('Actor not available');
       const result = await withRetry(
         () => actor.updateGrave(updatedRecord.id, updatedRecord),
-        'aktualizacji grobu'
+        'grave update'
       );
 
       if (result.__kind__ === 'err') {
@@ -391,7 +395,7 @@ export function useGetAllGraves() {
     },
     enabled: !!actor && !isFetching,
     retry: (failureCount, error: any) => {
-      if (isBossLockError(error)) return false;
+      if (isAuthorizationError(error)) return false;
       return failureCount < RETRY_CONFIG.maxRetries && isRetryableError(error);
     },
     ...CACHE_CONFIG.graves,
@@ -411,7 +415,7 @@ export function useInfinitePaginatedGraves(pageSize: number = 50) {
     initialPageParam: 0n,
     enabled: !!actor && !isFetching,
     retry: (failureCount, error: any) => {
-      if (isBossLockError(error)) return false;
+      if (isAuthorizationError(error)) return false;
       return failureCount < RETRY_CONFIG.maxRetries && isRetryableError(error);
     },
     ...CACHE_CONFIG.graves,
@@ -429,7 +433,7 @@ export function useGetGrave(id: bigint | null) {
     },
     enabled: !!actor && !isFetching && id !== null,
     retry: (failureCount, error: any) => {
-      if (isBossLockError(error)) return false;
+      if (isAuthorizationError(error)) return false;
       return failureCount < RETRY_CONFIG.maxRetries && isRetryableError(error);
     },
     ...CACHE_CONFIG.graves,
@@ -493,13 +497,7 @@ export function useGetPublicTiles() {
 export function useGetGraveStatistics() {
   const { actor, isFetching } = useActor();
 
-  return useQuery<{
-    total: bigint;
-    paid: bigint;
-    unpaid: bigint;
-    free: bigint;
-    reserved: bigint;
-  }>({
+  return useQuery({
     queryKey: ['graveStatistics'],
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
@@ -507,6 +505,7 @@ export function useGetGraveStatistics() {
     },
     enabled: !!actor && !isFetching,
     retry: (failureCount, error: any) => {
+      if (isAuthorizationError(error)) return false;
       return failureCount < RETRY_CONFIG.maxRetries && isRetryableError(error);
     },
     ...CACHE_CONFIG.statistics,
@@ -525,6 +524,7 @@ export function useGetSurnamesForAutocomplete() {
     },
     enabled: !!actor && !isFetching,
     retry: (failureCount, error: any) => {
+      if (isAuthorizationError(error)) return false;
       return failureCount < RETRY_CONFIG.maxRetries && isRetryableError(error);
     },
     ...CACHE_CONFIG.surnames,
@@ -543,7 +543,7 @@ export function useGetSiteContent() {
     },
     enabled: !!actor && !isFetching,
     retry: (failureCount, error: any) => {
-      if (isBossLockError(error)) return false;
+      if (isAuthorizationError(error)) return false;
       return failureCount < RETRY_CONFIG.maxRetries && isRetryableError(error);
     },
     ...CACHE_CONFIG.siteContent,
@@ -561,11 +561,29 @@ export function useGetPublicSiteContent() {
       return actor.getSiteContent();
     },
     enabled: !!actor && !isFetching,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
     retry: (failureCount, error: any) => {
       return failureCount < RETRY_CONFIG.maxRetries && isRetryableError(error);
     },
+    ...CACHE_CONFIG.publicSiteContent,
+  });
+}
+
+export function useGetFooterContent() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<FooterContent>({
+    queryKey: ['footerContent'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getFooterContent();
+    },
+    enabled: !!actor && !isFetching,
     refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    retry: (failureCount, error: any) => {
+      return failureCount < RETRY_CONFIG.maxRetries && isRetryableError(error);
+    },
     ...CACHE_CONFIG.publicSiteContent,
   });
 }
@@ -579,7 +597,7 @@ export function useUpdateSiteContent() {
       if (!actor) throw new Error('Actor not available');
       await withRetry(
         () => actor.updateSiteContent(newContent),
-        'aktualizacji treści strony'
+        'site content update'
       );
     },
     onSuccess: () => {
@@ -594,72 +612,6 @@ export function useUpdateSiteContent() {
   });
 }
 
-export function useUpdateHomepageHeroContent() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (newContent: HomepageHeroContent) => {
-      if (!actor) throw new Error('Actor not available');
-      await withRetry(
-        () => actor.updateHomepageHeroContent(newContent),
-        'aktualizacji treści hero'
-      );
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['siteContent'] });
-      queryClient.invalidateQueries({ queryKey: ['publicSiteContent'] });
-      toast.success('Treść sekcji hero została zaktualizowana');
-    },
-    onError: (error: any) => {
-      const message = sanitizeErrorMessage(error);
-      toast.error(`Nie udało się zaktualizować treści hero: ${message}`);
-    },
-  });
-}
-
-export function useGetFooterContent() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<FooterContent>({
-    queryKey: ['footerContent'],
-    queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.getFooterContent();
-    },
-    enabled: !!actor && !isFetching,
-    retry: (failureCount, error: any) => {
-      return failureCount < RETRY_CONFIG.maxRetries && isRetryableError(error);
-    },
-    ...CACHE_CONFIG.publicSiteContent,
-  });
-}
-
-export function useUpdateFooterContent() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (newFooterContent: FooterContent) => {
-      if (!actor) throw new Error('Actor not available');
-      await withRetry(
-        () => actor.updateFooterContent(newFooterContent),
-        'aktualizacji stopki'
-      );
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['siteContent'] });
-      queryClient.invalidateQueries({ queryKey: ['publicSiteContent'] });
-      queryClient.invalidateQueries({ queryKey: ['footerContent'] });
-      toast.success('Stopka została zaktualizowana');
-    },
-    onError: (error: any) => {
-      const message = sanitizeErrorMessage(error);
-      toast.error(`Nie udało się zaktualizować stopki: ${message}`);
-    },
-  });
-}
-
 export function useUpdateLogoImage() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
@@ -669,7 +621,7 @@ export function useUpdateLogoImage() {
       if (!actor) throw new Error('Actor not available');
       await withRetry(
         () => actor.updateLogoImage(newLogo),
-        'aktualizacji logo'
+        'logo update'
       );
     },
     onSuccess: () => {
@@ -680,78 +632,6 @@ export function useUpdateLogoImage() {
     onError: (error: any) => {
       const message = sanitizeErrorMessage(error);
       toast.error(`Nie udało się zaktualizować logo: ${message}`);
-    },
-  });
-}
-
-export function useUpdatePrayerForTheDeceased() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (newSection: PrayerForTheDeceased) => {
-      if (!actor) throw new Error('Actor not available');
-      await withRetry(
-        () => actor.updatePrayerForTheDeceased(newSection),
-        'aktualizacji modlitwy'
-      );
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['siteContent'] });
-      queryClient.invalidateQueries({ queryKey: ['publicSiteContent'] });
-      toast.success('Modlitwa została zaktualizowana');
-    },
-    onError: (error: any) => {
-      const message = sanitizeErrorMessage(error);
-      toast.error(`Nie udało się zaktualizować modlitwy: ${message}`);
-    },
-  });
-}
-
-export function useUpdateCemeteryInformation() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (newSection: PublicHtmlSection) => {
-      if (!actor) throw new Error('Actor not available');
-      await withRetry(
-        () => actor.updateCemeteryInformation(newSection),
-        'aktualizacji informacji o cmentarzu'
-      );
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['siteContent'] });
-      queryClient.invalidateQueries({ queryKey: ['publicSiteContent'] });
-      toast.success('Informacje o cmentarzu zostały zaktualizowane');
-    },
-    onError: (error: any) => {
-      const message = sanitizeErrorMessage(error);
-      toast.error(`Nie udało się zaktualizować informacji: ${message}`);
-    },
-  });
-}
-
-export function useUpdateGravesDeclaration() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (newSection: PublicHtmlSection) => {
-      if (!actor) throw new Error('Actor not available');
-      await withRetry(
-        () => actor.updateGravesDeclaration(newSection),
-        'aktualizacji orzeczenia'
-      );
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['siteContent'] });
-      queryClient.invalidateQueries({ queryKey: ['publicSiteContent'] });
-      toast.success('Orzeczenie zostało zaktualizowane');
-    },
-    onError: (error: any) => {
-      const message = sanitizeErrorMessage(error);
-      toast.error(`Nie udało się zaktualizować orzeczenia: ${message}`);
     },
   });
 }

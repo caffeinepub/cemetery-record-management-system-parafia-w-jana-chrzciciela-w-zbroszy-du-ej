@@ -293,6 +293,7 @@ export interface backendInterface {
     getSiteContent(): Promise<SiteContent>;
     getSurnamesForAutocomplete(): Promise<Array<string>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    healthCheck(): Promise<void>;
     isCallerAdmin(): Promise<boolean>;
     removeAlley(name: string): Promise<AsyncResult>;
     removeGrave(id: bigint): Promise<AsyncResult>;
@@ -749,6 +750,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getUserProfile(arg0);
             return from_candid_opt_n29(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async healthCheck(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.healthCheck();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.healthCheck();
+            return result;
         }
     }
     async isCallerAdmin(): Promise<boolean> {

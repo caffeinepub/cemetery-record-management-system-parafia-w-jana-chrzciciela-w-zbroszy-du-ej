@@ -200,6 +200,7 @@ export interface backendInterface {
     getSiteContent(): Promise<SiteContent>;
     getSurnamesForAutocomplete(): Promise<Array<string>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    healthCheck(): Promise<void>;
     isCallerAdmin(): Promise<boolean>;
     removeAlley(name: string): Promise<AsyncResult>;
     removeGrave(id: bigint): Promise<AsyncResult>;

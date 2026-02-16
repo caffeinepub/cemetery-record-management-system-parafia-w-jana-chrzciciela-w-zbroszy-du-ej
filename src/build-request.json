@@ -1,85 +1,94 @@
 {
   "kind": "build_request",
-  "title": "Show grave location and status in search results (alley + plot number)",
+  "title": "Eliminate false backend-connection warnings and improve reconnect reliability",
+  "projectName": "Cemetery Portal",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Update the backend public search result shape so public grave search results include grave location (alley and plot/grave number) in addition to the existing deceased name and grave status.",
-      "target": "backend",
+      "text": "Add a lightweight backend health-check method and use it to confirm real connectivity (instead of relying only on actor creation) so the app does not show a false “server unavailable” warning when the user’s internet is fine.",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-4",
+          "msg-6"
         ],
         "quotes": [
-          "wyszukiwarka ... po wyszukaniu powinien pokazać imię i nazwisko, status grobu ... oraz która Aleja i który to grób!"
+          "\"Połączenie z serwerem jest niedostępne. Sprawdź połączenie internetowe.\"",
+          "\"tak, uruchom, żeby całkowicie usunąć problemy całkowicie\""
         ]
       },
       "acceptanceCriteria": [
-        "The backend candid/types expose a public-search-result type that includes at least: firstName, lastName, status, alley, and plotNumber (or equivalent field names).",
-        "The existing public API that returns public graves (used by the public search UI) returns these new location fields for each result.",
-        "Existing persisted cemetery/grave data remains unchanged; no state migration is introduced unless strictly required by compilation/upgrade constraints."
+        "Backend exposes a public query health-check method (e.g., ping/health) that is safe for anonymous users and returns quickly.",
+        "Frontend performs a periodic or on-mount health-check and treats the backend as “connected” only when the health-check succeeds.",
+        "The connection warning is not shown if the health-check succeeds, even if actor initialization was briefly delayed."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Update the public grave search results UI to display, for each found grave, the deceased person’s first and last name, the grave status (paid/unpaid/reserved/free), and the grave location (alley + grave/plot number).",
+      "text": "Improve the connection banner UX to reduce false positives and provide recovery controls.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-4",
+          "msg-6"
         ],
         "quotes": [
-          "po wyszukaniu powinien pokazać imię i nazwisko, status grobu ... oraz która Aleja i który to grób!"
+          "\"Połączenie z serwerem jest niedostępne. Sprawdź połączenie internetowe.\"",
+          "\"tak, uruchom, żeby całkowicie usunąć problemy całkowicie\""
         ]
       },
       "acceptanceCriteria": [
-        "In the public search tab, each result card shows: (1) first + last name, (2) a status badge, and (3) a visible location line such as “Alley X, Grave no. Y” (exact wording can follow the app’s current language/style).",
-        "The location shown for public results matches the backend-provided alley and plot/grave number fields.",
-        "No changes are made to immutable frontend paths listed in SYSTEM_CONTEXT."
+        "`ConnectionStatus` shows a neutral “Connecting to server…” state while initial connection checks are in progress and does not switch to an error state prematurely.",
+        "If connection checks fail, the banner includes a user-actionable “Retry” control that re-runs the actor/health-check logic without requiring a full page refresh.",
+        "User-facing banner text is in English (e.g., “Unable to reach the server. Please retry or refresh.”)."
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Ensure the in-memory search index builder for public graves is updated (if needed) to accommodate the extended public result shape without breaking search filtering or rendering.",
+      "text": "Ensure network/actor-related error messages displayed to end users are in English for connectivity failures and are consistent with the connection banner wording.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-4"
+        ],
+        "quotes": [
+          "\"Połączenie z serwerem jest niedostępne. Sprawdź połączenie internetowe.\""
         ]
       },
       "acceptanceCriteria": [
-        "Public grave search does not crash after the backend adds location fields to the public result shape.",
-        "Search filtering continues to work as before for name/year-based queries."
+        "Connectivity-related error strings surfaced from query/mutation error handling use English wording for “actor not available / network / fetch / timeout” scenarios.",
+        "Boss/authorization errors remain correctly detected (do not introduce retries or masking for authorization failures)."
       ]
     },
     {
       "id": "REQ-4",
-      "text": "Update the admin grave search results UI so each found grave clearly surfaces the same key summary fields at a glance: deceased name (at least one), grave status, and location (alley + plot/grave number).",
-      "target": "frontend",
+      "text": "Produce a clean rebuild/redeploy that compiles successfully and does not regress loading of Public and Admin pages.",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-6"
         ],
         "quotes": [
-          "po wyszukaniu powinien pokazać imię i nazwisko, status grobu ... oraz która Aleja i który to grób!"
+          "\"tak, uruchom, żeby całkowicie usunąć problemy całkowicie\""
         ]
       },
       "acceptanceCriteria": [
-        "In the admin search results list, each result includes a prominent summary showing: location and status, plus at least one deceased person’s first/last name (when available) without requiring scrolling into the detailed “deceased persons” section.",
-        "If a grave has zero deceased persons, the UI shows a clear placeholder (e.g., “No deceased persons”) while still showing location and status."
+        "Application builds without TypeScript errors and Motoko compilation errors.",
+        "Public page loads with hero + tiles and can navigate to Search and Map sections without showing the false backend-unavailable warning when backend is reachable.",
+        "Admin panel (when authorized) still loads and can fetch cemetery state and graves without new connection-related regressions."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor in backend/main.mo; introduce backend/migration.mo changes only if a stable-state upgrade truly requires it.",
-    "Do not modify files under frontend/src/components/ui or any other immutable paths listed in SYSTEM_CONTEXT.",
-    "Do not introduce external databases or third-party services; use existing in-canister data and APIs."
+    "Do not modify any files under `frontend/src/components/ui` (read-only shadcn sources).",
+    "Do not edit immutable hook entrypoints listed in system context; compose changes using allowed files (e.g., update `useActor`, `ConnectionStatus`, and/or add new hooks/utilities as needed).",
+    "Backend must remain a single Motoko actor with all logic in `backend/main.mo`; only add `backend/migration.mo` if state schema changes are required (avoid schema changes for a simple health check)."
   ],
   "nonGoals": [
-    "Changing the search algorithm/performance characteristics beyond what is necessary to display the requested fields.",
-    "Adding new filters, sorting options, or map-based selection as part of this change.",
-    "Translating the entire UI to English (only this build request document uses English)."
+    "Do not add third-party monitoring, external uptime services, or WebSocket-based real-time connectivity.",
+    "Do not redesign unrelated UI (search/map styling, content management) beyond what is necessary to fix the connection warning and recovery flow.",
+    "Do not change authentication method (Internet Identity only)."
   ],
   "imageRequirements": {
     "required": [],

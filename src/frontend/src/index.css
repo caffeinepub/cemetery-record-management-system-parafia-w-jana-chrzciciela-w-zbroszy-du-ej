@@ -4,98 +4,114 @@
 
 @layer base {
     :root {
-        --radius: 0.625rem;
+        --radius: 0.75rem;
         --background: 0.98 0.01 50;
-        --foreground: 0.20 0.02 30;
-        --card: 1 0 0;
-        --card-foreground: 0.20 0.02 30;
-        --popover: 1 0 0;
-        --popover-foreground: 0.20 0.02 30;
-        --primary: 0.35 0.08 240;
+        --foreground: 0.15 0.02 30;
+        --card: 0.99 0.005 50;
+        --card-foreground: 0.15 0.02 30;
+        --popover: 0.99 0.005 50;
+        --popover-foreground: 0.15 0.02 30;
+        --primary: 0.35 0.10 240;
         --primary-foreground: 0.98 0.01 50;
-        --secondary: 0.94 0.01 50;
-        --secondary-foreground: 0.25 0.02 30;
-        --muted: 0.94 0.01 50;
-        --muted-foreground: 0.50 0.02 30;
-        --accent: 0.92 0.02 50;
-        --accent-foreground: 0.25 0.02 30;
+        --secondary: 0.92 0.015 50;
+        --secondary-foreground: 0.20 0.02 30;
+        --muted: 0.92 0.015 50;
+        --muted-foreground: 0.45 0.02 30;
+        --accent: 0.90 0.025 50;
+        --accent-foreground: 0.20 0.02 30;
         --destructive: 0.58 0.24 27;
         --destructive-foreground: 0.98 0.01 50;
-        --border: 0.88 0.01 50;
-        --input: 0.88 0.01 50;
-        --ring: 0.35 0.08 240;
+        --border: 0.85 0.015 50;
+        --input: 0.85 0.015 50;
+        --ring: 0.35 0.10 240;
         --chart-1: 0.65 0.22 41;
         --chart-2: 0.60 0.12 185;
         --chart-3: 0.40 0.07 227;
         --chart-4: 0.83 0.19 84;
         --chart-5: 0.77 0.19 70;
         --sidebar: 0.98 0.01 50;
-        --sidebar-foreground: 0.20 0.02 30;
-        --sidebar-primary: 0.35 0.08 240;
+        --sidebar-foreground: 0.15 0.02 30;
+        --sidebar-primary: 0.35 0.10 240;
         --sidebar-primary-foreground: 0.98 0.01 50;
-        --sidebar-accent: 0.94 0.01 50;
-        --sidebar-accent-foreground: 0.25 0.02 30;
-        --sidebar-border: 0.88 0.01 50;
-        --sidebar-ring: 0.35 0.08 240;
+        --sidebar-accent: 0.92 0.015 50;
+        --sidebar-accent-foreground: 0.20 0.02 30;
+        --sidebar-border: 0.85 0.015 50;
+        --sidebar-ring: 0.35 0.10 240;
         
         /* Light mode: stone/parchment theme with warm gold accents */
         --tile-surface: 0.96 0.015 45;
         --tile-surface-hover: 0.94 0.025 45;
-        --tile-border: 0.85 0.02 45;
-        --tile-accent: 0.68 0.12 50;
+        --tile-border: 0.82 0.025 45;
+        --tile-accent: 0.68 0.14 50;
         --tile-icon-bg: 0.92 0.02 45;
-        --tile-icon: 0.48 0.10 48;
-        --tile-text: 0.25 0.02 30;
+        --tile-icon: 0.48 0.12 48;
+        --tile-text: 0.20 0.02 30;
     }
 
     .dark {
-        --background: 0.18 0.08 240;
-        --foreground: 0.95 0.02 50;
-        --card: 0.22 0.08 240;
-        --card-foreground: 0.95 0.02 50;
-        --popover: 0.25 0.08 240;
-        --popover-foreground: 0.95 0.02 50;
-        --primary: 0.75 0.15 45;
-        --primary-foreground: 0.20 0.08 240;
-        --secondary: 0.28 0.08 240;
-        --secondary-foreground: 0.95 0.02 50;
-        --muted: 0.28 0.08 240;
-        --muted-foreground: 0.65 0.05 50;
-        --accent: 0.35 0.10 240;
-        --accent-foreground: 0.95 0.02 50;
-        --destructive: 0.65 0.20 25;
-        --destructive-foreground: 0.20 0.08 240;
-        --border: 0.30 0.08 240;
-        --input: 0.30 0.08 240;
-        --ring: 0.55 0.10 45;
+        --background: 0.16 0.10 240;
+        --foreground: 0.96 0.02 50;
+        --card: 0.20 0.10 240;
+        --card-foreground: 0.96 0.02 50;
+        --popover: 0.22 0.10 240;
+        --popover-foreground: 0.96 0.02 50;
+        --primary: 0.75 0.16 45;
+        --primary-foreground: 0.16 0.10 240;
+        --secondary: 0.26 0.10 240;
+        --secondary-foreground: 0.96 0.02 50;
+        --muted: 0.26 0.10 240;
+        --muted-foreground: 0.62 0.05 50;
+        --accent: 0.32 0.12 240;
+        --accent-foreground: 0.96 0.02 50;
+        --destructive: 0.65 0.22 25;
+        --destructive-foreground: 0.16 0.10 240;
+        --border: 0.28 0.10 240;
+        --input: 0.28 0.10 240;
+        --ring: 0.55 0.12 45;
         --chart-1: 0.50 0.24 265;
         --chart-2: 0.70 0.17 162;
         --chart-3: 0.77 0.19 70;
         --chart-4: 0.63 0.27 304;
         --chart-5: 0.65 0.25 16;
-        --sidebar: 0.20 0.08 240;
-        --sidebar-foreground: 0.95 0.02 50;
-        --sidebar-primary: 0.75 0.15 45;
-        --sidebar-primary-foreground: 0.20 0.08 240;
-        --sidebar-accent: 0.28 0.08 240;
-        --sidebar-accent-foreground: 0.95 0.02 50;
-        --sidebar-border: 0.30 0.08 240;
-        --sidebar-ring: 0.55 0.10 45;
+        --sidebar: 0.18 0.10 240;
+        --sidebar-foreground: 0.96 0.02 50;
+        --sidebar-primary: 0.75 0.16 45;
+        --sidebar-primary-foreground: 0.16 0.10 240;
+        --sidebar-accent: 0.26 0.10 240;
+        --sidebar-accent-foreground: 0.96 0.02 50;
+        --sidebar-border: 0.28 0.10 240;
+        --sidebar-ring: 0.55 0.12 45;
         
         /* Dark mode: navy + rich gold accents with cream text */
-        --tile-surface: 0.22 0.10 240;
-        --tile-surface-hover: 0.26 0.12 240;
-        --tile-border: 0.30 0.10 240;
-        --tile-accent: 0.78 0.18 48;
-        --tile-icon-bg: 0.28 0.10 240;
-        --tile-icon: 0.82 0.20 48;
+        --tile-surface: 0.20 0.12 240;
+        --tile-surface-hover: 0.24 0.14 240;
+        --tile-border: 0.28 0.12 240;
+        --tile-accent: 0.78 0.20 48;
+        --tile-icon-bg: 0.26 0.12 240;
+        --tile-icon: 0.82 0.22 48;
         --tile-text: 0.94 0.02 50;
     }
 
     * {
         @apply border-border;
     }
+    
     body {
         @apply bg-background text-foreground;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    
+    /* Smooth transitions for theme changes */
+    *,
+    *::before,
+    *::after {
+        transition-property: background-color, border-color, color;
+        transition-duration: 0.2s;
+        transition-timing-function: ease-in-out;
+    }
+    
+    /* Exclude animations and transforms from global transition */
+    * {
+        transition-property: background-color, border-color, color;
     }
 }

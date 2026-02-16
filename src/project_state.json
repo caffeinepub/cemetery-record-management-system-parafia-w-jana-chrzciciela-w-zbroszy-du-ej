@@ -1,55 +1,48 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Cemetery/grave management app with login/admin lock; search works but needs richer result details (alley/grave and status).",
+  "summary": "New project",
   "architectural_notes": [],
   "known_issues": [
-    "Search returns results but does not show location (alley/grave) or grave status in the UI."
+    "App shows notification: \"Połączenie z serwerem jest niedostępne. Sprawdź połączenie internetowe.\" despite good internet connection (likely backend/preview connectivity issue)."
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-update-the-public-grave-search-results-ui-to-display-for-each-found-grave-the-deceased-person-s-first-and-last-name-the-grave-status-paid-unpaid-reserved-free-and-the-grave-location-alley-grave-plot-number",
-      "title": "Update the public grave search results UI to display, for each found grave, the deceased person’s first and last name, the grave status (paid/unpaid/reserved/free), and the grave location (alley + grave/plot number).",
+      "id": "feature-add-a-lightweight-backend-health-check-method-and-use-it-to-confirm-real-connectivity-instead-of-relying-only-on-actor-creation-so-the-app-does-not-show-a-false-server-unavailable-warning-when-the-user-s-internet-is-fine",
+      "title": "Add a lightweight backend health-check method and use it to confirm real connectivity (instead of relying only on actor creation) so the app does not show a false “server unavailable” warning when the user’s internet is fine.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-improve-the-connection-banner-ux-to-reduce-false-positives-and-provide-recovery-controls",
+      "title": "Improve the connection banner UX to reduce false positives and provide recovery controls.",
       "reqIds": [
         "REQ-2"
       ],
       "version": 1
     },
     {
-      "id": "feature-ensure-the-in-memory-search-index-builder-for-public-graves-is-updated-if-needed-to-accommodate-the-extended-public-result-shape-without-breaking-search-filtering-or-rendering",
-      "title": "Ensure the in-memory search index builder for public graves is updated (if needed) to accommodate the extended public result shape without breaking search filtering or rendering.",
+      "id": "feature-ensure-network-actor-related-error-messages-displayed-to-end-users-are-in-english-for-connectivity-failures-and-are-consistent-with-the-connection-banner-wording",
+      "title": "Ensure network/actor-related error messages displayed to end users are in English for connectivity failures and are consistent with the connection banner wording.",
       "reqIds": [
         "REQ-3"
       ],
       "version": 1
     },
     {
-      "id": "feature-update-the-admin-grave-search-results-ui-so-each-found-grave-clearly-surfaces-the-same-key-summary-fields-at-a-glance-deceased-name-at-least-one-grave-status-and-location-alley-plot-grave-number",
-      "title": "Update the admin grave search results UI so each found grave clearly surfaces the same key summary fields at a glance: deceased name (at least one), grave status, and location (alley + plot/grave number).",
+      "id": "feature-produce-a-clean-rebuild-redeploy-that-compiles-successfully-and-does-not-regress-loading-of-public-and-admin-pages",
+      "title": "Produce a clean rebuild/redeploy that compiles successfully and does not regress loading of Public and Admin pages.",
       "reqIds": [
         "REQ-4"
       ],
       "version": 1
     }
   ],
-  "new_feature_requests": [
-    {
-      "id": "AR-1",
-      "summary": "Enhance search results to display grave details: first/last name, grave status (paid/unpaid/reserved), and location (alley + grave number).",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-2",
-      "summary": "Update the backend public search result shape so public grave search results include grave location (alley and plot/grave number) in addition to the existing deceased name and grave status.",
-      "reqIds": [
-        "REQ-1"
-      ],
-      "status": "pending"
-    }
-  ],
-  "projectName": "Show grave location and status in search results (alley + plot number)",
+  "new_feature_requests": [],
+  "projectName": "Cemetery Portal",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

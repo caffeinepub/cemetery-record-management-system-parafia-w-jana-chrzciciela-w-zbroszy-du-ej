@@ -94,9 +94,9 @@ export default function GraveSearch({ isAdmin = false }: GraveSearchProps) {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="py-12 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <Card className="shadow-lg">
+        <CardContent className="py-16 flex items-center justify-center">
+          <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
         </CardContent>
       </Card>
     );
@@ -107,42 +107,42 @@ export default function GraveSearch({ isAdmin = false }: GraveSearchProps) {
     : 'Szukaj po nazwisku zmarłego lub roku śmierci...';
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Search className="h-5 w-5" />
+    <div className="space-y-8">
+      <Card className="shadow-lg border-2">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-3 text-2xl">
+            <Search className="h-6 w-6 text-primary" />
             Wyszukiwanie grobów
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="search">Szukaj</Label>
+        <CardContent className="space-y-6">
+          <div className="space-y-3">
+            <Label htmlFor="search" className="text-base font-semibold">Szukaj</Label>
             <Input
               id="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={placeholderText}
-              className="w-full"
+              className="w-full h-12 text-base border-2 focus-visible:ring-4"
             />
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground leading-relaxed">
               Wyszukiwanie uruchamia się po krótkiej pauzie
             </p>
           </div>
 
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center justify-between text-sm pt-2">
             <div className="text-muted-foreground">
               {debouncedQuery ? (
                 <>
-                  Wyświetlono <span className="font-semibold text-foreground">{filteredCount}</span> z{' '}
-                  <span className="font-semibold text-foreground">{totalLoaded}</span> załadowanych grobów
+                  Wyświetlono <span className="font-bold text-foreground">{filteredCount}</span> z{' '}
+                  <span className="font-bold text-foreground">{totalLoaded}</span> załadowanych grobów
                 </>
               ) : (
                 <>
-                  Załadowano <span className="font-semibold text-foreground">{totalLoaded}</span>{' '}
+                  Załadowano <span className="font-bold text-foreground">{totalLoaded}</span>{' '}
                   {isAdmin && (
                     <>
-                      z <span className="font-semibold text-foreground">{totalGraves}</span>
+                      z <span className="font-bold text-foreground">{totalGraves}</span>
                     </>
                   )}{' '}
                   grobów
@@ -155,6 +155,7 @@ export default function GraveSearch({ isAdmin = false }: GraveSearchProps) {
                 disabled={isFetchingNextPage}
                 variant="outline"
                 size="sm"
+                className="font-medium"
               >
                 {isFetchingNextPage ? (
                   <>

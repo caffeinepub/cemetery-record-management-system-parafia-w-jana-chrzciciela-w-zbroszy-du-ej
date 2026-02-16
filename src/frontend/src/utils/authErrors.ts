@@ -34,3 +34,26 @@ export function isAuthorizationError(error: any): boolean {
     errorMessage.includes('Only users')
   );
 }
+
+/**
+ * Check if an error is a connectivity/network issue (not authorization).
+ * @param error - The error object from a failed query/mutation
+ * @returns true if this is a retryable connectivity error
+ */
+export function isConnectivityError(error: any): boolean {
+  if (!error) return false;
+  
+  // Never treat authorization errors as connectivity issues
+  if (isAuthorizationError(error)) {
+    return false;
+  }
+  
+  const errorMessage = error?.message?.toLowerCase() || '';
+  return (
+    errorMessage.includes('actor not available') ||
+    errorMessage.includes('network') ||
+    errorMessage.includes('timeout') ||
+    errorMessage.includes('connection') ||
+    errorMessage.includes('fetch')
+  );
+}

@@ -32,8 +32,8 @@ export default function PublicSectionsTiles({ onSelect }: PublicSectionsTilesPro
   ];
 
   return (
-    <section className="container mx-auto px-4 py-12">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+    <section className="container mx-auto px-6 py-16">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
         {tiles.map((tile) => {
           const Icon = tile.icon;
           return (
@@ -41,17 +41,17 @@ export default function PublicSectionsTiles({ onSelect }: PublicSectionsTilesPro
               key={tile.id}
               onClick={() => onSelect(tile.id)}
               variant="outline"
-              className="h-auto flex-col gap-4 p-8 rounded-2xl transition-all duration-300 
+              className="h-auto flex-col gap-5 p-10 rounded-2xl transition-all duration-300 
                 bg-tile-surface hover:bg-tile-surface-hover 
                 border-2 border-tile-border hover:border-tile-accent
-                shadow-md hover:shadow-xl hover:scale-[1.03]
-                focus-visible:ring-4 focus-visible:ring-tile-accent/50 focus-visible:border-tile-accent
-                active:scale-[0.98]"
+                shadow-lg hover:shadow-2xl hover:scale-105
+                focus-visible:ring-4 focus-visible:ring-tile-accent/60 focus-visible:border-tile-accent
+                active:scale-[0.97]"
             >
-              <div className="w-16 h-16 rounded-full bg-tile-icon-bg flex items-center justify-center transition-colors duration-300 group-hover:bg-tile-accent/20">
-                <Icon className="w-8 h-8 text-tile-icon transition-colors duration-300" />
+              <div className="w-20 h-20 rounded-full bg-tile-icon-bg flex items-center justify-center transition-all duration-300 shadow-md">
+                <Icon className="w-10 h-10 text-tile-icon transition-colors duration-300" />
               </div>
-              <span className="text-lg font-semibold text-tile-text text-center leading-tight">
+              <span className="text-xl font-bold text-tile-text text-center leading-snug">
                 {tile.label}
               </span>
             </Button>

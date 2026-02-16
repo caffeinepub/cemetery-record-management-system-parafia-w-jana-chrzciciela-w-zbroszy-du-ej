@@ -1,25 +1,24 @@
-import { useEffect, useState } from 'react';
-import { useActor } from '../hooks/useActor';
+import { useBackendHealthCheck } from '../hooks/useBackendHealthCheck';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { WifiOff, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { WifiOff, Loader2, RefreshCw } from 'lucide-react';
+import { useState } from 'react';
 
 export default function ConnectionStatus() {
-  const { actor, isFetching } = useActor();
-  const [showWarning, setShowWarning] = useState(false);
+  const { status, recheck } = useBackendHealthCheck();
+  const [isRetrying, setIsRetrying] = useState(false);
 
-  useEffect(() => {
-    // Show warning if actor is not available after initial loading
-    if (!isFetching && !actor) {
-      const timer = setTimeout(() => {
-        setShowWarning(true);
-      }, 5000); // Wait 5 seconds before showing warning to avoid false positives
-      return () => clearTimeout(timer);
-    } else {
-      setShowWarning(false);
+  const handleRetry = async () => {
+    setIsRetrying(true);
+    try {
+      await recheck();
+    } finally {
+      // Keep showing retry state for a moment to prevent flashing
+      setTimeout(() => setIsRetrying(false), 500);
     }
-  }, [actor, isFetching]);
+  };
 
-  if (isFetching) {
+  if (status === 'checking' && !isRetrying) {
     return (
       <Alert className="mb-4">
         <Loader2 className="h-4 w-4 animate-spin" />
@@ -28,12 +27,31 @@ export default function ConnectionStatus() {
     );
   }
 
-  if (showWarning && !actor) {
+  if (status === 'disconnected') {
     return (
       <Alert variant="destructive" className="mb-4">
         <WifiOff className="h-4 w-4" />
-        <AlertDescription>
-          Failed to communicate with backend. Please check your internet connection and refresh the page.
+        <AlertDescription className="flex items-center justify-between gap-4">
+          <span>Unable to reach the server. Please check your connection.</span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRetry}
+            disabled={isRetrying}
+            className="shrink-0"
+          >
+            {isRetrying ? (
+              <>
+                <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                Retrying...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-3 w-3 mr-2" />
+                Retry
+              </>
+            )}
+          </Button>
         </AlertDescription>
       </Alert>
     );

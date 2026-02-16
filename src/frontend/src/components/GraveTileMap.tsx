@@ -24,9 +24,9 @@ export default function GraveTileMap() {
 
   if (tilesLoading || cemeteryLoading) {
     return (
-      <Card>
-        <CardContent className="py-12 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <Card className="shadow-lg">
+        <CardContent className="py-16 flex items-center justify-center">
+          <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
         </CardContent>
       </Card>
     );
@@ -34,8 +34,8 @@ export default function GraveTileMap() {
 
   if (!cemetery || cemetery.alleys.length === 0) {
     return (
-      <Card>
-        <CardContent className="py-12 text-center text-muted-foreground">
+      <Card className="shadow-lg">
+        <CardContent className="py-16 text-center text-muted-foreground text-lg">
           Brak danych o układzie cmentarza.
         </CardContent>
       </Card>
@@ -43,97 +43,96 @@ export default function GraveTileMap() {
   }
 
   // Legend items using shared utilities
-  const legendItems: Array<{ status: GraveStatus; label: string }> = [
-    { status: GraveStatus.paid, label: 'Opłacone' },
-    { status: GraveStatus.unpaid, label: 'Nieopłacone' },
-    { status: GraveStatus.free, label: 'Wolne' },
-    { status: GraveStatus.reserved, label: 'Zarezerwowane' },
+  const legendItems: Array<{ status: GraveStatus; label: string; color: string }> = [
+    { status: GraveStatus.paid, label: getStatusLabel(GraveStatus.paid), color: getStatusLegendColor(GraveStatus.paid) },
+    { status: GraveStatus.unpaid, label: getStatusLabel(GraveStatus.unpaid), color: getStatusLegendColor(GraveStatus.unpaid) },
+    { status: GraveStatus.reserved, label: getStatusLabel(GraveStatus.reserved), color: getStatusLegendColor(GraveStatus.reserved) },
+    { status: GraveStatus.free, label: getStatusLabel(GraveStatus.free), color: getStatusLegendColor(GraveStatus.free) },
   ];
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MapPin className="h-5 w-5" />
+    <div className="space-y-8">
+      <Card className="shadow-lg border-2">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-3 text-2xl">
+            <MapPin className="h-6 w-6 text-primary" />
             Mapa cmentarza
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-4 mb-6">
-            {legendItems.map(({ status, label }) => (
-              <div key={status} className="flex items-center gap-2">
-                <div className={`w-4 h-4 rounded ${getStatusLegendColor(status)}`} />
-                <span className="text-sm">{label}</span>
-              </div>
-            ))}
+          <div className="space-y-3">
+            <h3 className="font-bold text-base">Legenda statusów:</h3>
+            <div className="flex flex-wrap gap-4">
+              {legendItems.map((item) => (
+                <div key={item.status} className="flex items-center gap-3 bg-muted/50 px-4 py-2 rounded-lg">
+                  <div className={`w-6 h-6 rounded-md ${item.color} shadow-sm ring-1 ring-border`} />
+                  <span className="text-sm font-semibold">{item.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>
 
       <div className="space-y-8">
         {cemetery.alleys.map((alley) => (
-          <LazyMount key={alley.name} rootMargin="600px">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Aleja {alley.name}</CardTitle>
+          <LazyMount key={alley.name} rootMargin="200px">
+            <Card className="shadow-lg border-2">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xl font-bold">Aleja {alley.name}</CardTitle>
               </CardHeader>
               <CardContent>
-                <TooltipProvider>
-                  <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-2 overflow-x-auto">
-                    {alley.graveIds.map((graveId) => {
-                      // Get tile data for this grave ID, or create a free tile if not found
-                      const tile = tileMap.get(graveId.toString()) || {
-                        id: graveId,
-                        alley: alley.name,
-                        plotNumber: graveId,
-                        status: GraveStatus.free,
-                        deceasedPersons: [],
-                      };
+                <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3">
+                  {alley.graveIds.map((graveId) => {
+                    const tile = tileMap.get(graveId.toString());
+                    if (!tile) return null;
 
-                      const styles = getGraveStatusStyles(tile.status);
+                    const styles = getGraveStatusStyles(tile.status);
+                    const deceasedNames = tile.deceasedPersons
+                      .map((p) => `${p.firstName} ${p.lastName}`)
+                      .join(', ');
 
-                      return (
-                        <Tooltip key={graveId.toString()}>
+                    return (
+                      <TooltipProvider key={graveId.toString()}>
+                        <Tooltip delayDuration={200}>
                           <TooltipTrigger asChild>
                             <button
                               className={`
-                                aspect-square rounded-md transition-all cursor-default
-                                ${styles.background}
-                                ${styles.hoverRing}
-                                ${styles.text}
-                                hover:scale-105
-                                flex items-center justify-center text-xs font-medium shadow-sm
-                                focus:outline-none focus:ring-4 focus:ring-primary focus:ring-offset-2
+                                aspect-square rounded-lg ${styles.background} ${styles.text}
+                                flex items-center justify-center text-sm font-bold
+                                transition-all duration-200
+                                hover:scale-110 ${styles.hoverRing}
+                                shadow-md hover:shadow-xl
+                                focus:outline-none focus-visible:scale-110
                               `}
+                              aria-label={`Grób ${tile.plotNumber}, ${getStatusLabel(tile.status)}`}
                             >
                               {tile.plotNumber.toString()}
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent className="max-w-xs bg-popover text-popover-foreground">
+                          <TooltipContent 
+                            side="top" 
+                            className="max-w-xs bg-popover border-2 shadow-xl p-4"
+                          >
                             <div className="space-y-2">
-                              <p className="font-semibold">
-                                Aleja {tile.alley}, Grób {tile.plotNumber.toString()}
+                              <p className="font-bold text-base">
+                                Grób nr {tile.plotNumber.toString()}
                               </p>
-                              <Badge variant="outline">{getStatusLabel(tile.status)}</Badge>
-                              {tile.deceasedPersons.length > 0 && (
-                                <div className="text-sm">
-                                  <p className="font-medium">Spoczywają:</p>
-                                  {tile.deceasedPersons.map((person, idx) => (
-                                    <p key={idx} className="text-muted-foreground">
-                                      {person.firstName} {person.lastName}
-                                      {person.yearOfDeath > 0 && ` (${person.yearOfDeath.toString()})`}
-                                    </p>
-                                  ))}
-                                </div>
+                              <Badge variant={styles.background.includes('green') ? 'default' : styles.background.includes('red') ? 'destructive' : 'secondary'} className="font-semibold">
+                                {getStatusLabel(tile.status)}
+                              </Badge>
+                              {deceasedNames && (
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                  {deceasedNames}
+                                </p>
                               )}
                             </div>
                           </TooltipContent>
                         </Tooltip>
-                      );
-                    })}
-                  </div>
-                </TooltipProvider>
+                      </TooltipProvider>
+                    );
+                  })}
+                </div>
               </CardContent>
             </Card>
           </LazyMount>

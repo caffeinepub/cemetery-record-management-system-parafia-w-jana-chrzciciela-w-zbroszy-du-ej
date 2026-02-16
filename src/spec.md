@@ -1,12 +1,13 @@
 # Specification
 
 ## Summary
-**Goal:** Show grave location (alley + plot/grave number) alongside status and deceased name in both public and admin grave search results.
+**Goal:** Eliminate false “server unavailable” warnings by confirming real backend connectivity via a lightweight health check, and improve reconnect UX and messaging consistency.
 
 **Planned changes:**
-- Extend the backend public grave search result type and API response to include location fields (alley and plot/grave number) in addition to existing name and status.
-- Update the public grave search results UI to display name, status badge, and a clear location line (alley + grave/plot number) for each result.
-- Adjust the public in-memory search index builder (if needed) to handle the extended result shape without breaking filtering or rendering.
-- Update the admin grave search results UI to prominently show location and status plus at least one deceased person’s name; show a clear placeholder when no deceased persons exist.
+- Add a fast, anonymous-safe backend health-check query method (e.g., ping/health) in the Motoko actor.
+- Update frontend connection logic to treat the backend as “connected” only when the health-check succeeds (rather than relying solely on actor initialization timing).
+- Improve `ConnectionStatus` UX to show a neutral “Connecting to server…” state during initial checks, avoid premature error states, and provide a “Retry” control to re-run health-check/actor connection logic without a full refresh.
+- Standardize connectivity-related user-facing errors to English and align wording with the connection banner, without changing authorization error handling.
+- Produce a clean rebuild/redeploy ensuring Public and Admin pages still load and function without new connection-related regressions.
 
-**User-visible outcome:** When searching for graves (public or admin), each result shows the deceased name, grave status, and the grave’s location (alley and plot/grave number) at a glance.
+**User-visible outcome:** Users see a “Connecting to server…” status during startup, do not get false “server unavailable” warnings when the backend is reachable, can retry connection from the banner, and see consistent English connectivity messages across the app.
