@@ -4,44 +4,27 @@
   "summary": "New project",
   "architectural_notes": [],
   "known_issues": [
-    "App shows notification: \"Połączenie z serwerem jest niedostępne. Sprawdź połączenie internetowe.\" despite good internet connection (likely backend/preview connectivity issue)."
+    "Low contrast on Map tab: hovering over a grave tile shows a preview/info that is hard to read; needs improved color contrast."
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-add-a-lightweight-backend-health-check-method-and-use-it-to-confirm-real-connectivity-instead-of-relying-only-on-actor-creation-so-the-app-does-not-show-a-false-server-unavailable-warning-when-the-user-s-internet-is-fine",
-      "title": "Add a lightweight backend health-check method and use it to confirm real connectivity (instead of relying only on actor creation) so the app does not show a false “server unavailable” warning when the user’s internet is fine.",
+      "id": "feature-improve-the-color-contrast-and-overall-readability-of-the-hover-preview-tooltip-shown-when-the-user-hovers-a-grave-tile-on-the-public-map-tab-so-that-the-grave-identification-information-is-clearly-visible-in-both-light-and-dark-themes",
+      "title": "Improve the color contrast and overall readability of the hover preview (tooltip) shown when the user hovers a grave tile on the public “Map” tab, so that the grave identification information is clearly visible in both light and dark themes.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
-    },
-    {
-      "id": "feature-improve-the-connection-banner-ux-to-reduce-false-positives-and-provide-recovery-controls",
-      "title": "Improve the connection banner UX to reduce false positives and provide recovery controls.",
-      "reqIds": [
-        "REQ-2"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-ensure-network-actor-related-error-messages-displayed-to-end-users-are-in-english-for-connectivity-failures-and-are-consistent-with-the-connection-banner-wording",
-      "title": "Ensure network/actor-related error messages displayed to end users are in English for connectivity failures and are consistent with the connection banner wording.",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-produce-a-clean-rebuild-redeploy-that-compiles-successfully-and-does-not-regress-loading-of-public-and-admin-pages",
-      "title": "Produce a clean rebuild/redeploy that compiles successfully and does not regress loading of Public and Admin pages.",
-      "reqIds": [
-        "REQ-4"
-      ],
-      "version": 1
     }
   ],
-  "new_feature_requests": [],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Improve color contrast of grave info hover preview on the Map tab (grave tile hover tooltip/info is hard to read).",
+      "reqIds": [],
+      "status": "pending"
+    }
+  ],
   "projectName": "Cemetery Portal",
   "clarification_mode": "instant",
   "clarification_rounds": 0

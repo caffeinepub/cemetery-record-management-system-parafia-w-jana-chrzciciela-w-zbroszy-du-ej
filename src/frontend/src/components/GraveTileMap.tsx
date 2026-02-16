@@ -115,14 +115,14 @@ export default function GraveTileMap() {
                             className="max-w-xs bg-popover border-2 shadow-xl p-4"
                           >
                             <div className="space-y-2">
-                              <p className="font-bold text-base">
+                              <p className="font-bold text-base text-popover-foreground">
                                 Grób nr {tile.plotNumber.toString()}
                               </p>
                               <Badge variant={styles.background.includes('green') ? 'default' : styles.background.includes('red') ? 'destructive' : 'secondary'} className="font-semibold">
                                 {getStatusLabel(tile.status)}
                               </Badge>
                               {deceasedNames && (
-                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                <p className="text-sm text-popover-foreground/75 leading-relaxed font-medium">
                                   {deceasedNames}
                                 </p>
                               )}

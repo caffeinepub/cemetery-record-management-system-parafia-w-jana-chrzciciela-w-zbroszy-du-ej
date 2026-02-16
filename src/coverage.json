@@ -1,87 +1,34 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-16T15:45:53.759Z",
+  "generatedAt": "2026-02-16T16:04:05.775Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 4,
-    "implemented": 4,
+    "total": 1,
+    "implemented": 1,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Add a lightweight backend health-check method and use it to confirm real connectivity (instead of relying only on actor creation) so the app does not show a false “server unavailable” warning when the user’s internet is fine.",
+        "summary": "Improve the color contrast and overall readability of the hover preview (tooltip) shown when the user hovers a grave tile on the public “Map” tab, so that the grave identification information is clearly visible in both light and dark themes.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useBackendHealthCheck.ts",
-          "frontend/src/hooks/useActor.ts",
-          "frontend/src/components/ConnectionStatus.tsx"
+          "frontend/src/components/GraveTileMap.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/hooks/useBackendHealthCheck.ts",
-          "frontend/src/components/ConnectionStatus.tsx"
-        ]
-      },
-      {
-        "id": "REQ-2",
-        "summary": "Improve the connection banner UX to reduce false positives and provide recovery controls.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/ConnectionStatus.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/ConnectionStatus.tsx"
-        ]
-      },
-      {
-        "id": "REQ-3",
-        "summary": "Ensure network/actor-related error messages displayed to end users are in English for connectivity failures and are consistent with the connection banner wording.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/utils/authErrors.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/utils/authErrors.ts"
-        ]
-      },
-      {
-        "id": "REQ-4",
-        "summary": "Produce a clean rebuild/redeploy that compiles successfully and does not regress loading of Public and Admin pages.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/App.tsx",
-          "frontend/src/components/ConnectionStatus.tsx",
-          "frontend/src/pages/PublicPage.tsx",
-          "frontend/src/pages/AdminPanel.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/App.tsx",
-          "frontend/src/components/ConnectionStatus.tsx"
+          "frontend/src/components/GraveTileMap.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
     "build-request.json",
-    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/App.tsx",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/components/ConnectionStatus.tsx",
-    "frontend/src/config.ts",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useBackendHealthCheck.ts",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/utils/authErrors.ts",
+    "frontend/src/components/GraveTileMap.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

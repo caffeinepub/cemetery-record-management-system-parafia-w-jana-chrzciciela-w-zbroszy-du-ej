@@ -2,11 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-add-a-lightweight-backend-health-check-method-and-use-it-to-confirm-real-connectivity-instead-of-relying-only-on-actor-creation-so-the-app-does-not-show-a-false-server-unavailable-warning-when-the-user-s-internet-is-fine",
-      "featureTitle": "Add a lightweight backend health-check method and use it to confirm real connectivity (instead of relying only on actor creation) so the app does not show a false “server unavailable” warning when the user’s internet is fine.",
+      "featureId": "feature-improve-the-color-contrast-and-overall-readability-of-the-hover-preview-tooltip-shown-when-the-user-hovers-a-grave-tile-on-the-public-map-tab-so-that-the-grave-identification-information-is-clearly-visible-in-both-light-and-dark-themes",
+      "featureTitle": "Improve the color contrast and overall readability of the hover preview (tooltip) shown when the user hovers a grave tile on the public “Map” tab, so that the grave identification information is clearly visible in both light and dark themes.",
       "files": [
-        "frontend/src/components/ConnectionStatus.tsx",
-        "frontend/src/hooks/useBackendHealthCheck.ts"
+        "frontend/src/components/GraveTileMap.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -19,68 +18,6 @@
       ],
       "testIds": [
         "REQ-1"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-improve-the-connection-banner-ux-to-reduce-false-positives-and-provide-recovery-controls",
-      "featureTitle": "Improve the connection banner UX to reduce false positives and provide recovery controls.",
-      "files": [
-        "frontend/src/components/ConnectionStatus.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "blob-storage@4.0.0"
-      ],
-      "testIds": [
-        "REQ-2"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-ensure-network-actor-related-error-messages-displayed-to-end-users-are-in-english-for-connectivity-failures-and-are-consistent-with-the-connection-banner-wording",
-      "featureTitle": "Ensure network/actor-related error messages displayed to end users are in English for connectivity failures and are consistent with the connection banner wording.",
-      "files": [
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/utils/authErrors.ts"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "blob-storage@4.0.0"
-      ],
-      "testIds": [
-        "REQ-3"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-produce-a-clean-rebuild-redeploy-that-compiles-successfully-and-does-not-regress-loading-of-public-and-admin-pages",
-      "featureTitle": "Produce a clean rebuild/redeploy that compiles successfully and does not regress loading of Public and Admin pages.",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/components/ConnectionStatus.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "blob-storage@4.0.0"
-      ],
-      "testIds": [
-        "REQ-4"
       ],
       "confidence": "high"
     }

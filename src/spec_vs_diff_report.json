@@ -1,60 +1,37 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-16T15:45:53.756Z",
-  "summary": "Frontend adds a React Query–based backend health-check hook and updates ConnectionStatus to show a neutral connecting state plus a Retry button. However, the diff evidence is insufficient to confirm the backend health-check method was actually added, and the banner/error wording may not fully match the requested English phrasing/consistency requirements.",
-  "missing_requirements": [
-    {
-      "id": "REQ-1",
-      "requirement": "Backend exposes a public query health-check method (e.g., ping/health) that is safe for anonymous users and returns quickly.",
-      "reason": "Frontend calls `actor.healthCheck()` but the provided `backend/main.mo` diff snippet is truncated and does not show any `public query func healthCheck` (or similar) being implemented. Without explicit evidence in the diff, the backend method cannot be verified as added.",
-      "evidence": [
-        "frontend/src/hooks/useBackendHealthCheck.ts",
-        "backend/main.mo"
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "requirement": "If connection checks fail, the banner text should be in English and include guidance consistent with the requested wording (e.g., “Unable to reach the server. Please retry or refresh.”).",
-      "reason": "The disconnected banner text is English and includes a Retry button, but the message shown is “Unable to reach the server. Please check your connection.” which does not include the requested “retry or refresh” guidance and may be inconsistent with the acceptance-criteria example.",
-      "evidence": [
-        "frontend/src/components/ConnectionStatus.tsx"
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "requirement": "Connectivity-related error strings surfaced from query/mutation error handling use English wording and are consistent with the connection banner wording.",
-      "reason": "`useQueries.ts` is truncated in the diff right as `sanitizeErrorMessage` begins, so the actual English connectivity strings and their consistency with the banner cannot be verified from the provided diff evidence.",
-      "evidence": [
-        "frontend/src/hooks/useQueries.ts"
-      ]
-    }
-  ],
+  "generatedAt": "2026-02-16T16:04:05.773Z",
+  "summary": "REQ-1 targets improving hover tooltip contrast/readability on the public Map tab. The diff shows changes in `frontend/src/components/GraveTileMap.tsx` and a file summary stating improved tooltip styling with higher-contrast text for light/dark themes, but the actual tooltip markup/classes are truncated so the implementation details can’t be fully verified from the provided excerpt. Additionally, there are unrelated project metadata/documentation updates and apparent broader Map UI/legend styling changes beyond tooltip contrast.",
+  "missing_requirements": [],
   "hallucinated_features": [
     {
-      "description": "Added generalized retry framework for queries/mutations with exponential backoff and user toasts (e.g., `withRetry`, `isRetryableError`, `toast.info(\"Retrying ...\")`).",
-      "reason": "The request focuses on eliminating false connection warnings and adding a health-check + retry control in the connection banner. A broad mutation/query retry-and-toast system is not explicitly requested and could change behavior beyond the banner/health-check flow.",
+      "description": "Updated `project_state.json` (new_feature_requests/known_issues metadata changes) unrelated to the requested UI-only tooltip contrast fix.",
+      "reason": "BuildRequest only requests improving the grave hover tooltip contrast on the public Map tab and explicitly notes no backend/architecture changes; it does not request project state metadata updates.",
       "evidence": [
-        "frontend/src/hooks/useQueries.ts"
+        "project_state.json"
       ]
     },
     {
-      "description": "Changed app-level gating to show a full-screen loading view whenever `!actor` (in addition to Internet Identity init), potentially altering initial load behavior for Public/Admin pages.",
-      "reason": "Not explicitly requested as part of the connection-warning fix; it changes app UX/flow and could mask connection states differently than requested (the requirement emphasizes banner behavior rather than blocking the app until actor exists).",
+      "description": "Updated `frontend-file-summaries.txt` content (documentation/summary changes) unrelated to the requested tooltip contrast fix.",
+      "reason": "BuildRequest contains no requirement to update generated file summaries or documentation.",
       "evidence": [
-        "frontend/src/App.tsx"
+        "frontend-file-summaries.txt"
+      ]
+    },
+    {
+      "description": "Broader Map page/UI restyling beyond tooltip contrast (e.g., ‘modernized legend layout’, enhanced cards/borders/spacing) in the public cemetery map component.",
+      "reason": "Non-goals specify not redesigning the entire Map page and only addressing the hover preview/tooltip contrast issue; the diff shows additional styling/layout changes in the Map component beyond tooltip text contrast.",
+      "evidence": [
+        "frontend/src/components/GraveTileMap.tsx",
+        "frontend-file-summaries.txt"
       ]
     }
   ],
-  "confidence": 0.62,
+  "confidence": 0.64,
   "changed_files": [
-    "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/App.tsx",
-    "frontend/src/components/ConnectionStatus.tsx",
-    "frontend/src/hooks/useBackendHealthCheck.ts",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/utils/authErrors.ts",
+    "frontend/src/components/GraveTileMap.tsx",
     "project_state.json"
   ]
 }

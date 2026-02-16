@@ -1,97 +1,49 @@
 {
   "kind": "build_request",
-  "title": "Eliminate false backend-connection warnings and improve reconnect reliability",
+  "title": "Improve grave tile hover info contrast on Map tab",
   "projectName": "Cemetery Portal",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Add a lightweight backend health-check method and use it to confirm real connectivity (instead of relying only on actor creation) so the app does not show a false “server unavailable” warning when the user’s internet is fine.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-4",
-          "msg-6"
-        ],
-        "quotes": [
-          "\"Połączenie z serwerem jest niedostępne. Sprawdź połączenie internetowe.\"",
-          "\"tak, uruchom, żeby całkowicie usunąć problemy całkowicie\""
-        ]
-      },
-      "acceptanceCriteria": [
-        "Backend exposes a public query health-check method (e.g., ping/health) that is safe for anonymous users and returns quickly.",
-        "Frontend performs a periodic or on-mount health-check and treats the backend as “connected” only when the health-check succeeds.",
-        "The connection warning is not shown if the health-check succeeds, even if actor initialization was briefly delayed."
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "text": "Improve the connection banner UX to reduce false positives and provide recovery controls.",
+      "text": "Improve the color contrast and overall readability of the hover preview (tooltip) shown when the user hovers a grave tile on the public “Map” tab, so that the grave identification information is clearly visible in both light and dark themes.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4",
-          "msg-6"
+          "recent-messages-6"
         ],
         "quotes": [
-          "\"Połączenie z serwerem jest niedostępne. Sprawdź połączenie internetowe.\"",
-          "\"tak, uruchom, żeby całkowicie usunąć problemy całkowicie\""
+          "po otworzeniu zakładki Mapa, po najechaniu kursorem na kafelek grobu niestety jest słaby kontrast i słabo widać informację który to grób - należy poprawić kontrast kolorystyczny wyświetlania podglądu informacji o wybranym grobie po najechaniu na niego kursorem."
         ]
       },
       "acceptanceCriteria": [
-        "`ConnectionStatus` shows a neutral “Connecting to server…” state while initial connection checks are in progress and does not switch to an error state prematurely.",
-        "If connection checks fail, the banner includes a user-actionable “Retry” control that re-runs the actor/health-check logic without requiring a full page refresh.",
-        "User-facing banner text is in English (e.g., “Unable to reach the server. Please retry or refresh.”)."
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Ensure network/actor-related error messages displayed to end users are in English for connectivity failures and are consistent with the connection banner wording.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "\"Połączenie z serwerem jest niedostępne. Sprawdź połączenie internetowe.\""
-        ]
-      },
-      "acceptanceCriteria": [
-        "Connectivity-related error strings surfaced from query/mutation error handling use English wording for “actor not available / network / fetch / timeout” scenarios.",
-        "Boss/authorization errors remain correctly detected (do not introduce retries or masking for authorization failures)."
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Produce a clean rebuild/redeploy that compiles successfully and does not regress loading of Public and Admin pages.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-6"
-        ],
-        "quotes": [
-          "\"tak, uruchom, żeby całkowicie usunąć problemy całkowicie\""
-        ]
-      },
-      "acceptanceCriteria": [
-        "Application builds without TypeScript errors and Motoko compilation errors.",
-        "Public page loads with hero + tiles and can navigate to Search and Map sections without showing the false backend-unavailable warning when backend is reachable.",
-        "Admin panel (when authorized) still loads and can fetch cemetery state and graves without new connection-related regressions."
+        "On the public Map tab, the tooltip content for a hovered grave tile is clearly readable (good contrast) in both light mode and dark mode.",
+        "The tooltip’s primary line identifying the grave (e.g., “Grave no. X”) uses a high-contrast text color against the tooltip background.",
+        "Secondary tooltip text (e.g., deceased names) is still visually secondary but remains clearly legible (not washed out / low-contrast).",
+        "No backend changes are required; only UI styling/markup changes are made."
       ]
     }
   ],
   "constraints": [
-    "Do not modify any files under `frontend/src/components/ui` (read-only shadcn sources).",
-    "Do not edit immutable hook entrypoints listed in system context; compose changes using allowed files (e.g., update `useActor`, `ConnectionStatus`, and/or add new hooks/utilities as needed).",
-    "Backend must remain a single Motoko actor with all logic in `backend/main.mo`; only add `backend/migration.mo` if state schema changes are required (avoid schema changes for a simple health check)."
+    "Do not modify any files under frontend/src/components/ui (Shadcn UI components must be composed/used, not edited).",
+    "Keep the backend architecture unchanged (single Motoko actor); no schema/state migration is needed for this UI-only change."
   ],
   "nonGoals": [
-    "Do not add third-party monitoring, external uptime services, or WebSocket-based real-time connectivity.",
-    "Do not redesign unrelated UI (search/map styling, content management) beyond what is necessary to fix the connection warning and recovery flow.",
-    "Do not change authentication method (Internet Identity only)."
+    "Do not change cemetery map data, layout, alley/grave ordering, or hover behavior timing.",
+    "Do not redesign the entire Map page; only address the hover preview/tooltip contrast issue."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }

@@ -1,98 +1,22 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Cemetery Portal: reliable backend connectivity checks and banner UX",
+  "title": "Improve Map grave tile hover tooltip contrast (light/dark)",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Use a real backend health-check call to confirm connectivity and avoid false “server unavailable” warnings during actor initialization delays.",
+      "summary": "Increase contrast/readability of the public Map grave-tile hover tooltip in both light and dark themes using shadcn/ui Tooltip composition (without editing ui components).",
       "acceptanceCriteria": [
-        "Backend exposes a public query health-check method (e.g., ping/health) that is safe for anonymous users and returns quickly.",
-        "Frontend performs a periodic or on-mount health-check and treats the backend as “connected” only when the health-check succeeds.",
-        "The connection warning is not shown if the health-check succeeds, even if actor initialization was briefly delayed."
+        "On the public Map tab, the tooltip content for a hovered grave tile is clearly readable (good contrast) in both light mode and dark mode.",
+        "The tooltip’s primary line identifying the grave (e.g., “Grave no. X”) uses a high-contrast text color against the tooltip background.",
+        "Secondary tooltip text (e.g., deceased names) is still visually secondary but remains clearly legible (not washed out / low-contrast).",
+        "No backend changes are required; only UI styling/markup changes are made."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useBackendHealthCheck.ts",
-          "operation": "create",
-          "description": "Create a lightweight hook that calls the backend's existing health-check capability (backendInterface.healthCheck) and exposes explicit states (checking/connected/disconnected), plus a manual recheck trigger."
-        },
-        {
-          "path": "frontend/src/hooks/useActor.ts",
+          "path": "frontend/src/components/GraveTileMap.tsx",
           "operation": "modify",
-          "description": "Expose a user-invokable refetch/recreate mechanism (e.g., a reconnect function that re-runs actor creation) so health-check and UI controls can force a fresh connectivity attempt without a full page refresh."
-        },
-        {
-          "path": "frontend/src/components/ConnectionStatus.tsx",
-          "operation": "modify",
-          "description": "Update connectivity determination to rely on the health-check result (via the new useBackendHealthCheck hook) rather than actor presence alone; keep actor initialization delay from triggering a false disconnected state."
-        }
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "summary": "Improve the connection banner UX with a neutral connecting state, an explicit retry control, and English messaging.",
-      "acceptanceCriteria": [
-        "`ConnectionStatus` shows a neutral “Connecting to server…” state while initial connection checks are in progress and does not switch to an error state prematurely.",
-        "If connection checks fail, the banner includes a user-actionable “Retry” control that re-runs the actor/health-check logic without requiring a full page refresh.",
-        "User-facing banner text is in English (e.g., “Unable to reach the server. Please retry or refresh.”)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/ConnectionStatus.tsx",
-          "operation": "modify",
-          "description": "Revise banner state machine to: (1) show a neutral connecting state while actor creation + health-check are pending, (2) only show an error after health-check failure, and (3) include an English Retry action that invokes actor reconnect + health recheck."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Standardize end-user connectivity error strings to English while preserving authorization/Boss-lock detection and behavior.",
-      "acceptanceCriteria": [
-        "Connectivity-related error strings surfaced from query/mutation error handling use English wording for “actor not available / network / fetch / timeout” scenarios.",
-        "Boss/authorization errors remain correctly detected (do not introduce retries or masking for authorization failures)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Update retry/sanitize logic so connectivity failures produce consistent English messaging aligned with ConnectionStatus wording; ensure retryable-error detection does not treat authorization/Boss-lock failures as retryable and does not mask them with connectivity text."
-        },
-        {
-          "path": "frontend/src/utils/authErrors.ts",
-          "operation": "modify",
-          "description": "Extend/align authorization error detection helpers so query/mutation error handling can reliably distinguish authorization failures from connectivity failures and keep existing Boss-lock behavior intact."
-        }
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "summary": "Ensure the updated connectivity logic compiles cleanly and does not regress Public/Admin page loading behavior.",
-      "acceptanceCriteria": [
-        "Application builds without TypeScript errors and Motoko compilation errors.",
-        "Public page loads with hero + tiles and can navigate to Search and Map sections without showing the false backend-unavailable warning when backend is reachable.",
-        "Admin panel (when authorized) still loads and can fetch cemetery state and graves without new connection-related regressions."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Verify ConnectionStatus integration remains correct after changes (no premature error banner during initial load) and that routing/gating between Public and Admin experiences is unaffected."
-        },
-        {
-          "path": "frontend/src/components/ConnectionStatus.tsx",
-          "operation": "modify",
-          "description": "Finalize banner rendering and state transitions to avoid regressions across PublicPage/AdminPanel navigation and initial loads (including slow actor initialization)."
-        },
-        {
-          "path": "frontend/src/pages/PublicPage.tsx",
-          "operation": "modify",
-          "description": "Confirm PublicPage remains resilient with the updated connectivity/health-check approach (no new user-facing connectivity regressions when backend is reachable)."
-        },
-        {
-          "path": "frontend/src/pages/AdminPanel.tsx",
-          "operation": "modify",
-          "description": "Confirm AdminPanel remains resilient with the updated connectivity/health-check approach (no new user-facing connectivity regressions when authorized and backend is reachable)."
+          "description": "Adjust the shadcn/ui Tooltip (TooltipContent + inner text classes) used for grave tiles to enforce higher-contrast background, border, and text colors in both light/dark themes; update primary and secondary text styling so secondary remains subordinate but legible. Verify the component's usage instructions before implementing."
         }
       ]
     }
