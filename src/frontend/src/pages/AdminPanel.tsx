@@ -1,6 +1,7 @@
 import { useState, lazy, Suspense } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LayoutGrid, Search, Settings, FileText, Map, Loader2, FileEdit } from 'lucide-react';
+import { LayoutGrid, Search, Settings, FileText, Map, Loader2, FileEdit, Shield } from 'lucide-react';
+import { useAdminAuthorization } from '@/hooks/useAdminAuthorization';
 
 // Lazy load admin components for better performance
 const GraveManagement = lazy(() => import('../components/admin/GraveManagement'));
@@ -9,6 +10,7 @@ const GraveSearch = lazy(() => import('../components/GraveSearch'));
 const PDFExport = lazy(() => import('../components/admin/PDFExport'));
 const AdminGraveTileMap = lazy(() => import('../components/admin/AdminGraveTileMap'));
 const SiteContentManager = lazy(() => import('../components/admin/SiteContentManager'));
+const ManagerDelegation = lazy(() => import('../components/admin/ManagerDelegation'));
 
 function ComponentLoader() {
   return (
@@ -20,6 +22,7 @@ function ComponentLoader() {
 
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState('graves');
+  const { isBoss, isLoading: authLoading } = useAdminAuthorization();
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -31,7 +34,7 @@ export default function AdminPanel() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full max-w-4xl mx-auto grid-cols-6">
+        <TabsList className={`grid w-full max-w-4xl mx-auto ${isBoss ? 'grid-cols-7' : 'grid-cols-6'}`}>
           <TabsTrigger value="graves" className="flex items-center gap-2">
             <Search className="h-4 w-4" />
             <span className="hidden sm:inline">Groby</span>
@@ -56,6 +59,12 @@ export default function AdminPanel() {
             <FileEdit className="h-4 w-4" />
             <span className="hidden sm:inline">Treść</span>
           </TabsTrigger>
+          {isBoss && (
+            <TabsTrigger value="managers" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              <span className="hidden sm:inline">Managers</span>
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="graves" className="mt-6">
@@ -93,6 +102,14 @@ export default function AdminPanel() {
             <SiteContentManager />
           </Suspense>
         </TabsContent>
+
+        {isBoss && (
+          <TabsContent value="managers" className="mt-6">
+            <Suspense fallback={<ComponentLoader />}>
+              <ManagerDelegation />
+            </Suspense>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

@@ -2,10 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-improve-the-color-contrast-and-overall-readability-of-the-hover-preview-tooltip-shown-when-the-user-hovers-a-grave-tile-on-the-public-map-tab-so-that-the-grave-identification-information-is-clearly-visible-in-both-light-and-dark-themes",
-      "featureTitle": "Improve the color contrast and overall readability of the hover preview (tooltip) shown when the user hovers a grave tile on the public “Map” tab, so that the grave identification information is clearly visible in both light and dark themes.",
+      "featureId": "feature-publish-the-current-successful-build-version-64-to-the-live-environment",
+      "featureTitle": "Publish the current successful build (version 64) to the Live environment.",
       "files": [
-        "frontend/src/components/GraveTileMap.tsx"
+        "frontend/publish-live.build64.txt"
       ],
       "components": [
         "authorization@4.0.0",
@@ -18,6 +18,26 @@
       ],
       "testIds": [
         "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-if-a-new-build-artifact-is-required-to-trigger-a-redeploy-add-a-new-operational-redeploy-trigger-file-for-build-64-modeled-after-the-existing-build-63-trigger-file-without-changing-application-behavior",
+      "featureTitle": "If a new build artifact is required to trigger a redeploy, add a new operational redeploy trigger file for build 64 (modeled after the existing build 63 trigger file) without changing application behavior.",
+      "files": [
+        "frontend/redeploy-trigger.build64.txt"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
       ],
       "confidence": "high"
     }

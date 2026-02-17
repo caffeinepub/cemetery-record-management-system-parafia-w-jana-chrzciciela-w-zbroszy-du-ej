@@ -101,7 +101,6 @@ actor {
     #err : Error;
   };
 
-  // Types for homepage and footer content
   public type HomepageHeroContent = {
     headline : Text;
     introParagraph : Text;
@@ -110,18 +109,24 @@ actor {
     logoImage : ?Storage.ExternalBlob;
   };
 
-  public type FooterContent = {
-    address : Text;
+  public type ParishFooterContent = {
+    parishName : Text;
+    fullAddress : Text;
+    oneSentenceDescription : Text;
+    massTimes : Text;
     phoneNumber : Text;
     email : Text;
-    officeHours : Text;
     bankAccountNumber : Text;
-    websiteLink : Text;
+    websiteUrl : Text;
+    facebookUrl : Text;
+    youtubeUrl : Text;
+    xUrl : Text;
+    bibleQuote : Text;
   };
 
   public type SiteContent = {
     homepageHero : HomepageHeroContent;
-    footer : FooterContent;
+    parishFooter : ParishFooterContent;
     logoImage : ?Storage.ExternalBlob;
     gravesDeclaration : PublicHtmlSection;
     prayerForTheDeceased : PrayerForTheDeceased;
@@ -133,11 +138,10 @@ actor {
     content : Text;
   };
 
-  // New type for Prayer For The Deceased
   public type PrayerForTheDeceased = {
     title : Text;
     content : Text;
-    memorialPrayer : Text; // New field for memorial prayer content
+    memorialPrayer : Text;
   };
 
   module GraveRecord {
@@ -187,10 +191,143 @@ actor {
   };
   type Error = Error.Error;
 
-  // Boss principal - the first authenticated user becomes the permanent Boss
   var boss : ?Principal = null;
+  var managers = Set.empty<Principal>();
 
-  // Grave records state
+  func addManagerInternal(manager : Principal) : Bool {
+    if (managers.contains(manager)) { return false };
+    managers.add(manager);
+    true;
+  };
+
+  func removeManagerInternal(manager : Principal) : Bool {
+    if (not managers.contains(manager)) { return false };
+    managers.remove(manager);
+    true;
+  };
+
+  public shared ({ caller }) func isPermanentBoss() : async Bool {
+    assertPermanentBoss(caller);
+    if (caller.isAnonymous()) {
+      return false;
+    };
+
+    switch (boss) {
+      case (?storedBoss) { storedBoss == caller };
+      case (null) { false };
+    };
+  };
+
+  public shared ({ caller }) func getBoss() : async ?Principal {
+    assertPermanentBoss(caller);
+    boss;
+  };
+
+  public shared ({ caller }) func getManagers() : async [Principal] {
+    assertPermanentBoss(caller);
+    managers.toArray();
+  };
+
+  func assertPermanentBoss(caller : Principal) : () {
+    if (not isPermanentBossInternal(caller)) {
+      Runtime.trap("Only the Boss can perform this action");
+    };
+  };
+
+  func assertBossOrManager(caller : Principal) : () {
+    if (not isBossOrManagerInternal(caller)) {
+      Runtime.trap("Unauthorized: Caller is neither Boss nor manager");
+    };
+  };
+
+  func isPermanentBossInternal(caller : Principal) : Bool {
+    if (caller.isAnonymous()) {
+      return false;
+    };
+
+    ensureBossAssigned(caller);
+
+    switch (boss) {
+      case (?storedBoss) { storedBoss == caller };
+      case (null) { false };
+    };
+  };
+
+  func isBossOrManagerInternal(caller : Principal) : Bool {
+    if (caller.isAnonymous()) {
+      return false;
+    };
+    switch (boss) {
+      case (?storedBoss) {
+        if (caller == storedBoss) {
+          return true;
+        };
+      };
+      case (null) { return false };
+    };
+
+    managers.contains(caller);
+  };
+
+  func ensureBossAssigned(caller : Principal) : () {
+    if (caller.isAnonymous()) {
+      return;
+    };
+
+    switch (boss) {
+      case (null) {
+        boss := ?caller;
+      };
+      case (?_) {};
+    };
+  };
+
+  public shared ({ caller }) func assignBoss(newBoss : Principal) : async () {
+    assertPermanentBoss(caller);
+    if (newBoss.isAnonymous()) {
+      Runtime.trap("Cannot assign anonymous principal as Boss");
+    };
+    boss := ?newBoss;
+    managers.clear();
+  };
+
+  public shared ({ caller }) func addManager(principal : Principal) : async Bool {
+    assertPermanentBoss(caller);
+    if (principal.isAnonymous()) {
+      return false;
+    };
+
+    addManagerInternal(principal);
+  };
+
+  public shared ({ caller }) func removeManager(principal : Principal) : async Bool {
+    assertPermanentBoss(caller);
+    removeManagerInternal(principal);
+  };
+
+  public shared ({ caller }) func clearManagers() : async () {
+    assertPermanentBoss(caller);
+    managers.clear();
+  };
+
+  public shared ({ caller }) func isManager(principal : Principal) : async Bool {
+    assertPermanentBoss(caller);
+    managers.contains(principal);
+  };
+
+  public query ({ caller }) func getAccessRole() : async Text {
+    if (caller.isAnonymous()) {
+      Runtime.trap("Unauthorized: Authentication required");
+    };
+    if (isPermanentBossInternal(caller)) {
+      "boss";
+    } else if (isBossOrManagerInternal(caller)) {
+      "manager";
+    } else {
+      "user";
+    };
+  };
+
   let graveRecords = Map.empty<Nat, GraveRecord>();
   let userProfiles = Map.empty<Principal, UserProfile>();
   var accessControlState = AccessControl.initState();
@@ -211,13 +348,19 @@ actor {
       logoImage = null;
     };
 
-    footer = {
-      address = "Zbrosza Duża 57, 05-650 Chynów";
+    parishFooter = {
+      parishName = "Parafia św. Jana Chrzciciela w Zbroszy Dużej";
+      fullAddress = "Zbrosza Duża 57, 05-650 Chynów";
+      oneSentenceDescription = "Parafia rzymskokatolicka prowadząca cmentarz katolicki w Zbroszy Dużej.";
+      massTimes = "Niedziela: 8:00, 10:00, 12:00; Dni powszednie: 18:00";
       phoneNumber = "+48 48 662 70 01";
       email = "zbroszaduza@archidiecezja.waw.pl";
-      officeHours = "Poniedziałek, czwartek i piątek w godz. 16.30-18.00";
       bankAccountNumber = "Bank Pekao S.A. 06 1240 3259 1111 0010 7422 2925";
-      websiteLink = "https://zbroszaduza.parafialnastrona.pl/";
+      websiteUrl = "https://zbroszaduza.parafialnastrona.pl/";
+      facebookUrl = "https://www.facebook.com/parafiazbroszaduza/";
+      youtubeUrl = "https://www.youtube.com/channel/UC7V2ZRuvs0KUknhfP4JfBsw";
+      xUrl = "";
+      bibleQuote = "Wieczny odpoczynek racz im dać, Panie, a światłość wiekuista niechaj im świeci.";
     };
 
     gravesDeclaration = {
@@ -225,11 +368,10 @@ actor {
       content = "Według prawa kościelnego cmentarz kościelny jest miejscem wyjętym spod jurysdykcji świeckiej... (extend full content as needed)";
     };
 
-    // Updated Prayer For The Deceased with new field
     prayerForTheDeceased = {
       title = "Modlitwa za zmarłych";
       content = "Wieczny odpoczynek racz im dać, Panie...\nA światłość wiekuista niechaj im świeci...";
-      memorialPrayer = ""; // Initialize as empty text
+      memorialPrayer = "";
     };
 
     logoImage = null;
@@ -284,58 +426,17 @@ actor {
   include MixinAuthorization(accessControlState);
   include MixinStorage();
 
-  // -- Permanent Boss Authorization Logic ----
-  func ensureBossAssigned(caller : Principal) : () {
-    if (caller.isAnonymous()) {
-      return; // Anonymous users never become Boss
-    };
-
-    switch (boss) {
-      case (null) {
-        // First authenticated user becomes the Boss
-        boss := ?caller;
-      };
-      case (?_) {
-        // Boss already assigned, do nothing
-      };
-    };
-  };
-
-  func isPermanentBoss(caller : Principal) : Bool {
-    if (caller.isAnonymous()) {
-      return false;
-    };
-
-    // Ensure Boss is assigned if not yet set
-    ensureBossAssigned(caller);
-
-    switch (boss) {
-      case (?storedBoss) { storedBoss == caller };
-      case (null) { false }; // Should not happen after ensureBossAssigned
-    };
-  };
-
-  func assertPermanentBoss(caller : Principal) : () {
-    if (not isPermanentBoss(caller)) {
-      Runtime.trap("Unauthorized: Only the Boss can perform this action");
-    };
-  };
-
-  // -- Persistent Site Content API ----
-
-  // PUBLIC getter for full persistent site content, including all site-managed fields (logo, hero, footer, public sections etc.)
   public query ({ caller }) func getSiteContent() : async SiteContent {
     siteContentState;
   };
 
-  // Boss-only persistent section update methods.
   public shared ({ caller }) func updateSiteContent(newContent : SiteContent) : async () {
-    assertPermanentBoss(caller);
+    assertBossOrManager(caller);
     siteContentState := newContent;
   };
 
   public shared ({ caller }) func updateLogoImage(newLogo : ?Storage.ExternalBlob) : async () {
-    assertPermanentBoss(caller);
+    assertBossOrManager(caller);
     siteContentState := { siteContentState with logoImage = newLogo };
   };
 
@@ -344,7 +445,7 @@ actor {
   };
 
   public shared ({ caller }) func updateHomepageHeroContent(newContent : HomepageHeroContent) : async () {
-    assertPermanentBoss(caller);
+    assertBossOrManager(caller);
     siteContentState := {
       siteContentState with homepageHero = {
         newContent with
@@ -354,16 +455,15 @@ actor {
     };
   };
 
-  public query ({ caller }) func getFooterContent() : async FooterContent {
-    siteContentState.footer;
+  public query ({ caller }) func getParishFooterContent() : async ParishFooterContent {
+    siteContentState.parishFooter;
   };
 
-  public shared ({ caller }) func updateFooterContent(newFooterContent : FooterContent) : async () {
-    assertPermanentBoss(caller);
-    siteContentState := { siteContentState with footer = newFooterContent };
+  public shared ({ caller }) func updateParishFooterContent(newFooterContent : ParishFooterContent) : async () {
+    assertBossOrManager(caller);
+    siteContentState := { siteContentState with parishFooter = newFooterContent };
   };
 
-  // Persistent public section API; non-restricted access
   public query ({ caller }) func getGravesDeclaration() : async PublicHtmlSection {
     siteContentState.gravesDeclaration;
   };
@@ -376,25 +476,21 @@ actor {
     siteContentState.cemeteryInformation;
   };
 
-  // Boss-only persistent section update methods (called through the management panel).
   public shared ({ caller }) func updateGravesDeclaration(newSection : PublicHtmlSection) : async () {
-    assertPermanentBoss(caller);
+    assertBossOrManager(caller);
     siteContentState := { siteContentState with gravesDeclaration = newSection };
   };
 
   public shared ({ caller }) func updatePrayerForTheDeceased(newSection : PrayerForTheDeceased) : async () {
-    assertPermanentBoss(caller);
+    assertBossOrManager(caller);
     siteContentState := { siteContentState with prayerForTheDeceased = newSection };
   };
 
   public shared ({ caller }) func updateCemeteryInformation(newSection : PublicHtmlSection) : async () {
-    assertPermanentBoss(caller);
+    assertBossOrManager(caller);
     siteContentState := { siteContentState with cemeteryInformation = newSection };
   };
 
-  // Persistent admin business logic.
-
-  // Public API to fetch the admin email (for contact form)
   public query ({ caller }) func getParishContactEmail() : async Text {
     adminEmail;
   };
@@ -412,7 +508,6 @@ actor {
     };
   };
 
-  // User profile functions - allow any authenticated user (not just Boss)
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can view profiles");
@@ -435,9 +530,7 @@ actor {
   };
 
   public shared ({ caller }) func addAlley(name : Text) : async AsyncResult<()> {
-    if (not isPermanentBoss(caller)) {
-      return #err(#unauthorized);
-    };
+    assertBossOrManager(caller);
 
     let existingAlley = alleysState.find(func(a : Alley) : Bool { a.name == name });
     switch (existingAlley) {
@@ -456,9 +549,7 @@ actor {
   };
 
   public shared ({ caller }) func removeAlley(name : Text) : async AsyncResult<()> {
-    if (not isPermanentBoss(caller)) {
-      return #err(#unauthorized);
-    };
+    assertBossOrManager(caller);
 
     let alleyToRemoveOpt = alleysState.find(func(a : Alley) : Bool { a.name == name });
     switch (alleyToRemoveOpt) {
@@ -481,9 +572,7 @@ actor {
   };
 
   public shared ({ caller }) func addGrave(alley : Text, plotNumber : Nat) : async AsyncResult<Nat> {
-    if (not isPermanentBoss(caller)) {
-      return #err(#unauthorized);
-    };
+    assertBossOrManager(caller);
 
     let matchingAlley = alleysState.find(func(a : Alley) : Bool { a.name == alley });
     switch (matchingAlley) {
@@ -529,9 +618,7 @@ actor {
   };
 
   public shared ({ caller }) func removeGrave(id : Nat) : async AsyncResult<()> {
-    if (not isPermanentBoss(caller)) {
-      return #err(#unauthorized);
-    };
+    assertBossOrManager(caller);
 
     switch (graveRecords.get(id)) {
       case (?grave) {
@@ -569,9 +656,7 @@ actor {
   };
 
   public shared ({ caller }) func updateGrave(id : Nat, updatedRecord : GraveRecord) : async AsyncResult<()> {
-    if (not isPermanentBoss(caller)) {
-      return #err(#unauthorized);
-    };
+    assertBossOrManager(caller);
 
     if (not graveRecords.containsKey(id)) {
       return #err(#graveNotFound({ graveId = id }));
@@ -619,7 +704,7 @@ actor {
     status : ?GraveStatus,
     locality : ?Text,
   ) : async [GraveRecord] {
-    assertPermanentBoss(caller);
+    assertBossOrManager(caller);
 
     let filtered = graveRecords.values().toArray().filter(
       func(grave : GraveRecord) : Bool {
@@ -700,7 +785,7 @@ actor {
   };
 
   public query ({ caller }) func getGrave(id : Nat) : async ?GraveRecord {
-    assertPermanentBoss(caller);
+    assertBossOrManager(caller);
     graveRecords.get(id);
   };
 
@@ -717,26 +802,26 @@ actor {
   };
 
   public query ({ caller }) func getAllGraves() : async [GraveRecord] {
-    assertPermanentBoss(caller);
+    assertBossOrManager(caller);
     graveRecords.values().toArray().sort();
   };
 
   public query ({ caller }) func getGravesByAlley(alley : Text) : async [GraveRecord] {
-    assertPermanentBoss(caller);
+    assertBossOrManager(caller);
     graveRecords.values().toArray().filter(
       func(grave : GraveRecord) : Bool { grave.alley == alley }
     ).sort();
   };
 
   public query ({ caller }) func getAvailableGraves() : async [GraveRecord] {
-    assertPermanentBoss(caller);
+    assertBossOrManager(caller);
     graveRecords.values().toArray().filter(
       func(grave : GraveRecord) : Bool { grave.status == #free }
     ).sort();
   };
 
   public query ({ caller }) func getPaginatedGraves(offset : Nat, pageSize : Nat) : async PaginatedGravesResult {
-    assertPermanentBoss(caller);
+    assertBossOrManager(caller);
 
     let orderedGraves = graveRecords.values().toArray().sort();
     let totalGraves = orderedGraves.size();
@@ -800,7 +885,6 @@ actor {
     surnames.keys().toArray().sort();
   };
 
-  // Simplified public grave data.
   public query func getPublicGraves() : async [PublicGraveShape] {
     Array.fromIter(
       graveRecords.values().flatMap(
@@ -815,7 +899,6 @@ actor {
     );
   };
 
-  // PUBLIC method for searching public graves, including location.
   public query func searchPublicGravesWithLocation(
     surname : ?Text,
     yearOfDeath : ?Int,

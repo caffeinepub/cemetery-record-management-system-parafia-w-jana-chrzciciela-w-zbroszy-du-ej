@@ -104,7 +104,7 @@ export default function GraveEditDialog({ grave, open, onClose }: GraveEditDialo
             ? BigInt(new Date(paymentValidUntil).getTime() * 1000000)
             : undefined,
         };
-        await updateGrave.mutateAsync(updatedRecord);
+        await updateGrave.mutateAsync({ id: grave!.id, record: updatedRecord });
       }
       // Only close on success
       onClose();
@@ -322,7 +322,7 @@ export default function GraveEditDialog({ grave, open, onClose }: GraveEditDialo
                         />
                       </div>
                       <div className="space-y-2 col-span-2">
-                        <Label>Telefon (opcjonalnie)</Label>
+                        <Label>Telefon</Label>
                         <Input
                           value={owner.phone || ''}
                           onChange={(e) =>
@@ -339,17 +339,18 @@ export default function GraveEditDialog({ grave, open, onClose }: GraveEditDialo
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={updateGrave.isPending || addGrave.isPending}>
             Anuluj
           </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={updateGrave.isPending || addGrave.isPending}
-          >
-            {(updateGrave.isPending || addGrave.isPending) && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <Button onClick={handleSubmit} disabled={updateGrave.isPending || addGrave.isPending}>
+            {updateGrave.isPending || addGrave.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Zapisywanie...
+              </>
+            ) : (
+              'Zapisz'
             )}
-            {isNew ? 'Dodaj' : 'Zapisz'}
           </Button>
         </DialogFooter>
       </DialogContent>

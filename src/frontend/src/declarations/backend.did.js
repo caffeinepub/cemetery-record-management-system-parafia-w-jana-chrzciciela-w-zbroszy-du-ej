@@ -84,14 +84,6 @@ export const CemeteryView = IDL.Record({
   'lastGraveId' : IDL.Nat,
   'alleys' : IDL.Vec(AlleyView),
 });
-export const FooterContent = IDL.Record({
-  'bankAccountNumber' : IDL.Text,
-  'websiteLink' : IDL.Text,
-  'officeHours' : IDL.Text,
-  'email' : IDL.Text,
-  'address' : IDL.Text,
-  'phoneNumber' : IDL.Text,
-});
 export const ExternalBlob = IDL.Vec(IDL.Nat8);
 export const HomepageHeroContent = IDL.Record({
   'backgroundImageUrl' : IDL.Text,
@@ -105,6 +97,20 @@ export const PaginatedGravesResult = IDL.Record({
   'nextOffset' : IDL.Opt(IDL.Nat),
   'pageSize' : IDL.Nat,
   'totalGraves' : IDL.Nat,
+});
+export const ParishFooterContent = IDL.Record({
+  'bankAccountNumber' : IDL.Text,
+  'websiteUrl' : IDL.Text,
+  'xUrl' : IDL.Text,
+  'oneSentenceDescription' : IDL.Text,
+  'email' : IDL.Text,
+  'parishName' : IDL.Text,
+  'fullAddress' : IDL.Text,
+  'phoneNumber' : IDL.Text,
+  'massTimes' : IDL.Text,
+  'youtubeUrl' : IDL.Text,
+  'facebookUrl' : IDL.Text,
+  'bibleQuote' : IDL.Text,
 });
 export const PrayerForTheDeceased = IDL.Record({
   'title' : IDL.Text,
@@ -127,9 +133,9 @@ export const PublicTileData = IDL.Record({
 export const SiteContent = IDL.Record({
   'logoImage' : IDL.Opt(ExternalBlob),
   'cemeteryInformation' : PublicHtmlSection,
+  'parishFooter' : ParishFooterContent,
   'prayerForTheDeceased' : PrayerForTheDeceased,
   'gravesDeclaration' : PublicHtmlSection,
-  'footer' : FooterContent,
   'homepageHero' : HomepageHeroContent,
 });
 export const PublicGraveResult = IDL.Record({
@@ -171,9 +177,14 @@ export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'addAlley' : IDL.Func([IDL.Text], [AsyncResult], []),
   'addGrave' : IDL.Func([IDL.Text, IDL.Nat], [AsyncResult_1], []),
+  'addManager' : IDL.Func([IDL.Principal], [IDL.Bool], []),
+  'assignBoss' : IDL.Func([IDL.Principal], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'clearManagers' : IDL.Func([], [], []),
+  'getAccessRole' : IDL.Func([], [IDL.Text], ['query']),
   'getAllGraves' : IDL.Func([], [IDL.Vec(GraveRecord)], ['query']),
   'getAvailableGraves' : IDL.Func([], [IDL.Vec(GraveRecord)], ['query']),
+  'getBoss' : IDL.Func([], [IDL.Opt(IDL.Principal)], []),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getCemeteryInformation' : IDL.Func([], [PublicHtmlSection], ['query']),
@@ -183,7 +194,6 @@ export const idlService = IDL.Service({
       [CemeteryView],
       ['query'],
     ),
-  'getFooterContent' : IDL.Func([], [FooterContent], ['query']),
   'getGrave' : IDL.Func([IDL.Nat], [IDL.Opt(GraveRecord)], ['query']),
   'getGraveStatistics' : IDL.Func(
       [],
@@ -201,12 +211,14 @@ export const idlService = IDL.Service({
   'getGravesByAlley' : IDL.Func([IDL.Text], [IDL.Vec(GraveRecord)], ['query']),
   'getGravesDeclaration' : IDL.Func([], [PublicHtmlSection], ['query']),
   'getHomepageHeroContent' : IDL.Func([], [HomepageHeroContent], ['query']),
+  'getManagers' : IDL.Func([], [IDL.Vec(IDL.Principal)], []),
   'getPaginatedGraves' : IDL.Func(
       [IDL.Nat, IDL.Nat],
       [PaginatedGravesResult],
       ['query'],
     ),
   'getParishContactEmail' : IDL.Func([], [IDL.Text], ['query']),
+  'getParishFooterContent' : IDL.Func([], [ParishFooterContent], ['query']),
   'getPrayerForTheDeceased' : IDL.Func([], [PrayerForTheDeceased], ['query']),
   'getPublicGraves' : IDL.Func([], [IDL.Vec(PublicGraveShape)], ['query']),
   'getPublicTiles' : IDL.Func([], [IDL.Vec(PublicTileData)], ['query']),
@@ -219,8 +231,11 @@ export const idlService = IDL.Service({
     ),
   'healthCheck' : IDL.Func([], [], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'isManager' : IDL.Func([IDL.Principal], [IDL.Bool], []),
+  'isPermanentBoss' : IDL.Func([], [IDL.Bool], []),
   'removeAlley' : IDL.Func([IDL.Text], [AsyncResult], []),
   'removeGrave' : IDL.Func([IDL.Nat], [AsyncResult], []),
+  'removeManager' : IDL.Func([IDL.Principal], [IDL.Bool], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'searchGraves' : IDL.Func(
       [
@@ -239,11 +254,11 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'updateCemeteryInformation' : IDL.Func([PublicHtmlSection], [], []),
-  'updateFooterContent' : IDL.Func([FooterContent], [], []),
   'updateGrave' : IDL.Func([IDL.Nat, GraveRecord], [AsyncResult], []),
   'updateGravesDeclaration' : IDL.Func([PublicHtmlSection], [], []),
   'updateHomepageHeroContent' : IDL.Func([HomepageHeroContent], [], []),
   'updateLogoImage' : IDL.Func([IDL.Opt(ExternalBlob)], [], []),
+  'updateParishFooterContent' : IDL.Func([ParishFooterContent], [], []),
   'updatePrayerForTheDeceased' : IDL.Func([PrayerForTheDeceased], [], []),
   'updateSiteContent' : IDL.Func([SiteContent], [], []),
 });
@@ -327,14 +342,6 @@ export const idlFactory = ({ IDL }) => {
     'lastGraveId' : IDL.Nat,
     'alleys' : IDL.Vec(AlleyView),
   });
-  const FooterContent = IDL.Record({
-    'bankAccountNumber' : IDL.Text,
-    'websiteLink' : IDL.Text,
-    'officeHours' : IDL.Text,
-    'email' : IDL.Text,
-    'address' : IDL.Text,
-    'phoneNumber' : IDL.Text,
-  });
   const ExternalBlob = IDL.Vec(IDL.Nat8);
   const HomepageHeroContent = IDL.Record({
     'backgroundImageUrl' : IDL.Text,
@@ -348,6 +355,20 @@ export const idlFactory = ({ IDL }) => {
     'nextOffset' : IDL.Opt(IDL.Nat),
     'pageSize' : IDL.Nat,
     'totalGraves' : IDL.Nat,
+  });
+  const ParishFooterContent = IDL.Record({
+    'bankAccountNumber' : IDL.Text,
+    'websiteUrl' : IDL.Text,
+    'xUrl' : IDL.Text,
+    'oneSentenceDescription' : IDL.Text,
+    'email' : IDL.Text,
+    'parishName' : IDL.Text,
+    'fullAddress' : IDL.Text,
+    'phoneNumber' : IDL.Text,
+    'massTimes' : IDL.Text,
+    'youtubeUrl' : IDL.Text,
+    'facebookUrl' : IDL.Text,
+    'bibleQuote' : IDL.Text,
   });
   const PrayerForTheDeceased = IDL.Record({
     'title' : IDL.Text,
@@ -370,9 +391,9 @@ export const idlFactory = ({ IDL }) => {
   const SiteContent = IDL.Record({
     'logoImage' : IDL.Opt(ExternalBlob),
     'cemeteryInformation' : PublicHtmlSection,
+    'parishFooter' : ParishFooterContent,
     'prayerForTheDeceased' : PrayerForTheDeceased,
     'gravesDeclaration' : PublicHtmlSection,
-    'footer' : FooterContent,
     'homepageHero' : HomepageHeroContent,
   });
   const PublicGraveResult = IDL.Record({
@@ -414,9 +435,14 @@ export const idlFactory = ({ IDL }) => {
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'addAlley' : IDL.Func([IDL.Text], [AsyncResult], []),
     'addGrave' : IDL.Func([IDL.Text, IDL.Nat], [AsyncResult_1], []),
+    'addManager' : IDL.Func([IDL.Principal], [IDL.Bool], []),
+    'assignBoss' : IDL.Func([IDL.Principal], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'clearManagers' : IDL.Func([], [], []),
+    'getAccessRole' : IDL.Func([], [IDL.Text], ['query']),
     'getAllGraves' : IDL.Func([], [IDL.Vec(GraveRecord)], ['query']),
     'getAvailableGraves' : IDL.Func([], [IDL.Vec(GraveRecord)], ['query']),
+    'getBoss' : IDL.Func([], [IDL.Opt(IDL.Principal)], []),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getCemeteryInformation' : IDL.Func([], [PublicHtmlSection], ['query']),
@@ -426,7 +452,6 @@ export const idlFactory = ({ IDL }) => {
         [CemeteryView],
         ['query'],
       ),
-    'getFooterContent' : IDL.Func([], [FooterContent], ['query']),
     'getGrave' : IDL.Func([IDL.Nat], [IDL.Opt(GraveRecord)], ['query']),
     'getGraveStatistics' : IDL.Func(
         [],
@@ -448,12 +473,14 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getGravesDeclaration' : IDL.Func([], [PublicHtmlSection], ['query']),
     'getHomepageHeroContent' : IDL.Func([], [HomepageHeroContent], ['query']),
+    'getManagers' : IDL.Func([], [IDL.Vec(IDL.Principal)], []),
     'getPaginatedGraves' : IDL.Func(
         [IDL.Nat, IDL.Nat],
         [PaginatedGravesResult],
         ['query'],
       ),
     'getParishContactEmail' : IDL.Func([], [IDL.Text], ['query']),
+    'getParishFooterContent' : IDL.Func([], [ParishFooterContent], ['query']),
     'getPrayerForTheDeceased' : IDL.Func([], [PrayerForTheDeceased], ['query']),
     'getPublicGraves' : IDL.Func([], [IDL.Vec(PublicGraveShape)], ['query']),
     'getPublicTiles' : IDL.Func([], [IDL.Vec(PublicTileData)], ['query']),
@@ -466,8 +493,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'healthCheck' : IDL.Func([], [], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'isManager' : IDL.Func([IDL.Principal], [IDL.Bool], []),
+    'isPermanentBoss' : IDL.Func([], [IDL.Bool], []),
     'removeAlley' : IDL.Func([IDL.Text], [AsyncResult], []),
     'removeGrave' : IDL.Func([IDL.Nat], [AsyncResult], []),
+    'removeManager' : IDL.Func([IDL.Principal], [IDL.Bool], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'searchGraves' : IDL.Func(
         [
@@ -486,11 +516,11 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'updateCemeteryInformation' : IDL.Func([PublicHtmlSection], [], []),
-    'updateFooterContent' : IDL.Func([FooterContent], [], []),
     'updateGrave' : IDL.Func([IDL.Nat, GraveRecord], [AsyncResult], []),
     'updateGravesDeclaration' : IDL.Func([PublicHtmlSection], [], []),
     'updateHomepageHeroContent' : IDL.Func([HomepageHeroContent], [], []),
     'updateLogoImage' : IDL.Func([IDL.Opt(ExternalBlob)], [], []),
+    'updateParishFooterContent' : IDL.Func([ParishFooterContent], [], []),
     'updatePrayerForTheDeceased' : IDL.Func([PrayerForTheDeceased], [], []),
     'updateSiteContent' : IDL.Func([SiteContent], [], []),
   });

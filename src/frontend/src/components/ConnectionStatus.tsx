@@ -1,11 +1,11 @@
 import { useBackendHealthCheck } from '../hooks/useBackendHealthCheck';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { WifiOff, Loader2, RefreshCw } from 'lucide-react';
+import { WifiOff, Loader2, RefreshCw, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 
 export default function ConnectionStatus() {
-  const { status, recheck } = useBackendHealthCheck();
+  const { status, recheck, hasActorError } = useBackendHealthCheck();
   const [isRetrying, setIsRetrying] = useState(false);
 
   const handleRetry = async () => {
@@ -20,7 +20,7 @@ export default function ConnectionStatus() {
 
   if (status === 'checking' && !isRetrying) {
     return (
-      <Alert className="mb-4">
+      <Alert className="mb-4 mx-4 mt-4">
         <Loader2 className="h-4 w-4 animate-spin" />
         <AlertDescription>Connecting to server...</AlertDescription>
       </Alert>
@@ -29,10 +29,14 @@ export default function ConnectionStatus() {
 
   if (status === 'disconnected') {
     return (
-      <Alert variant="destructive" className="mb-4">
-        <WifiOff className="h-4 w-4" />
+      <Alert variant="destructive" className="mb-4 mx-4 mt-4">
+        {hasActorError ? <AlertCircle className="h-4 w-4" /> : <WifiOff className="h-4 w-4" />}
         <AlertDescription className="flex items-center justify-between gap-4">
-          <span>Unable to reach the server. Please check your connection.</span>
+          <span>
+            {hasActorError
+              ? 'Failed to initialize connection. Please retry.'
+              : 'Unable to reach the server. Please check your connection.'}
+          </span>
           <Button
             variant="outline"
             size="sm"

@@ -115,3 +115,23 @@
         transition-property: background-color, border-color, color;
     }
 }
+
+/* Footer-specific styling utilities */
+@layer components {
+    .footer-quote-block {
+        @apply relative px-8 py-6 text-center;
+    }
+    
+    .footer-quote-text {
+        @apply text-base md:text-lg italic leading-relaxed;
+        color: oklch(var(--foreground) / 0.9);
+    }
+    
+    .footer-ornament {
+        @apply w-full max-w-md mx-auto h-auto opacity-20;
+    }
+    
+    .dark .footer-ornament {
+        @apply opacity-10;
+    }
+}

@@ -1,10 +1,10 @@
 /**
- * Utility to detect Boss-lock authorization errors from backend.
- * The backend traps with "Unauthorized: Only the Boss can perform this action"
- * when a non-Boss user tries to access privileged operations.
+ * Utility to detect authorization errors from backend.
+ * The backend traps with various authorization messages depending on the context.
  */
 
 const BOSS_LOCK_ERROR_PHRASE = 'Only the Boss can perform this action';
+const MANAGER_LOCK_ERROR_PHRASE = 'neither Boss nor manager';
 
 /**
  * Check if an error is a Boss-lock denial from the backend.
@@ -16,6 +16,21 @@ export function isBossLockError(error: any): boolean {
   
   const errorMessage = error?.message || String(error);
   return errorMessage.includes(BOSS_LOCK_ERROR_PHRASE);
+}
+
+/**
+ * Check if an error is a manager authorization denial from the backend.
+ * @param error - The error object from a failed query/mutation
+ * @returns true if this is a manager authorization error
+ */
+export function isManagerAuthError(error: any): boolean {
+  if (!error) return false;
+  
+  const errorMessage = error?.message || String(error);
+  return (
+    errorMessage.includes(MANAGER_LOCK_ERROR_PHRASE) ||
+    errorMessage.includes('Unauthorized: Caller is neither Boss nor manager')
+  );
 }
 
 /**
@@ -31,7 +46,8 @@ export function isAuthorizationError(error: any): boolean {
     errorMessage.includes('Unauthorized') ||
     errorMessage.includes('Only the Boss') ||
     errorMessage.includes('Only admins') ||
-    errorMessage.includes('Only users')
+    errorMessage.includes('Only users') ||
+    errorMessage.includes('neither Boss nor manager')
   );
 }
 
@@ -55,5 +71,21 @@ export function isConnectivityError(error: any): boolean {
     errorMessage.includes('timeout') ||
     errorMessage.includes('connection') ||
     errorMessage.includes('fetch')
+  );
+}
+
+/**
+ * Check if an error is related to access control initialization.
+ * @param error - The error object from a failed query/mutation
+ * @returns true if this is an access control initialization error
+ */
+export function isAccessControlInitError(error: any): boolean {
+  if (!error) return false;
+  
+  const errorMessage = error?.message || String(error);
+  return (
+    errorMessage.includes('_initializeAccessControlWithSecret') ||
+    errorMessage.includes('access control') ||
+    errorMessage.includes('admin token')
   );
 }

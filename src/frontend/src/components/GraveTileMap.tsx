@@ -122,7 +122,7 @@ export default function GraveTileMap() {
                                 {getStatusLabel(tile.status)}
                               </Badge>
                               {deceasedNames && (
-                                <p className="text-sm text-popover-foreground/75 leading-relaxed font-medium">
+                                <p className="text-sm text-popover-foreground leading-relaxed font-bold">
                                   {deceasedNames}
                                 </p>
                               )}

@@ -1,22 +1,36 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Improve Map grave tile hover tooltip contrast (light/dark)",
+  "title": "Publish build 64 to Live (frontend-only operational triggers)",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Increase contrast/readability of the public Map grave-tile hover tooltip in both light and dark themes using shadcn/ui Tooltip composition (without editing ui components).",
+      "summary": "Add a non-functional operational publish marker to trigger deploying build 64 to Live via CI/CD.",
       "acceptanceCriteria": [
-        "On the public Map tab, the tooltip content for a hovered grave tile is clearly readable (good contrast) in both light mode and dark mode.",
-        "The tooltip’s primary line identifying the grave (e.g., “Grave no. X”) uses a high-contrast text color against the tooltip background.",
-        "Secondary tooltip text (e.g., deceased names) is still visually secondary but remains clearly legible (not washed out / low-contrast).",
-        "No backend changes are required; only UI styling/markup changes are made."
+        "Build version 64 is deployed to Live successfully",
+        "The Live URL serves build 64 without deployment errors"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/GraveTileMap.tsx",
-          "operation": "modify",
-          "description": "Adjust the shadcn/ui Tooltip (TooltipContent + inner text classes) used for grave tiles to enforce higher-contrast background, border, and text colors in both light/dark themes; update primary and secondary text styling so secondary remains subordinate but legible. Verify the component's usage instructions before implementing."
+          "path": "frontend/publish-live.build64.txt",
+          "operation": "create",
+          "description": "Create an operational publish marker for build 64 (no functional changes) intended to trigger the Live deployment workflow in CI/CD."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Add a build 64 redeploy trigger file modeled after the existing build 63 trigger file, with no behavior changes.",
+      "acceptanceCriteria": [
+        "A new file exists at frontend/redeploy-trigger.build64.txt",
+        "The file indicates Build: 64 and states it is an operational redeploy trigger with no functional changes",
+        "A new CI/build artifact is produced as a result of the commit containing this file"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/redeploy-trigger.build64.txt",
+          "operation": "create",
+          "description": "Create a redeploy trigger file for Build: 64 modeled after frontend/redeploy-trigger.build63.txt, updating build number and timestamp, and explicitly noting it is an operational redeploy trigger with no functional changes."
         }
       ]
     }

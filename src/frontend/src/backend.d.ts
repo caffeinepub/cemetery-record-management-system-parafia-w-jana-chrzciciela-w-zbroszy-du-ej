@@ -95,6 +95,20 @@ export type Error_ = {
         alley: string;
     };
 };
+export interface ParishFooterContent {
+    bankAccountNumber: string;
+    websiteUrl: string;
+    xUrl: string;
+    oneSentenceDescription: string;
+    email: string;
+    parishName: string;
+    fullAddress: string;
+    phoneNumber: string;
+    massTimes: string;
+    youtubeUrl: string;
+    facebookUrl: string;
+    bibleQuote: string;
+}
 export interface DeceasedPerson {
     placeOfDeath: string;
     yearOfDeath: bigint;
@@ -127,14 +141,6 @@ export interface HomepageHeroContent {
     heroBackgroundImage?: ExternalBlob;
     introParagraph: string;
 }
-export interface FooterContent {
-    bankAccountNumber: string;
-    websiteLink: string;
-    officeHours: string;
-    email: string;
-    address: string;
-    phoneNumber: string;
-}
 export type AsyncResult_1 = {
     __kind__: "ok";
     ok: bigint;
@@ -145,9 +151,9 @@ export type AsyncResult_1 = {
 export interface SiteContent {
     logoImage?: ExternalBlob;
     cemeteryInformation: PublicHtmlSection;
+    parishFooter: ParishFooterContent;
     prayerForTheDeceased: PrayerForTheDeceased;
     gravesDeclaration: PublicHtmlSection;
-    footer: FooterContent;
     homepageHero: HomepageHeroContent;
 }
 export interface AlleyView {
@@ -172,15 +178,19 @@ export enum UserRole {
 export interface backendInterface {
     addAlley(name: string): Promise<AsyncResult>;
     addGrave(alley: string, plotNumber: bigint): Promise<AsyncResult_1>;
+    addManager(principal: Principal): Promise<boolean>;
+    assignBoss(newBoss: Principal): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    clearManagers(): Promise<void>;
+    getAccessRole(): Promise<string>;
     getAllGraves(): Promise<Array<GraveRecord>>;
     getAvailableGraves(): Promise<Array<GraveRecord>>;
+    getBoss(): Promise<Principal | null>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getCemeteryInformation(): Promise<PublicHtmlSection>;
     getCemeteryState(): Promise<CemeteryView>;
     getCemeteryStateWithoutVerification(): Promise<CemeteryView>;
-    getFooterContent(): Promise<FooterContent>;
     getGrave(id: bigint): Promise<GraveRecord | null>;
     getGraveStatistics(): Promise<{
         total: bigint;
@@ -192,8 +202,10 @@ export interface backendInterface {
     getGravesByAlley(alley: string): Promise<Array<GraveRecord>>;
     getGravesDeclaration(): Promise<PublicHtmlSection>;
     getHomepageHeroContent(): Promise<HomepageHeroContent>;
+    getManagers(): Promise<Array<Principal>>;
     getPaginatedGraves(offset: bigint, pageSize: bigint): Promise<PaginatedGravesResult>;
     getParishContactEmail(): Promise<string>;
+    getParishFooterContent(): Promise<ParishFooterContent>;
     getPrayerForTheDeceased(): Promise<PrayerForTheDeceased>;
     getPublicGraves(): Promise<Array<PublicGraveShape>>;
     getPublicTiles(): Promise<Array<PublicTileData>>;
@@ -202,17 +214,20 @@ export interface backendInterface {
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     healthCheck(): Promise<void>;
     isCallerAdmin(): Promise<boolean>;
+    isManager(principal: Principal): Promise<boolean>;
+    isPermanentBoss(): Promise<boolean>;
     removeAlley(name: string): Promise<AsyncResult>;
     removeGrave(id: bigint): Promise<AsyncResult>;
+    removeManager(principal: Principal): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     searchGraves(surname: string | null, yearOfDeath: bigint | null, owner: string | null, status: GraveStatus | null, locality: string | null): Promise<Array<GraveRecord>>;
     searchPublicGravesWithLocation(surname: string | null, yearOfDeath: bigint | null): Promise<Array<PublicGraveResult>>;
     updateCemeteryInformation(newSection: PublicHtmlSection): Promise<void>;
-    updateFooterContent(newFooterContent: FooterContent): Promise<void>;
     updateGrave(id: bigint, updatedRecord: GraveRecord): Promise<AsyncResult>;
     updateGravesDeclaration(newSection: PublicHtmlSection): Promise<void>;
     updateHomepageHeroContent(newContent: HomepageHeroContent): Promise<void>;
     updateLogoImage(newLogo: ExternalBlob | null): Promise<void>;
+    updateParishFooterContent(newFooterContent: ParishFooterContent): Promise<void>;
     updatePrayerForTheDeceased(newSection: PrayerForTheDeceased): Promise<void>;
     updateSiteContent(newContent: SiteContent): Promise<void>;
 }

@@ -35,14 +35,6 @@ export type Error = { 'duplicateAlley' : { 'alley' : string } } |
   { 'unauthorized' : null } |
   { 'alleyNotEmpty' : { 'alley' : string } };
 export type ExternalBlob = Uint8Array;
-export interface FooterContent {
-  'bankAccountNumber' : string,
-  'websiteLink' : string,
-  'officeHours' : string,
-  'email' : string,
-  'address' : string,
-  'phoneNumber' : string,
-}
 export interface GraveOwner {
   'address' : string,
   'phone' : [] | [string],
@@ -75,6 +67,20 @@ export interface PaginatedGravesResult {
   'pageSize' : bigint,
   'totalGraves' : bigint,
 }
+export interface ParishFooterContent {
+  'bankAccountNumber' : string,
+  'websiteUrl' : string,
+  'xUrl' : string,
+  'oneSentenceDescription' : string,
+  'email' : string,
+  'parishName' : string,
+  'fullAddress' : string,
+  'phoneNumber' : string,
+  'massTimes' : string,
+  'youtubeUrl' : string,
+  'facebookUrl' : string,
+  'bibleQuote' : string,
+}
 export interface PrayerForTheDeceased {
   'title' : string,
   'content' : string,
@@ -105,9 +111,9 @@ export interface PublicTileData {
 export interface SiteContent {
   'logoImage' : [] | [ExternalBlob],
   'cemeteryInformation' : PublicHtmlSection,
+  'parishFooter' : ParishFooterContent,
   'prayerForTheDeceased' : PrayerForTheDeceased,
   'gravesDeclaration' : PublicHtmlSection,
-  'footer' : FooterContent,
   'homepageHero' : HomepageHeroContent,
 }
 export type Time = bigint;
@@ -145,15 +151,19 @@ export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'addAlley' : ActorMethod<[string], AsyncResult>,
   'addGrave' : ActorMethod<[string, bigint], AsyncResult_1>,
+  'addManager' : ActorMethod<[Principal], boolean>,
+  'assignBoss' : ActorMethod<[Principal], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'clearManagers' : ActorMethod<[], undefined>,
+  'getAccessRole' : ActorMethod<[], string>,
   'getAllGraves' : ActorMethod<[], Array<GraveRecord>>,
   'getAvailableGraves' : ActorMethod<[], Array<GraveRecord>>,
+  'getBoss' : ActorMethod<[], [] | [Principal]>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getCemeteryInformation' : ActorMethod<[], PublicHtmlSection>,
   'getCemeteryState' : ActorMethod<[], CemeteryView>,
   'getCemeteryStateWithoutVerification' : ActorMethod<[], CemeteryView>,
-  'getFooterContent' : ActorMethod<[], FooterContent>,
   'getGrave' : ActorMethod<[bigint], [] | [GraveRecord]>,
   'getGraveStatistics' : ActorMethod<
     [],
@@ -168,8 +178,10 @@ export interface _SERVICE {
   'getGravesByAlley' : ActorMethod<[string], Array<GraveRecord>>,
   'getGravesDeclaration' : ActorMethod<[], PublicHtmlSection>,
   'getHomepageHeroContent' : ActorMethod<[], HomepageHeroContent>,
+  'getManagers' : ActorMethod<[], Array<Principal>>,
   'getPaginatedGraves' : ActorMethod<[bigint, bigint], PaginatedGravesResult>,
   'getParishContactEmail' : ActorMethod<[], string>,
+  'getParishFooterContent' : ActorMethod<[], ParishFooterContent>,
   'getPrayerForTheDeceased' : ActorMethod<[], PrayerForTheDeceased>,
   'getPublicGraves' : ActorMethod<[], Array<PublicGraveShape>>,
   'getPublicTiles' : ActorMethod<[], Array<PublicTileData>>,
@@ -178,8 +190,11 @@ export interface _SERVICE {
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'healthCheck' : ActorMethod<[], undefined>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'isManager' : ActorMethod<[Principal], boolean>,
+  'isPermanentBoss' : ActorMethod<[], boolean>,
   'removeAlley' : ActorMethod<[string], AsyncResult>,
   'removeGrave' : ActorMethod<[bigint], AsyncResult>,
+  'removeManager' : ActorMethod<[Principal], boolean>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'searchGraves' : ActorMethod<
     [
@@ -196,11 +211,11 @@ export interface _SERVICE {
     Array<PublicGraveResult>
   >,
   'updateCemeteryInformation' : ActorMethod<[PublicHtmlSection], undefined>,
-  'updateFooterContent' : ActorMethod<[FooterContent], undefined>,
   'updateGrave' : ActorMethod<[bigint, GraveRecord], AsyncResult>,
   'updateGravesDeclaration' : ActorMethod<[PublicHtmlSection], undefined>,
   'updateHomepageHeroContent' : ActorMethod<[HomepageHeroContent], undefined>,
   'updateLogoImage' : ActorMethod<[[] | [ExternalBlob]], undefined>,
+  'updateParishFooterContent' : ActorMethod<[ParishFooterContent], undefined>,
   'updatePrayerForTheDeceased' : ActorMethod<[PrayerForTheDeceased], undefined>,
   'updateSiteContent' : ActorMethod<[SiteContent], undefined>,
 }

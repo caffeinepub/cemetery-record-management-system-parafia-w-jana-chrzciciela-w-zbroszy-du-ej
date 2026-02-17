@@ -28,11 +28,11 @@ export default function GraveSearch({ isAdmin = false }: GraveSearchProps) {
     fetchNextPage: adminFetchNextPage,
   } = useInfinitePaginatedGraves(pageSize);
 
-  // Public: use public grave results with location
+  // Public: use public grave results with location (fetch all, no filters)
   const {
     data: publicGraves = [],
     isLoading: publicLoading,
-  } = useGetPublicGravesWithLocation();
+  } = useGetPublicGravesWithLocation(null, null);
 
   const isLoading = isAdmin ? adminLoading : publicLoading;
   const isFetchingNextPage = isAdmin ? adminFetchingNextPage : false;

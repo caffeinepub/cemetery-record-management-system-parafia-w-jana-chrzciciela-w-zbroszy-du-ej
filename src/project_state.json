@@ -2,30 +2,31 @@
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
   "summary": "New project",
-  "architectural_notes": [],
-  "known_issues": [
-    "Low contrast on Map tab: hovering over a grave tile shows a preview/info that is hard to read; needs improved color contrast."
+  "architectural_notes": [
+    "User approved publishing build/version 64 to live (deployment/publish action confirmed)."
   ],
-  "isFixRequest": true,
+  "known_issues": [],
+  "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-improve-the-color-contrast-and-overall-readability-of-the-hover-preview-tooltip-shown-when-the-user-hovers-a-grave-tile-on-the-public-map-tab-so-that-the-grave-identification-information-is-clearly-visible-in-both-light-and-dark-themes",
-      "title": "Improve the color contrast and overall readability of the hover preview (tooltip) shown when the user hovers a grave tile on the public “Map” tab, so that the grave identification information is clearly visible in both light and dark themes.",
+      "id": "feature-publish-the-current-successful-build-version-64-to-the-live-environment",
+      "title": "Publish the current successful build (version 64) to the Live environment.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
-    }
-  ],
-  "new_feature_requests": [
+    },
     {
-      "id": "AR-1",
-      "summary": "Improve color contrast of grave info hover preview on the Map tab (grave tile hover tooltip/info is hard to read).",
-      "reqIds": [],
-      "status": "pending"
+      "id": "feature-if-a-new-build-artifact-is-required-to-trigger-a-redeploy-add-a-new-operational-redeploy-trigger-file-for-build-64-modeled-after-the-existing-build-63-trigger-file-without-changing-application-behavior",
+      "title": "If a new build artifact is required to trigger a redeploy, add a new operational redeploy trigger file for build 64 (modeled after the existing build 63 trigger file) without changing application behavior.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
     }
   ],
-  "projectName": "Cemetery Portal",
+  "new_feature_requests": [],
+  "projectName": "Parish Site",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ShieldX } from 'lucide-react';
 
 /**
- * Access denied screen for non-Boss users attempting to access the single-admin locked application.
+ * Access denied screen for unauthorized users attempting to access the admin-locked application.
  * Displays a clear message and provides a logout action.
  */
 export default function AccessDeniedScreen() {
@@ -30,10 +30,10 @@ export default function AccessDeniedScreen() {
             Access Denied
           </h1>
           <p className="text-muted-foreground">
-            This application is locked to a single administrator account.
+            This application is restricted to authorized administrators only.
           </p>
           <p className="text-sm text-muted-foreground">
-            Only the first user who logged in has access to manage this system.
+            Only the Boss and delegated managers have access to manage this system.
           </p>
         </div>
 

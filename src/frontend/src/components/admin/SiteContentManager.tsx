@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Save, Image as ImageIcon, Heart, Church } from 'lucide-react';
+import { Loader2, Save, Image as ImageIcon, Heart, Church, Mail } from 'lucide-react';
 import { useGetSiteContent, useUpdateSiteContent, useUpdateLogoImage } from '../../hooks/useQueries';
 import { ExternalBlob } from '../../backend';
 import { Separator } from '@/components/ui/separator';
@@ -20,13 +20,19 @@ export default function SiteContentManager() {
   const [introParagraph, setIntroParagraph] = useState('');
   const [isUploadingHero, setIsUploadingHero] = useState(false);
 
-  // Footer content state
-  const [address, setAddress] = useState('');
+  // Parish Footer state
+  const [parishName, setParishName] = useState('');
+  const [fullAddress, setFullAddress] = useState('');
+  const [oneSentenceDescription, setOneSentenceDescription] = useState('');
+  const [massTimes, setMassTimes] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
-  const [officeHours, setOfficeHours] = useState('');
   const [bankAccountNumber, setBankAccountNumber] = useState('');
-  const [websiteLink, setWebsiteLink] = useState('');
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [facebookUrl, setFacebookUrl] = useState('');
+  const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [xUrl, setXUrl] = useState('');
+  const [bibleQuote, setBibleQuote] = useState('');
   const [isUpdatingFooter, setIsUpdatingFooter] = useState(false);
 
   // Prayer section state
@@ -45,12 +51,20 @@ export default function SiteContentManager() {
     if (siteContent) {
       setHeadline(siteContent.homepageHero.headline);
       setIntroParagraph(siteContent.homepageHero.introParagraph);
-      setAddress(siteContent.footer.address);
-      setPhoneNumber(siteContent.footer.phoneNumber);
-      setEmail(siteContent.footer.email);
-      setOfficeHours(siteContent.footer.officeHours);
-      setBankAccountNumber(siteContent.footer.bankAccountNumber);
-      setWebsiteLink(siteContent.footer.websiteLink);
+      
+      setParishName(siteContent.parishFooter.parishName);
+      setFullAddress(siteContent.parishFooter.fullAddress);
+      setOneSentenceDescription(siteContent.parishFooter.oneSentenceDescription);
+      setMassTimes(siteContent.parishFooter.massTimes);
+      setPhoneNumber(siteContent.parishFooter.phoneNumber);
+      setEmail(siteContent.parishFooter.email);
+      setBankAccountNumber(siteContent.parishFooter.bankAccountNumber);
+      setWebsiteUrl(siteContent.parishFooter.websiteUrl);
+      setFacebookUrl(siteContent.parishFooter.facebookUrl);
+      setYoutubeUrl(siteContent.parishFooter.youtubeUrl);
+      setXUrl(siteContent.parishFooter.xUrl);
+      setBibleQuote(siteContent.parishFooter.bibleQuote);
+      
       setPrayerTitle(siteContent.prayerForTheDeceased.title);
       setPrayerContent(siteContent.prayerForTheDeceased.content);
       setMemorialPrayer(siteContent.prayerForTheDeceased.memorialPrayer || '');
@@ -107,13 +121,19 @@ export default function SiteContentManager() {
     try {
       await updateSiteContent.mutateAsync({
         ...siteContent,
-        footer: {
-          address,
+        parishFooter: {
+          parishName,
+          fullAddress,
+          oneSentenceDescription,
+          massTimes,
           phoneNumber,
           email,
-          officeHours,
           bankAccountNumber,
-          websiteLink,
+          websiteUrl,
+          facebookUrl,
+          youtubeUrl,
+          xUrl,
+          bibleQuote,
         },
       });
     } finally {
@@ -423,92 +443,207 @@ export default function SiteContentManager() {
 
       <Separator />
 
-      {/* Footer Section */}
+      {/* Parish Footer Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Stopka - Dane kontaktowe</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Mail className="h-5 w-5" />
+            Stopka Parafii - Pełne Informacje
+          </CardTitle>
           <CardDescription>
-            Edytuj informacje kontaktowe wyświetlane w stopce strony
+            Edytuj wszystkie informacje wyświetlane w stopce strony: dane parafii, godziny Mszy, kontakt, media społecznościowe i cytat biblijny
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="address">Adres</Label>
-            <Input
-              id="address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="ul. Przykładowa 1, 00-000 Miasto"
-            />
+        <CardContent className="space-y-6">
+          {/* Parish Identity */}
+          <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
+            <h4 className="font-semibold text-sm uppercase tracking-wide text-foreground">
+              Tożsamość Parafii
+            </h4>
+            
+            <div className="space-y-2">
+              <Label htmlFor="parishName">Nazwa parafii</Label>
+              <Input
+                id="parishName"
+                value={parishName}
+                onChange={(e) => setParishName(e.target.value)}
+                placeholder="Parafia św. Jana Chrzciciela w Zbroszy Dużej"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fullAddress">Pełny adres</Label>
+              <Input
+                id="fullAddress"
+                value={fullAddress}
+                onChange={(e) => setFullAddress(e.target.value)}
+                placeholder="Zbrosza Duża 57, 05-650 Chynów"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="oneSentenceDescription">Krótki opis (jedno zdanie)</Label>
+              <Textarea
+                id="oneSentenceDescription"
+                value={oneSentenceDescription}
+                onChange={(e) => setOneSentenceDescription(e.target.value)}
+                placeholder="Parafia rzymskokatolicka prowadząca cmentarz katolicki w Zbroszy Dużej."
+                rows={2}
+              />
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="phoneNumber">Numer telefonu</Label>
-            <Input
-              id="phoneNumber"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="+48 123 456 789"
-            />
+          {/* Mass Times */}
+          <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
+            <h4 className="font-semibold text-sm uppercase tracking-wide text-foreground">
+              Godziny Mszy Świętych
+            </h4>
+            
+            <div className="space-y-2">
+              <Label htmlFor="massTimes">Godziny Mszy (możesz używać wielu linii)</Label>
+              <Textarea
+                id="massTimes"
+                value={massTimes}
+                onChange={(e) => setMassTimes(e.target.value)}
+                placeholder="Niedziela: 8:00, 10:00, 12:00&#10;Dni powszednie: 18:00"
+                rows={4}
+              />
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="kontakt@parafia.pl"
-            />
+          {/* Contact Information */}
+          <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
+            <h4 className="font-semibold text-sm uppercase tracking-wide text-foreground">
+              Dane Kontaktowe
+            </h4>
+            
+            <div className="space-y-2">
+              <Label htmlFor="phoneNumber">Numer telefonu</Label>
+              <Input
+                id="phoneNumber"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="+48 48 662 70 01"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Adres e-mail</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="zbroszaduza@archidiecezja.waw.pl"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="bankAccountNumber">Numer konta bankowego</Label>
+              <Input
+                id="bankAccountNumber"
+                value={bankAccountNumber}
+                onChange={(e) => setBankAccountNumber(e.target.value)}
+                placeholder="Bank Pekao S.A. 06 1240 3259 1111 0010 7422 2925"
+              />
+              <p className="text-xs text-muted-foreground">
+                Numer będzie klikalny - użytkownicy będą mogli go skopiować jednym kliknięciem
+              </p>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="officeHours">Godziny otwarcia kancelarii</Label>
-            <Textarea
-              id="officeHours"
-              value={officeHours}
-              onChange={(e) => setOfficeHours(e.target.value)}
-              placeholder="Poniedziałek - Piątek: 9:00 - 17:00"
-              rows={3}
-            />
+          {/* Social Media & Web Links */}
+          <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
+            <h4 className="font-semibold text-sm uppercase tracking-wide text-foreground">
+              Linki do Mediów Społecznościowych i Strony WWW
+            </h4>
+            
+            <div className="space-y-2">
+              <Label htmlFor="websiteUrl">Strona internetowa parafii</Label>
+              <Input
+                id="websiteUrl"
+                type="url"
+                value={websiteUrl}
+                onChange={(e) => setWebsiteUrl(e.target.value)}
+                placeholder="https://zbroszaduza.parafialnastrona.pl/"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="facebookUrl">Facebook</Label>
+              <Input
+                id="facebookUrl"
+                type="url"
+                value={facebookUrl}
+                onChange={(e) => setFacebookUrl(e.target.value)}
+                placeholder="https://www.facebook.com/parafiazbroszaduza/"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="youtubeUrl">YouTube</Label>
+              <Input
+                id="youtubeUrl"
+                type="url"
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                placeholder="https://www.youtube.com/channel/UC..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="xUrl">X (Twitter)</Label>
+              <Input
+                id="xUrl"
+                type="url"
+                value={xUrl}
+                onChange={(e) => setXUrl(e.target.value)}
+                placeholder="https://x.com/parafia..."
+              />
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Pozostaw puste pola dla mediów społecznościowych, których parafia nie używa
+            </p>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="bankAccountNumber">Numer konta bankowego</Label>
-            <Input
-              id="bankAccountNumber"
-              value={bankAccountNumber}
-              onChange={(e) => setBankAccountNumber(e.target.value)}
-              placeholder="00 0000 0000 0000 0000 0000 0000"
-            />
+          {/* Bible Quote */}
+          <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
+            <h4 className="font-semibold text-sm uppercase tracking-wide text-foreground">
+              Cytat Biblijny
+            </h4>
+            
+            <div className="space-y-2">
+              <Label htmlFor="bibleQuote">Cytat biblijny lub modlitwa</Label>
+              <Textarea
+                id="bibleQuote"
+                value={bibleQuote}
+                onChange={(e) => setBibleQuote(e.target.value)}
+                placeholder="Wieczny odpoczynek racz im dać, Panie, a światłość wiekuista niechaj im świeci."
+                rows={3}
+              />
+              <p className="text-xs text-muted-foreground">
+                Ten cytat będzie wyświetlany w eleganckim stylu w stopce strony
+              </p>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="websiteLink">Link do strony parafii</Label>
-            <Input
-              id="websiteLink"
-              type="url"
-              value={websiteLink}
-              onChange={(e) => setWebsiteLink(e.target.value)}
-              placeholder="https://parafia.pl"
-            />
-          </div>
-
+          {/* Save Button */}
           <Button
             onClick={handleFooterSave}
             disabled={isUpdatingFooter}
             className="w-full"
+            size="lg"
           >
             {isUpdatingFooter ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Zapisywanie...
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Zapisywanie stopki...
               </>
             ) : (
               <>
-                <Save className="mr-2 h-4 w-4" />
-                Zapisz dane kontaktowe
+                <Save className="mr-2 h-5 w-5" />
+                Zapisz wszystkie informacje stopki
               </>
             )}
           </Button>

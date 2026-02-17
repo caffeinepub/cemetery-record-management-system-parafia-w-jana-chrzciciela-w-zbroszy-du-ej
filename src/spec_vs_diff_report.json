@@ -1,37 +1,54 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-16T16:04:05.773Z",
-  "summary": "REQ-1 targets improving hover tooltip contrast/readability on the public Map tab. The diff shows changes in `frontend/src/components/GraveTileMap.tsx` and a file summary stating improved tooltip styling with higher-contrast text for light/dark themes, but the actual tooltip markup/classes are truncated so the implementation details can’t be fully verified from the provided excerpt. Additionally, there are unrelated project metadata/documentation updates and apparent broader Map UI/legend styling changes beyond tooltip contrast.",
-  "missing_requirements": [],
-  "hallucinated_features": [
+  "generatedAt": "2026-02-17T13:00:11.434Z",
+  "summary": "REQ-2 is implemented via the added redeploy trigger file for build 64. REQ-1 (actual deployment of build 64 to Live) is not verifiable/implemented in the provided diff. The diff also includes multiple changes that appear to introduce functional/product changes and extra operational markers beyond the BuildRequest constraints.",
+  "missing_requirements": [
     {
-      "description": "Updated `project_state.json` (new_feature_requests/known_issues metadata changes) unrelated to the requested UI-only tooltip contrast fix.",
-      "reason": "BuildRequest only requests improving the grave hover tooltip contrast on the public Map tab and explicitly notes no backend/architecture changes; it does not request project state metadata updates.",
+      "id": "REQ-1",
+      "requirement": "Publish the current successful build (version 64) to the Live environment.",
+      "reason": "The diff only shows repository file changes; it does not contain any evidence of an actual Live deployment or configuration change that would deploy build 64 or make the Live URL serve build 64.",
       "evidence": [
-        "project_state.json"
-      ]
-    },
-    {
-      "description": "Updated `frontend-file-summaries.txt` content (documentation/summary changes) unrelated to the requested tooltip contrast fix.",
-      "reason": "BuildRequest contains no requirement to update generated file summaries or documentation.",
-      "evidence": [
-        "frontend-file-summaries.txt"
-      ]
-    },
-    {
-      "description": "Broader Map page/UI restyling beyond tooltip contrast (e.g., ‘modernized legend layout’, enhanced cards/borders/spacing) in the public cemetery map component.",
-      "reason": "Non-goals specify not redesigning the entire Map page and only addressing the hover preview/tooltip contrast issue; the diff shows additional styling/layout changes in the Map component beyond tooltip text contrast.",
-      "evidence": [
-        "frontend/src/components/GraveTileMap.tsx",
-        "frontend-file-summaries.txt"
+        "File diff summary shows only repo file adds/modifications; no deployment logs/configs/actions are included."
       ]
     }
   ],
-  "confidence": 0.64,
+  "hallucinated_features": [
+    {
+      "description": "Added an extra publish marker file frontend/publish-live.build64.txt not requested by REQ-2 (which only asked for frontend/redeploy-trigger.build64.txt if needed).",
+      "reason": "BuildRequest only specifies adding a redeploy trigger file (modeled after build 63) if needed; it does not request an additional publish marker file.",
+      "evidence": [
+        "frontend/publish-live.build64.txt"
+      ]
+    },
+    {
+      "description": "Backend functional/code changes in backend/main.mo, violating the constraint to not introduce functional product changes (and non-goal of changing backend data structures or logic).",
+      "reason": "The request is operational (publish build 64) and explicitly disallows backend logic/data structure changes; backend/main.mo is modified and contains extensive type/model definitions, indicating potential logic/product changes.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "description": "Frontend/UI/product changes described in the modified frontend-file-summaries.txt (new tabs, redesigned footer/header, new modal, new manager delegation hooks, UI spacing/typography changes, etc.), violating the non-goals of adding new frontend features or UI changes.",
+      "reason": "The BuildRequest explicitly states no new frontend features or UI changes; the summary describes multiple UI redesigns and new functionality (e.g., Boss-only Managers tab, profile setup modal).",
+      "evidence": [
+        "frontend-file-summaries.txt"
+      ]
+    },
+    {
+      "description": "Updated/added project tracking metadata in project_state.json (new_feature_requests entries).",
+      "reason": "Not requested by BuildRequest; operational publish request did not ask for updating internal project state metadata.",
+      "evidence": [
+        "project_state.json"
+      ]
+    }
+  ],
+  "confidence": 0.74,
   "changed_files": [
+    "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/GraveTileMap.tsx",
+    "frontend/publish-live.build64.txt",
+    "frontend/redeploy-trigger.build64.txt",
     "project_state.json"
   ]
 }

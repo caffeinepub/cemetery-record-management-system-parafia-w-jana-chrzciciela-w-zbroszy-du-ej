@@ -145,7 +145,7 @@ export default function AdminGraveTileMap() {
                                   <div className="text-sm">
                                     <p className="font-medium">Spoczywają:</p>
                                     {grave.deceasedPersons.map((person, idx) => (
-                                      <p key={idx} className="text-muted-foreground">
+                                      <p key={idx} className="text-popover-foreground font-bold">
                                         {person.firstName} {person.lastName} ({person.yearOfDeath.toString()})
                                       </p>
                                     ))}

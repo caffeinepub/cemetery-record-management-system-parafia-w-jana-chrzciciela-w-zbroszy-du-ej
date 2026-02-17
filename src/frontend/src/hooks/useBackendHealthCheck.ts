@@ -1,18 +1,26 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
+import { useState, useCallback } from 'react';
 
 export type HealthCheckStatus = 'checking' | 'connected' | 'disconnected';
 
 export function useBackendHealthCheck() {
   const { actor, isFetching: actorFetching } = useActor();
   const queryClient = useQueryClient();
+  const [hasActorError, setHasActorError] = useState(false);
 
   const healthQuery = useQuery({
     queryKey: ['backend-health'],
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
-      await actor.healthCheck();
-      return true;
+      try {
+        await actor.healthCheck();
+        setHasActorError(false);
+        return true;
+      } catch (error) {
+        setHasActorError(true);
+        throw error;
+      }
     },
     enabled: !!actor && !actorFetching,
     retry: 2,
@@ -22,19 +30,23 @@ export function useBackendHealthCheck() {
     refetchOnReconnect: true,
   });
 
-  const status: HealthCheckStatus = actorFetching || healthQuery.isLoading
-    ? 'checking'
-    : healthQuery.isSuccess
-    ? 'connected'
-    : 'disconnected';
+  // If actor is not available after initial fetch, we're disconnected
+  const status: HealthCheckStatus = 
+    actorFetching || healthQuery.isLoading
+      ? 'checking'
+      : hasActorError || healthQuery.isError || (!actor && !actorFetching)
+      ? 'disconnected'
+      : healthQuery.isSuccess
+      ? 'connected'
+      : 'checking';
 
-  const recheck = async () => {
+  const recheck = useCallback(async () => {
     // Force actor recreation by invalidating and refetching the actor query
     await queryClient.invalidateQueries({ queryKey: ['actor'] });
     await queryClient.refetchQueries({ queryKey: ['actor'] });
     // Then refetch health check
     await healthQuery.refetch();
-  };
+  }, [queryClient, healthQuery]);
 
   return {
     status,
@@ -43,5 +55,6 @@ export function useBackendHealthCheck() {
     isDisconnected: status === 'disconnected',
     recheck,
     error: healthQuery.error,
+    hasActorError,
   };
 }

@@ -1,13 +1,17 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
 import { useInternetIdentity } from './hooks/useInternetIdentity';
 import { useGetCallerUserProfile } from './hooks/useQueries';
+import { useAdminAuthorization } from './hooks/useAdminAuthorization';
 import ProfileSetupModal from './components/ProfileSetupModal';
 import ConnectionStatus from './components/ConnectionStatus';
 import FloatingLoginControl from './components/FloatingLoginControl';
-import { isBossLockError } from './utils/authErrors';
+import PrivatePreviewBanner from './components/PrivatePreviewBanner';
+import PrivatePreviewGate from './components/PrivatePreviewGate';
+import ActorInitializationErrorScreen from './components/ActorInitializationErrorScreen';
+import { usePrivatePreviewMode } from './hooks/usePrivatePreviewMode';
 import { useActor } from './hooks/useActor';
 
 const Header = lazy(() => import('./components/Header'));
@@ -27,29 +31,70 @@ const queryClient = new QueryClient({
 
 function AppContent() {
   const { identity, isInitializing } = useInternetIdentity();
-  const { actor } = useActor();
+  const { actor, isFetching: actorFetching } = useActor();
+  const queryClient = useQueryClient();
   const isAuthenticated = !!identity && !identity.getPrincipal().isAnonymous();
+  const isPreviewMode = usePrivatePreviewMode();
 
   const {
     data: userProfile,
     isLoading: profileLoading,
     isFetched,
-    error: profileError,
   } = useGetCallerUserProfile();
 
-  const [showAccessDenied, setShowAccessDenied] = useState(false);
+  const {
+    isAllowed: isAdminAllowed,
+    isLoading: authLoading,
+  } = useAdminAuthorization();
 
+  const [isRetryingActor, setIsRetryingActor] = useState(false);
+  const [showActorError, setShowActorError] = useState(false);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+
+  // Set a timeout to detect if actor is stuck loading
   useEffect(() => {
-    if (profileError && isBossLockError(profileError)) {
-      setShowAccessDenied(true);
+    if (!actor && !isInitializing) {
+      const timer = setTimeout(() => {
+        if (!actor && !actorFetching) {
+          setLoadingTimeout(true);
+          setShowActorError(true);
+        }
+      }, 15000); // 15 second timeout
+
+      return () => clearTimeout(timer);
     } else {
-      setShowAccessDenied(false);
+      setLoadingTimeout(false);
+      setShowActorError(false);
     }
-  }, [profileError]);
+  }, [actor, actorFetching, isInitializing]);
 
   const showProfileSetup = isAuthenticated && !profileLoading && isFetched && userProfile === null;
 
-  if (isInitializing || !actor) {
+  // Handle actor initialization retry
+  const handleActorRetry = async () => {
+    setIsRetryingActor(true);
+    setShowActorError(false);
+    setLoadingTimeout(false);
+    try {
+      await queryClient.invalidateQueries({ queryKey: ['actor'] });
+      await queryClient.refetchQueries({ queryKey: ['actor'] });
+    } finally {
+      setTimeout(() => setIsRetryingActor(false), 500);
+    }
+  };
+
+  // Show initialization error screen if actor failed to load after timeout
+  if (showActorError && loadingTimeout) {
+    return (
+      <ActorInitializationErrorScreen
+        onRetry={handleActorRetry}
+        isRetrying={isRetryingActor}
+      />
+    );
+  }
+
+  // Show loading only while initializing identity or loading actor
+  if (isInitializing || (!actor && !showActorError)) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center space-y-4">
@@ -60,7 +105,8 @@ function AppContent() {
     );
   }
 
-  if (showAccessDenied) {
+  // Show access denied if authenticated but not authorized
+  if (isAuthenticated && !authLoading && !isAdminAllowed) {
     return (
       <Suspense fallback={null}>
         <AccessDeniedScreen />
@@ -68,8 +114,13 @@ function AppContent() {
     );
   }
 
+  // Private Preview Mode: gate public content when not authenticated
+  const shouldShowGate = isPreviewMode && !isAuthenticated;
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      {isPreviewMode && <PrivatePreviewBanner />}
+
       <Suspense fallback={null}>
         <Header />
       </Suspense>
@@ -87,6 +138,8 @@ function AppContent() {
           >
             <AdminPanel />
           </Suspense>
+        ) : shouldShowGate ? (
+          <PrivatePreviewGate />
         ) : (
           <Suspense
             fallback={
@@ -104,7 +157,7 @@ function AppContent() {
         <Footer />
       </Suspense>
 
-      {!isAuthenticated && <FloatingLoginControl />}
+      {!isAuthenticated && !shouldShowGate && <FloatingLoginControl />}
 
       {showProfileSetup && <ProfileSetupModal />}
     </div>

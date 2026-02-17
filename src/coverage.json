@@ -1,34 +1,48 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-16T16:04:05.775Z",
+  "generatedAt": "2026-02-17T13:00:11.438Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 1,
-    "implemented": 1,
+    "total": 2,
+    "implemented": 2,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Improve the color contrast and overall readability of the hover preview (tooltip) shown when the user hovers a grave tile on the public “Map” tab, so that the grave identification information is clearly visible in both light and dark themes.",
+        "summary": "Publish the current successful build (version 64) to the Live environment.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/GraveTileMap.tsx"
+          "frontend/publish-live.build64.txt"
         ],
         "matchedFiles": [
-          "frontend/src/components/GraveTileMap.tsx"
+          "frontend/publish-live.build64.txt"
+        ]
+      },
+      {
+        "id": "REQ-2",
+        "summary": "If a new build artifact is required to trigger a redeploy, add a new operational redeploy trigger file for build 64 (modeled after the existing build 63 trigger file) without changing application behavior.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/redeploy-trigger.build64.txt"
+        ],
+        "matchedFiles": [
+          "frontend/redeploy-trigger.build64.txt"
         ]
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/GraveTileMap.tsx",
+    "frontend/publish-live.build64.txt",
+    "frontend/redeploy-trigger.build64.txt",
+    "frontend/src/declarations/backend.did.js",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",
