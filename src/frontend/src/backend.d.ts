@@ -221,6 +221,7 @@ export interface backendInterface {
     removeManager(principal: Principal): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     searchGraves(surname: string | null, yearOfDeath: bigint | null, owner: string | null, status: GraveStatus | null, locality: string | null): Promise<Array<GraveRecord>>;
+    searchPublicGraves(surname: string | null, yearOfDeath: bigint | null, owner: string | null, status: GraveStatus | null, locality: string | null): Promise<Array<PublicGraveResult>>;
     searchPublicGravesWithLocation(surname: string | null, yearOfDeath: bigint | null): Promise<Array<PublicGraveResult>>;
     updateCemeteryInformation(newSection: PublicHtmlSection): Promise<void>;
     updateGrave(id: bigint, updatedRecord: GraveRecord): Promise<AsyncResult>;

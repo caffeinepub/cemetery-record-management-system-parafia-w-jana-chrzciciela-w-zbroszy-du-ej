@@ -248,6 +248,17 @@ export const idlService = IDL.Service({
       [IDL.Vec(GraveRecord)],
       ['query'],
     ),
+  'searchPublicGraves' : IDL.Func(
+      [
+        IDL.Opt(IDL.Text),
+        IDL.Opt(IDL.Int),
+        IDL.Opt(IDL.Text),
+        IDL.Opt(GraveStatus),
+        IDL.Opt(IDL.Text),
+      ],
+      [IDL.Vec(PublicGraveResult)],
+      ['query'],
+    ),
   'searchPublicGravesWithLocation' : IDL.Func(
       [IDL.Opt(IDL.Text), IDL.Opt(IDL.Int)],
       [IDL.Vec(PublicGraveResult)],
@@ -508,6 +519,17 @@ export const idlFactory = ({ IDL }) => {
           IDL.Opt(IDL.Text),
         ],
         [IDL.Vec(GraveRecord)],
+        ['query'],
+      ),
+    'searchPublicGraves' : IDL.Func(
+        [
+          IDL.Opt(IDL.Text),
+          IDL.Opt(IDL.Int),
+          IDL.Opt(IDL.Text),
+          IDL.Opt(GraveStatus),
+          IDL.Opt(IDL.Text),
+        ],
+        [IDL.Vec(PublicGraveResult)],
         ['query'],
       ),
     'searchPublicGravesWithLocation' : IDL.Func(

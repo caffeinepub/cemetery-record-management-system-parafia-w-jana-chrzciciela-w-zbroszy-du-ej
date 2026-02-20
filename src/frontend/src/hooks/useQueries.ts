@@ -542,7 +542,8 @@ export function useGetPublicGravesWithLocation(surname: string | null, yearOfDea
       if (!actor) throw new Error('Actor not available');
       return actor.searchPublicGravesWithLocation(surname, yearOfDeath);
     },
-    enabled: !!actor && !isFetching && (!!surname || !!yearOfDeath),
+    enabled: !!actor && !isFetching,
+    staleTime: 2 * 60 * 1000,
   });
 }
 

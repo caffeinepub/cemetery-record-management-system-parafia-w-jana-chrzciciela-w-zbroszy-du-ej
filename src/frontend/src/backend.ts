@@ -314,6 +314,7 @@ export interface backendInterface {
     removeManager(principal: Principal): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     searchGraves(surname: string | null, yearOfDeath: bigint | null, owner: string | null, status: GraveStatus | null, locality: string | null): Promise<Array<GraveRecord>>;
+    searchPublicGraves(surname: string | null, yearOfDeath: bigint | null, owner: string | null, status: GraveStatus | null, locality: string | null): Promise<Array<PublicGraveResult>>;
     searchPublicGravesWithLocation(surname: string | null, yearOfDeath: bigint | null): Promise<Array<PublicGraveResult>>;
     updateCemeteryInformation(newSection: PublicHtmlSection): Promise<void>;
     updateGrave(id: bigint, updatedRecord: GraveRecord): Promise<AsyncResult>;
@@ -975,6 +976,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.searchGraves(to_candid_opt_n53(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n54(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n53(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n55(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n53(this._uploadFile, this._downloadFile, arg4));
             return from_candid_vec_n16(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async searchPublicGraves(arg0: string | null, arg1: bigint | null, arg2: string | null, arg3: GraveStatus | null, arg4: string | null): Promise<Array<PublicGraveResult>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.searchPublicGraves(to_candid_opt_n53(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n54(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n53(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n55(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n53(this._uploadFile, this._downloadFile, arg4));
+                return from_candid_vec_n58(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.searchPublicGraves(to_candid_opt_n53(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n54(this._uploadFile, this._downloadFile, arg1), to_candid_opt_n53(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n55(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n53(this._uploadFile, this._downloadFile, arg4));
+            return from_candid_vec_n58(this._uploadFile, this._downloadFile, result);
         }
     }
     async searchPublicGravesWithLocation(arg0: string | null, arg1: bigint | null): Promise<Array<PublicGraveResult>> {

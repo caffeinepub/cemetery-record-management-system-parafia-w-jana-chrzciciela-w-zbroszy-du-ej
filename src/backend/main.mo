@@ -957,6 +957,98 @@ actor {
     );
   };
 
+  public query func searchPublicGraves(
+    surname : ?Text,
+    yearOfDeath : ?Int,
+    owner : ?Text,
+    status : ?GraveStatus,
+    locality : ?Text,
+  ) : async [PublicGraveResult] {
+    Array.fromIter(
+      graveRecords.values().flatMap(
+        func(grave) {
+          if (grave.status == #free) {
+            return [].values();
+          };
+
+          grave.deceasedPersons.values().flatMap(
+            func(person) {
+              var matches = true;
+
+              switch (surname) {
+                case (?s) {
+                  if (not person.lastName.contains(#text s)) {
+                    matches := false;
+                  };
+                };
+                case (null) {};
+              };
+
+              switch (yearOfDeath) {
+                case (?year) {
+                  if (person.yearOfDeath != year) {
+                    matches := false;
+                  };
+                };
+                case (null) {};
+              };
+
+              switch (owner) {
+                case (?o) {
+                  switch (grave.owner) {
+                    case (?own) {
+                      if (not own.lastName.contains(#text o)) {
+                        matches := false;
+                      };
+                    };
+                    case (null) { matches := false };
+                  };
+                };
+                case (null) {};
+              };
+
+              switch (status) {
+                case (?s) {
+                  if (grave.status != s) {
+                    matches := false;
+                  };
+                };
+                case (null) {};
+              };
+
+              switch (locality) {
+                case (?l) {
+                  switch (grave.owner) {
+                    case (?own) {
+                      if (not own.address.contains(#text l)) {
+                        matches := false;
+                      };
+                    };
+                    case (null) { matches := false };
+                  };
+                };
+                case (null) {};
+              };
+
+              if (matches) {
+                [{
+                  firstName = person.firstName;
+                  lastName = person.lastName;
+                  alley = grave.alley;
+                  plotNumber = grave.plotNumber;
+                  yearOfDeath = if (person.yearOfDeath > 0) { ?(person.yearOfDeath) } else { null };
+                  status = grave.status;
+                }].values();
+              } else {
+                [].values();
+              };
+            }
+          );
+        }
+      )
+    );
+  };
+
   public query func healthCheck() : async () {
     ();
   };

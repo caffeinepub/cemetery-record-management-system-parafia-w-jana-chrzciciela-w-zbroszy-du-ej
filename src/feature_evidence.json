@@ -2,10 +2,12 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-publish-the-current-successful-build-version-64-to-the-live-environment",
-      "featureTitle": "Publish the current successful build (version 64) to the Live environment.",
+      "featureId": "feature-create-a-detailed-grave-card-component-that-displays-when-a-user-clicks-on-a-grave-tile-in-the-cemetery-map-or-selects-a-grave-from-search-results-the-card-should-show-the-same-information-currently-visible-on-hover-deceased-names-dates-grave-location-in-a-persistent-standalone-view-that-can-be-freely-examined",
+      "featureTitle": "Create a detailed grave card component that displays when a user clicks on a grave tile in the cemetery map or selects a grave from search results. The card should show the same information currently visible on hover (deceased names, dates, grave location) in a persistent, standalone view that can be freely examined.",
       "files": [
-        "frontend/publish-live.build64.txt"
+        "frontend/src/components/GraveDetailCard.tsx",
+        "frontend/src/components/GraveResultsList.tsx",
+        "frontend/src/components/GraveTileMap.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -22,10 +24,10 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-if-a-new-build-artifact-is-required-to-trigger-a-redeploy-add-a-new-operational-redeploy-trigger-file-for-build-64-modeled-after-the-existing-build-63-trigger-file-without-changing-application-behavior",
-      "featureTitle": "If a new build artifact is required to trigger a redeploy, add a new operational redeploy trigger file for build 64 (modeled after the existing build 63 trigger file) without changing application behavior.",
+      "featureId": "feature-display-payment-status-prominently-on-the-grave-card-with-color-coded-backgrounds-green-background-with-message-thank-you-for-paying-for-the-grave-when-the-grave-is-paid-red-background-with-message-please-pay-the-grave-fee-when-unpaid-and-orange-background-when-the-grave-is-reserved",
+      "featureTitle": "Display payment status prominently on the grave card with color-coded backgrounds: green background with message 'Thank you for paying for the grave' when the grave is paid, red background with message 'Please pay the grave fee' when unpaid, and orange background when the grave is reserved.",
       "files": [
-        "frontend/redeploy-trigger.build64.txt"
+        "frontend/src/components/GraveDetailCard.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -38,6 +40,26 @@
       ],
       "testIds": [
         "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-preserve-the-existing-hover-tooltip-behavior-on-grave-tiles-showing-quick-preview-information-the-hover-tooltip-should-continue-to-work-as-it-currently-does",
+      "featureTitle": "Preserve the existing hover tooltip behavior on grave tiles showing quick preview information. The hover tooltip should continue to work as it currently does.",
+      "files": [
+        "frontend/src/components/GraveTileMap.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
       ],
       "confidence": "high"
     }

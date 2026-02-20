@@ -1,48 +1,64 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-17T13:00:11.438Z",
+  "generatedAt": "2026-02-20T20:09:25.701Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
-    "implemented": 2,
+    "total": 3,
+    "implemented": 3,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Publish the current successful build (version 64) to the Live environment.",
+        "summary": "Create a detailed grave card component that displays when a user clicks on a grave tile in the cemetery map or selects a grave from search results. The card should show the same information currently visible on hover (deceased names, dates, grave location) in a persistent, standalone view that can be freely examined.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/publish-live.build64.txt"
+          "frontend/src/components/GraveDetailCard.tsx",
+          "frontend/src/components/GraveTileMap.tsx",
+          "frontend/src/components/admin/AdminGraveTileMap.tsx",
+          "frontend/src/components/GraveResultsList.tsx"
         ],
         "matchedFiles": [
-          "frontend/publish-live.build64.txt"
+          "frontend/src/components/GraveDetailCard.tsx",
+          "frontend/src/components/GraveTileMap.tsx",
+          "frontend/src/components/GraveResultsList.tsx"
         ]
       },
       {
         "id": "REQ-2",
-        "summary": "If a new build artifact is required to trigger a redeploy, add a new operational redeploy trigger file for build 64 (modeled after the existing build 63 trigger file) without changing application behavior.",
+        "summary": "Display payment status prominently on the grave card with color-coded backgrounds: green background with message 'Thank you for paying for the grave' when the grave is paid, red background with message 'Please pay the grave fee' when unpaid, and orange background when the grave is reserved.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/redeploy-trigger.build64.txt"
+          "frontend/src/components/GraveDetailCard.tsx",
+          "frontend/src/utils/graveStatusStyles.ts"
         ],
         "matchedFiles": [
-          "frontend/redeploy-trigger.build64.txt"
+          "frontend/src/components/GraveDetailCard.tsx"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Preserve the existing hover tooltip behavior on grave tiles showing quick preview information. The hover tooltip should continue to work as it currently does.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/GraveTileMap.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/GraveTileMap.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/publish-live.build64.txt",
-    "frontend/redeploy-trigger.build64.txt",
-    "frontend/src/declarations/backend.did.js",
+    "frontend/src/components/GraveDetailCard.tsx",
+    "frontend/src/components/GraveResultsList.tsx",
+    "frontend/src/components/GraveTileMap.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

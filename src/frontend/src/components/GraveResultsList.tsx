@@ -6,6 +6,7 @@ import { MapPin, User, Calendar, Phone, Home, ChevronDown } from 'lucide-react';
 import type { GraveRecord, PublicGraveResult } from '../backend';
 import { useState, useMemo } from 'react';
 import GraveEditDialog from './admin/GraveEditDialog';
+import GraveDetailCard from './GraveDetailCard';
 import { getStatusLabel } from '../utils/graveStatusStyles';
 
 interface GraveResultsListProps {
@@ -20,6 +21,7 @@ const LOAD_MORE_INCREMENT = 30;
 
 export default function GraveResultsList({ results = [], publicResults = [], isAdmin = false, showCount = true }: GraveResultsListProps) {
   const [editingGrave, setEditingGrave] = useState<GraveRecord | null>(null);
+  const [selectedPublicGrave, setSelectedPublicGrave] = useState<PublicGraveResult | null>(null);
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);
 
   const getStatusBadge = (status: string) => {
@@ -69,64 +71,73 @@ export default function GraveResultsList({ results = [], publicResults = [], isA
   // Render public results
   if (!isAdmin && visiblePublicResults.length > 0) {
     return (
-      <div className="space-y-5">
-        {showCount && (
-          <h3 className="text-xl font-bold">
-            Znaleziono {publicResults.length} {publicResults.length === 1 ? 'wynik' : 'wyników'}
-          </h3>
-        )}
+      <>
+        <div className="space-y-5">
+          {showCount && (
+            <h3 className="text-xl font-bold">
+              Znaleziono {publicResults.length} {publicResults.length === 1 ? 'wynik' : 'wyników'}
+            </h3>
+          )}
 
-        {visiblePublicResults.map((publicGrave, idx) => (
-          <Card 
-            key={idx} 
-            className="shadow-md hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/30 hover:-translate-y-1"
-          >
-            <CardHeader className="pb-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="space-y-3 flex-1">
-                  <CardTitle className="flex items-center gap-3 text-xl">
-                    <User className="h-6 w-6 text-primary flex-shrink-0" />
-                    <span className="font-bold">{publicGrave.firstName} {publicGrave.lastName}</span>
-                  </CardTitle>
-                  <div className="flex items-center gap-3 flex-wrap">
-                    {getStatusBadge(publicGrave.status)}
+          {visiblePublicResults.map((publicGrave, idx) => (
+            <Card 
+              key={idx} 
+              onClick={() => setSelectedPublicGrave(publicGrave)}
+              className="shadow-md hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/30 hover:-translate-y-1 cursor-pointer"
+            >
+              <CardHeader className="pb-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-3 flex-1">
+                    <CardTitle className="flex items-center gap-3 text-xl">
+                      <User className="h-6 w-6 text-primary flex-shrink-0" />
+                      <span className="font-bold">{publicGrave.firstName} {publicGrave.lastName}</span>
+                    </CardTitle>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      {getStatusBadge(publicGrave.status)}
+                    </div>
+                    <div className="flex items-center gap-2 text-base text-foreground bg-muted/50 px-4 py-2 rounded-lg">
+                      <MapPin className="h-5 w-5 text-primary flex-shrink-0" />
+                      <span className="font-bold">
+                        Aleja {publicGrave.alley}, Grób nr {publicGrave.plotNumber.toString()}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-base text-foreground bg-muted/50 px-4 py-2 rounded-lg">
-                    <MapPin className="h-5 w-5 text-primary flex-shrink-0" />
-                    <span className="font-bold">
-                      Aleja {publicGrave.alley}, Grób nr {publicGrave.plotNumber.toString()}
+                </div>
+              </CardHeader>
+              {publicGrave.yearOfDeath && (
+                <CardContent className="pt-0">
+                  <div className="text-sm bg-muted/30 px-4 py-2 rounded-lg">
+                    <span className="text-muted-foreground flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      <span className="font-medium">Rok śmierci: {publicGrave.yearOfDeath.toString()}</span>
                     </span>
                   </div>
-                </div>
-              </div>
-            </CardHeader>
-            {publicGrave.yearOfDeath && (
-              <CardContent className="pt-0">
-                <div className="text-sm bg-muted/30 px-4 py-2 rounded-lg">
-                  <span className="text-muted-foreground flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    <span className="font-medium">Rok śmierci: {publicGrave.yearOfDeath.toString()}</span>
-                  </span>
-                </div>
-              </CardContent>
-            )}
-          </Card>
-        ))}
+                </CardContent>
+              )}
+            </Card>
+          ))}
 
-        {hasMore && (
-          <div className="flex justify-center pt-6">
-            <Button 
-              onClick={handleLoadMore} 
-              variant="outline" 
-              size="lg"
-              className="font-semibold shadow-md hover:shadow-lg transition-all"
-            >
-              <ChevronDown className="mr-2 h-5 w-5" />
-              Załaduj więcej ({visibleCount} z {totalResults})
-            </Button>
-          </div>
-        )}
-      </div>
+          {hasMore && (
+            <div className="flex justify-center pt-6">
+              <Button 
+                onClick={handleLoadMore} 
+                variant="outline" 
+                size="lg"
+                className="font-semibold shadow-md hover:shadow-lg transition-all"
+              >
+                <ChevronDown className="mr-2 h-5 w-5" />
+                Załaduj więcej ({visibleCount} z {totalResults})
+              </Button>
+            </div>
+          )}
+        </div>
+
+        <GraveDetailCard
+          grave={selectedPublicGrave}
+          open={!!selectedPublicGrave}
+          onClose={() => setSelectedPublicGrave(null)}
+        />
+      </>
     );
   }
 

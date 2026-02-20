@@ -206,6 +206,16 @@ export interface _SERVICE {
     ],
     Array<GraveRecord>
   >,
+  'searchPublicGraves' : ActorMethod<
+    [
+      [] | [string],
+      [] | [bigint],
+      [] | [string],
+      [] | [GraveStatus],
+      [] | [string],
+    ],
+    Array<PublicGraveResult>
+  >,
   'searchPublicGravesWithLocation' : ActorMethod<
     [[] | [string], [] | [bigint]],
     Array<PublicGraveResult>
