@@ -1,13 +1,9 @@
 # Specification
 
 ## Summary
-**Goal:** Add a detailed grave card view that displays comprehensive grave information when clicking on graves, with color-coded payment status visualization.
+**Goal:** Fix the transparent grave detail card overlay so that underlying page content doesn't show through.
 
 **Planned changes:**
-- Create a detailed grave card component that opens when clicking a grave tile or search result
-- Display deceased names, dates, and grave location on the card
-- Show payment status with color-coded backgrounds: green for paid graves with "Thank you for paying for the grave" message, red for unpaid graves with "Please pay the grave fee" message, and orange for reserved graves
-- Add a close/dismiss mechanism for the card
-- Preserve existing hover tooltip behavior on grave tiles
+- Add an opaque background to the GraveDetailCard modal component to block visibility of underlying page elements
 
-**User-visible outcome:** Users can click on any grave tile or search result to view detailed information in a persistent card with clear visual indication of payment status through color-coded backgrounds and messages.
+**User-visible outcome:** When viewing grave details from the map or search results, the detail card displays with a solid background that prevents text and elements from the page behind from showing through, ensuring clear readability of grave information.

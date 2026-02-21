@@ -30,7 +30,7 @@ export function useBackendHealthCheck() {
     refetchOnReconnect: true,
   });
 
-  // If actor is not available after initial fetch, we're disconnected
+  // If actor is not available or has error, we're disconnected
   const status: HealthCheckStatus = 
     actorFetching || healthQuery.isLoading
       ? 'checking'

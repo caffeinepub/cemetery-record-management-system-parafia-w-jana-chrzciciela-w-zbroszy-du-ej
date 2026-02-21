@@ -1,81 +1,39 @@
 {
   "kind": "build_request",
-  "title": "Add detailed grave card view with payment status visualization",
-  "projectName": "Cemetery Records",
+  "title": "Fix transparent grave card overlay issue",
+  "projectName": "Cemetery Manager",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Create a detailed grave card component that displays when a user clicks on a grave tile in the cemetery map or selects a grave from search results. The card should show the same information currently visible on hover (deceased names, dates, grave location) in a persistent, standalone view that can be freely examined.",
+      "text": "Add an opaque background to the grave detail card modal (GraveDetailCard component) to prevent underlying page content from showing through. The card should have a solid backdrop that completely blocks visibility of text and elements behind it.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-12"
+          "msg-last"
         ],
         "quotes": [
-          "prezentacja informacji o grobie wyświetlała się w osobnej pojedynczej wizytówce do swobodnego obserwowania - na tej wizytówce powinny znaleźć się te informacje, które zostały podświetlone podczas najechania kursorem na kafelek"
+          "wizytówka jest prześwietlona - przebija tekst z innej strony, mam wrażenie jakbym patrzył przez szybę"
         ]
       },
       "acceptanceCriteria": [
-        "Clicking a grave tile opens a card/modal showing grave details",
-        "Clicking a search result opens the same card view",
-        "Card displays deceased names, dates, and grave location (alley + number)",
-        "Card can be freely examined without auto-closing on mouse movement",
-        "Card has a close button or dismiss mechanism"
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "text": "Display payment status prominently on the grave card with color-coded backgrounds: green background with message 'Thank you for paying for the grave' when the grave is paid, red background with message 'Please pay the grave fee' when unpaid, and orange background when the grave is reserved.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-12"
-        ],
-        "quotes": [
-          "na wizytówce powinna znaleźć się wyraźna informacja, że grób jest opłacony, wizytówka wyświetla się na zielona i jest napis : \"dziękujemy za opłacenie grobu\"",
-          "jeśli grób jest nie opłacony, wizytówka wyświetla się na czerwono i powinien pojawić się napis: \"prosimy o uregulowanie opłaty za grób\"",
-          "jeśli grób jest zarezerwowany, to wizytówka wyświetla się na pomarańczowo"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Paid graves show green card background with 'Thank you for paying for the grave' message",
-        "Unpaid graves show red card background with 'Please pay the grave fee' message",
-        "Reserved graves show orange card background",
-        "Payment status message is clearly visible and prominent on the card",
-        "Color coding is consistent with grave status enum (Paid, Unpaid, Reserved)"
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Preserve the existing hover tooltip behavior on grave tiles showing quick preview information. The hover tooltip should continue to work as it currently does.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-12"
-        ],
-        "quotes": [
-          "po najechaniu na kafelek grobu bardzo ładnie wyświetla się jak na razie informacje, które są konieczne i dostępne i to powinno pozostać"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Hovering over a grave tile continues to show tooltip with deceased info",
-        "Hover behavior is unchanged from current implementation",
-        "Tooltip appears immediately on hover without delay"
+        "When clicking on a grave tile in the map view, the detail card displays with a fully opaque background",
+        "When clicking on a grave in the search results, the detail card displays with a fully opaque background",
+        "No text or elements from the underlying page are visible through the card",
+        "The card content (grave location, status, deceased persons) is clearly readable without transparency issues"
       ]
     }
   ],
   "constraints": [
-    "Do not modify the hover tooltip behavior on grave tiles",
-    "Use the existing GraveStatus enum values (Paid, Unpaid, Reserved, Free) for determining card background color",
-    "The grave card must work for both cemetery map tile clicks and search result clicks"
+    "Do not modify the GraveDetailCard component's data structure or props interface",
+    "Maintain existing modal behavior and close functionality",
+    "Keep the current content layout and information display unchanged"
   ],
   "nonGoals": [
-    "Changing the grave data model or backend schema",
-    "Modifying payment processing logic",
-    "Adding new grave status types beyond existing ones",
-    "Changing the cemetery map layout or tile rendering",
-    "Modifying the search functionality or results display format"
+    "Changing the card's visual design beyond fixing the transparency",
+    "Modifying the grave tile map appearance",
+    "Altering search functionality",
+    "Redesigning the modal interaction pattern"
   ],
   "imageRequirements": {
     "required": [],

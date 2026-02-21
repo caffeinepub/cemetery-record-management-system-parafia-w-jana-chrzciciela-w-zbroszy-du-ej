@@ -25,6 +25,7 @@ const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: false,
       retry: 1,
+      staleTime: 5000,
     },
   },
 });
@@ -49,21 +50,18 @@ function AppContent() {
 
   const [isRetryingActor, setIsRetryingActor] = useState(false);
   const [showActorError, setShowActorError] = useState(false);
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
 
   // Set a timeout to detect if actor is stuck loading
   useEffect(() => {
-    if (!actor && !isInitializing) {
+    if (!actor && !isInitializing && !actorFetching) {
       const timer = setTimeout(() => {
         if (!actor && !actorFetching) {
-          setLoadingTimeout(true);
           setShowActorError(true);
         }
-      }, 15000); // 15 second timeout
+      }, 10000); // 10 second timeout
 
       return () => clearTimeout(timer);
-    } else {
-      setLoadingTimeout(false);
+    } else if (actor) {
       setShowActorError(false);
     }
   }, [actor, actorFetching, isInitializing]);
@@ -74,17 +72,16 @@ function AppContent() {
   const handleActorRetry = async () => {
     setIsRetryingActor(true);
     setShowActorError(false);
-    setLoadingTimeout(false);
     try {
       await queryClient.invalidateQueries({ queryKey: ['actor'] });
       await queryClient.refetchQueries({ queryKey: ['actor'] });
     } finally {
-      setTimeout(() => setIsRetryingActor(false), 500);
+      setTimeout(() => setIsRetryingActor(false), 1000);
     }
   };
 
   // Show initialization error screen if actor failed to load after timeout
-  if (showActorError && loadingTimeout) {
+  if (showActorError && !isInitializing) {
     return (
       <ActorInitializationErrorScreen
         onRetry={handleActorRetry}

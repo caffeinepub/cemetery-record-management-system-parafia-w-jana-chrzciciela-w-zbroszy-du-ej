@@ -45,15 +45,17 @@ export default function ActorInitializationErrorScreen({
           )}
         </Button>
 
-        <p className="text-sm text-muted-foreground text-center">
-          If the problem persists, please try:
-        </p>
-        <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-          <li>Refreshing the page</li>
-          <li>Checking your internet connection</li>
-          <li>Trying a different browser</li>
-          <li>Clearing your browser cache</li>
-        </ul>
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground text-center">
+            If the problem persists, please try:
+          </p>
+          <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+            <li>Refreshing the page</li>
+            <li>Checking your internet connection</li>
+            <li>Trying a different browser</li>
+            <li>Clearing your browser cache</li>
+          </ul>
+        </div>
       </div>
     </div>
   );

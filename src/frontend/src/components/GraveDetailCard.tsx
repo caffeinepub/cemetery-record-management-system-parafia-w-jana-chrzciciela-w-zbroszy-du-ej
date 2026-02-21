@@ -18,10 +18,10 @@ function isPublicTileData(grave: PublicTileData | PublicGraveResult): grave is P
 
 function getCardBackgroundClass(status: GraveStatus): string {
   const backgrounds: Record<GraveStatus, string> = {
-    [GraveStatus.paid]: 'bg-green-50 dark:bg-green-950/30 border-green-500',
-    [GraveStatus.unpaid]: 'bg-red-50 dark:bg-red-950/30 border-red-500',
-    [GraveStatus.reserved]: 'bg-orange-50 dark:bg-orange-950/30 border-orange-500',
-    [GraveStatus.free]: 'bg-muted border-border',
+    [GraveStatus.paid]: 'bg-green-100 dark:bg-green-900 border-green-500',
+    [GraveStatus.unpaid]: 'bg-red-100 dark:bg-red-900 border-red-500',
+    [GraveStatus.reserved]: 'bg-orange-100 dark:bg-orange-900 border-orange-500',
+    [GraveStatus.free]: 'bg-background border-border',
   };
   return backgrounds[status];
 }
@@ -129,7 +129,7 @@ export default function GraveDetailCard({ grave, open, onClose }: GraveDetailCar
                 {deceasedPersons.map((person, idx) => (
                   <div 
                     key={idx} 
-                    className="bg-background/60 dark:bg-background/40 border border-border rounded-lg p-4 shadow-sm"
+                    className="bg-white dark:bg-slate-800 border border-border rounded-lg p-4 shadow-sm"
                   >
                     <p className="font-bold text-lg">
                       {person.firstName} {person.lastName}

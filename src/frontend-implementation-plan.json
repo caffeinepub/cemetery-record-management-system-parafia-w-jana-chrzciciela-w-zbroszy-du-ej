@@ -1,77 +1,22 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Add detailed grave card view with payment status visualization",
+  "title": "Fix transparent grave card overlay issue",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Create a detailed grave card component that displays when a user clicks on a grave tile in the cemetery map or selects a grave from search results",
+      "summary": "Add opaque background to GraveDetailCard modal to prevent underlying content from showing through",
       "acceptanceCriteria": [
-        "Clicking a grave tile opens a card/modal showing grave details",
-        "Clicking a search result opens the same card view",
-        "Card displays deceased names, dates, and grave location (alley + number)",
-        "Card can be freely examined without auto-closing on mouse movement",
-        "Card has a close button or dismiss mechanism"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/GraveDetailCard.tsx",
-          "operation": "create",
-          "description": "Create a new GraveDetailCard component that displays comprehensive grave information in a modal/dialog format. The component should accept either a PublicTileData or PublicGraveResult object as props and render deceased persons with their names, dates of death, places of death, and grave location (alley + plot number). Include a close button for dismissing the card. Use shadcn/ui Dialog component for the modal structure. The card should persist on screen without auto-closing on mouse events and allow free examination of the content."
-        },
-        {
-          "path": "frontend/src/components/GraveTileMap.tsx",
-          "operation": "modify",
-          "description": "Add click handler to grave tiles that opens the GraveDetailCard component. Pass the clicked grave's PublicTileData to the new card component. Implement state management to control card visibility (open/closed). Ensure the existing hover tooltip behavior remains unchanged and continues to work independently of the click-to-open card functionality."
-        },
-        {
-          "path": "frontend/src/components/admin/AdminGraveTileMap.tsx",
-          "operation": "modify",
-          "description": "Preserve existing click-to-edit functionality for admin users. Do not add GraveDetailCard to admin map view since admins already have edit dialog access. This file requires no changes related to the grave detail card feature."
-        },
-        {
-          "path": "frontend/src/components/GraveResultsList.tsx",
-          "operation": "modify",
-          "description": "Add click handler to each grave result item in the public view that opens the GraveDetailCard component. Pass the clicked grave's PublicGraveResult data to the card component. For admin view, preserve the existing edit dialog functionality without adding the detail card. Implement conditional rendering to show the detail card only in public mode."
-        }
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "summary": "Display payment status prominently on the grave card with color-coded backgrounds based on grave status",
-      "acceptanceCriteria": [
-        "Paid graves show green card background with 'Thank you for paying for the grave' message",
-        "Unpaid graves show red card background with 'Please pay the grave fee' message",
-        "Reserved graves show orange card background",
-        "Payment status message is clearly visible and prominent on the card",
-        "Color coding is consistent with grave status enum (Paid, Unpaid, Reserved)"
+        "When clicking on a grave tile in the map view, the detail card displays with a fully opaque background",
+        "When clicking on a grave in the search results, the detail card displays with a fully opaque background",
+        "No text or elements from the underlying page are visible through the card",
+        "The card content (grave location, status, deceased persons) is clearly readable without transparency issues"
       ],
       "file_operations": [
         {
           "path": "frontend/src/components/GraveDetailCard.tsx",
           "operation": "modify",
-          "description": "Add payment status visualization to the GraveDetailCard component. Implement conditional background colors based on GraveStatus enum: green background for 'paid' status with message 'Thank you for paying for the grave', red background for 'unpaid' status with message 'Please pay the grave fee', and orange background for 'reserved' status. Use the existing graveStatusStyles utility (frontend/src/utils/graveStatusStyles.ts) to ensure consistent color coding across the application. Display the payment status message prominently at the top of the card with high contrast text. For 'free' status, use neutral styling without a payment message."
-        },
-        {
-          "path": "frontend/src/utils/graveStatusStyles.ts",
-          "operation": "modify",
-          "description": "Add utility functions for grave detail card background colors if not already present. Ensure functions return appropriate Tailwind classes for green (paid), red (unpaid), orange (reserved), and neutral (free) backgrounds that work well with text content. Verify compatibility with existing status badge and tile styling utilities."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Preserve the existing hover tooltip behavior on grave tiles showing quick preview information",
-      "acceptanceCriteria": [
-        "Hovering over a grave tile continues to show tooltip with deceased info",
-        "Hover behavior is unchanged from current implementation",
-        "Tooltip appears immediately on hover without delay"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/GraveTileMap.tsx",
-          "operation": "modify",
-          "description": "Verify that existing hover tooltip implementation remains intact after adding click handlers. Ensure tooltip event handlers (onMouseEnter, onMouseLeave) are preserved and continue to function independently of the new click-to-open card functionality. Test that both hover and click interactions work simultaneously without conflicts. No changes to tooltip rendering logic or styling should be made."
+          "description": "Modify the DialogContent component to include a fully opaque background class. Add 'bg-background' or 'bg-white dark:bg-slate-900' class to ensure the modal has a solid backdrop that completely blocks visibility of underlying content. Verify that the Dialog overlay also has sufficient opacity to prevent content bleed-through."
         }
       ]
     }
