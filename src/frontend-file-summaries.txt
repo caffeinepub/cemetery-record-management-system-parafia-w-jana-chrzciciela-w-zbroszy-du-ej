@@ -43,6 +43,6 @@
   "frontend/redeploy-trigger.build63.txt": "Operational marker file created to trigger a new Live deployment attempt for build 63 without introducing any functional changes to the application.",
   "frontend/publish-live.build64.txt": "Operational marker file created to trigger Live deployment of build 64 via CI/CD without introducing any functional changes to the application.",
   "frontend/redeploy-trigger.build64.txt": "Operational redeploy trigger file for build 64 modeled after build 63 trigger, updating build number and timestamp to produce a new CI/build artifact with no functional changes.",
-  "frontend/src/components/GraveDetailCard.tsx": "Modal dialog component that displays comprehensive grave information with fully opaque color-coded backgrounds (green for paid, red for unpaid, orange for reserved) and solid white/dark backgrounds for deceased person cards to prevent transparency issues.",
+  "frontend/src/components/GraveDetailCard.tsx": "Modal dialog component that displays comprehensive grave information with fully opaque color-coded backgrounds and a single close button provided by the DialogContent component (removed duplicate custom close button from DialogTitle).",
   "frontend/src/main.tsx": "Application entry point that wraps the app with InternetIdentityProvider only, removing duplicate QueryClientProvider to fix initialization conflicts."
 }

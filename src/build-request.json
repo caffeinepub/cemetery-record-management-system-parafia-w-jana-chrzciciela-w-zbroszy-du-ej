@@ -1,39 +1,36 @@
 {
   "kind": "build_request",
-  "title": "Fix transparent grave card overlay issue",
+  "title": "Remove duplicate close button from grave detail card",
   "projectName": "Cemetery Manager",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Add an opaque background to the grave detail card modal (GraveDetailCard component) to prevent underlying page content from showing through. The card should have a solid backdrop that completely blocks visibility of text and elements behind it.",
+      "text": "Remove one of the duplicate close buttons (X) from the GraveDetailCard modal in the top-right corner, keeping only a single close button for dismissing the card",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-last"
+          "msg-10"
         ],
         "quotes": [
-          "wizytówka jest prześwietlona - przebija tekst z innej strony, mam wrażenie jakbym patrzył przez szybę"
+          "na wizytówce w prawym górnym rogu dubluje sie \"krzyżyk\" którym wyłączamy wizytówkę. Należy jeden \"krzyżyk\" - do wyłączania wizytówki usunąć - wystarczy jeden do wyłączenia."
         ]
       },
       "acceptanceCriteria": [
-        "When clicking on a grave tile in the map view, the detail card displays with a fully opaque background",
-        "When clicking on a grave in the search results, the detail card displays with a fully opaque background",
-        "No text or elements from the underlying page are visible through the card",
-        "The card content (grave location, status, deceased persons) is clearly readable without transparency issues"
+        "Only one close button (X) appears in the top-right corner of the grave detail card modal",
+        "The remaining close button successfully closes the modal when clicked",
+        "No visual duplicates or overlapping close icons are visible"
       ]
     }
   ],
   "constraints": [
-    "Do not modify the GraveDetailCard component's data structure or props interface",
-    "Maintain existing modal behavior and close functionality",
-    "Keep the current content layout and information display unchanged"
+    "Do not modify the card opening functionality triggered by clicking on a grave",
+    "Preserve all other content and functionality of the GraveDetailCard component"
   ],
   "nonGoals": [
-    "Changing the card's visual design beyond fixing the transparency",
-    "Modifying the grave tile map appearance",
-    "Altering search functionality",
-    "Redesigning the modal interaction pattern"
+    "Changing the position or styling of the close button",
+    "Modifying the grave detail card content or layout beyond removing the duplicate button",
+    "Altering the modal backdrop or other visual elements"
   ],
   "imageRequirements": {
     "required": [],

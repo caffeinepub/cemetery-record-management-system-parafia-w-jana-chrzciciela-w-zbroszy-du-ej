@@ -1,7 +1,7 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-21T07:17:48.859Z",
+  "generatedAt": "2026-02-21T18:20:46.941Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
@@ -12,7 +12,7 @@
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Add an opaque background to the grave detail card modal (GraveDetailCard component) to prevent underlying page content from showing through. The card should have a solid backdrop that completely blocks visibility of text and elements behind it.",
+        "summary": "Remove one of the duplicate close buttons (X) from the GraveDetailCard modal in the top-right corner, keeping only a single close button for dismissing the card",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/components/GraveDetailCard.tsx"

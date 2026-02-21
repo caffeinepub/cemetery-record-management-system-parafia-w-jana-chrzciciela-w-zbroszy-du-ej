@@ -1,22 +1,21 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix transparent grave card overlay issue",
+  "title": "Remove duplicate close button from grave detail card",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Add opaque background to GraveDetailCard modal to prevent underlying content from showing through",
+      "summary": "Remove one of the duplicate close buttons (X) from the GraveDetailCard modal in the top-right corner, keeping only a single close button for dismissing the card",
       "acceptanceCriteria": [
-        "When clicking on a grave tile in the map view, the detail card displays with a fully opaque background",
-        "When clicking on a grave in the search results, the detail card displays with a fully opaque background",
-        "No text or elements from the underlying page are visible through the card",
-        "The card content (grave location, status, deceased persons) is clearly readable without transparency issues"
+        "Only one close button (X) appears in the top-right corner of the grave detail card modal",
+        "The remaining close button successfully closes the modal when clicked",
+        "No visual duplicates or overlapping close icons are visible"
       ],
       "file_operations": [
         {
           "path": "frontend/src/components/GraveDetailCard.tsx",
           "operation": "modify",
-          "description": "Modify the DialogContent component to include a fully opaque background class. Add 'bg-background' or 'bg-white dark:bg-slate-900' class to ensure the modal has a solid backdrop that completely blocks visibility of underlying content. Verify that the Dialog overlay also has sufficient opacity to prevent content bleed-through."
+          "description": "Remove the duplicate close button (X) from the dialog header while preserving the DialogClose component that dismisses the modal. Inspect the component structure to identify which close button element is duplicated and remove one instance, ensuring the remaining close button maintains full dismiss functionality and proper positioning in the top-right corner."
         }
       ]
     }

@@ -1,7 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, User, Calendar, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { MapPin, User, Calendar } from 'lucide-react';
 import type { PublicTileData, PublicGraveResult, DeceasedPerson } from '../backend';
 import { GraveStatus } from '../backend';
 import { getStatusLabel } from '../utils/graveStatusStyles';
@@ -81,21 +80,11 @@ export default function GraveDetailCard({ grave, open, onClose }: GraveDetailCar
         className={`max-w-2xl ${getCardBackgroundClass(status)} border-2 shadow-2xl`}
       >
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <MapPin className="h-6 w-6 text-primary" />
-              <span className="text-2xl font-bold">
-                Aleja {alley}, Grób nr {plotNumber.toString()}
-              </span>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="h-8 w-8 rounded-full"
-            >
-              <X className="h-5 w-5" />
-            </Button>
+          <DialogTitle className="flex items-center gap-3">
+            <MapPin className="h-6 w-6 text-primary" />
+            <span className="text-2xl font-bold">
+              Aleja {alley}, Grób nr {plotNumber.toString()}
+            </span>
           </DialogTitle>
         </DialogHeader>
 

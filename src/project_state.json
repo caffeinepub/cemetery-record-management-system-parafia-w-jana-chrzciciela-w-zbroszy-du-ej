@@ -4,20 +4,27 @@
   "summary": "New project",
   "architectural_notes": [],
   "known_issues": [
-    "Grave card (wizytówka) displays with transparency issue - background content shows through making it hard to read"
+    "Duplicate close button (X) appears on grave card in top-right corner"
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-add-an-opaque-background-to-the-grave-detail-card-modal-gravedetailcard-component-to-prevent-underlying-page-content-from-showing-through-the-card-should-have-a-solid-backdrop-that-completely-blocks-visibility-of-text-and-elements-behind-it",
-      "title": "Add an opaque background to the grave detail card modal (GraveDetailCard component) to prevent underlying page content from showing through. The card should have a solid backdrop that completely blocks visibility of text and elements behind it.",
+      "id": "feature-remove-one-of-the-duplicate-close-buttons-x-from-the-gravedetailcard-modal-in-the-top-right-corner-keeping-only-a-single-close-button-for-dismissing-the-card",
+      "title": "Remove one of the duplicate close buttons (X) from the GraveDetailCard modal in the top-right corner, keeping only a single close button for dismissing the card",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     }
   ],
-  "new_feature_requests": [],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Remove duplicate close button (X) from grave card - keep only one",
+      "reqIds": [],
+      "status": "pending"
+    }
+  ],
   "projectName": "Cemetery Manager",
   "clarification_mode": "instant",
   "clarification_rounds": 0

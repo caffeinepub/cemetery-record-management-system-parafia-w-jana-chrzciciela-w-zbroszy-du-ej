@@ -1,9 +1,10 @@
 # Specification
 
 ## Summary
-**Goal:** Fix the transparent grave detail card overlay so that underlying page content doesn't show through.
+**Goal:** Remove the duplicate close button from the grave detail card modal.
 
 **Planned changes:**
-- Add an opaque background to the GraveDetailCard modal component to block visibility of underlying page elements
+- Remove one of the two duplicate close buttons (X) in the top-right corner of the GraveDetailCard modal
+- Ensure only a single close button remains functional
 
-**User-visible outcome:** When viewing grave details from the map or search results, the detail card displays with a solid background that prevents text and elements from the page behind from showing through, ensuring clear readability of grave information.
+**User-visible outcome:** When opening a grave detail card, users will see only one close button in the top-right corner to dismiss the modal, eliminating the visual duplication.
