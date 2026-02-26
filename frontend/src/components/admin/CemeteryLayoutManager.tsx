@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,6 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { sortAlleys } from '../../utils/alleySort';
 
 export default function CemeteryLayoutManager() {
   const { data: cemetery, isLoading } = useGetCemeteryState();
@@ -35,6 +36,12 @@ export default function CemeteryLayoutManager() {
   const [newPlotNumber, setNewPlotNumber] = useState('');
   const [deleteAlleyDialog, setDeleteAlleyDialog] = useState<string | null>(null);
   const [deleteGraveDialog, setDeleteGraveDialog] = useState<bigint | null>(null);
+
+  // Sort alleys client-side for consistent display order
+  const sortedAlleys = useMemo(() => {
+    if (!cemetery) return [];
+    return sortAlleys(cemetery.alleys);
+  }, [cemetery]);
 
   const handleAddAlley = async () => {
     if (!newAlleyName.trim()) {
@@ -93,172 +100,238 @@ export default function CemeteryLayoutManager() {
     );
   }
 
+  if (!cemetery) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center text-muted-foreground">
+          Nie można załadować danych cmentarza.
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Zarządzanie alejami</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <div className="flex-1 space-y-2">
-              <Label htmlFor="newAlley">Nazwa nowej alei</Label>
-              <Input
-                id="newAlley"
-                value={newAlleyName}
-                onChange={(e) => setNewAlleyName(e.target.value)}
-                placeholder="np. A, B, 1, 2..."
-                disabled={addAlley.isPending}
-              />
-            </div>
-            <Button
-              onClick={handleAddAlley}
-              disabled={addAlley.isPending || !newAlleyName.trim()}
-              className="self-end"
-            >
-              {addAlley.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Dodaj aleję
-                </>
-              )}
-            </Button>
-          </div>
-
-          <Separator />
-
-          <div className="space-y-2">
-            <Label>Istniejące aleje</Label>
-            {cemetery?.alleys.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Brak alei</p>
-            ) : (
-              <div className="space-y-2">
-                {cemetery?.alleys.map((alley) => (
-                  <div
-                    key={alley.name}
-                    className="flex items-center justify-between p-3 border rounded-lg"
-                  >
-                    <div>
-                      <p className="font-medium">Aleja {alley.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {alley.graveIds.length} grobów
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setDeleteAlleyDialog(alley.name)}
-                      disabled={alley.graveIds.length > 0 || removeAlley.isPending}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
+    <>
+      <div className="space-y-6">
+        {/* Add Alley */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Zarządzanie alejami</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-3">
+              <div className="flex-1 space-y-1">
+                <Label htmlFor="newAlleyName">Nazwa nowej alei</Label>
+                <Input
+                  id="newAlleyName"
+                  value={newAlleyName}
+                  onChange={(e) => setNewAlleyName(e.target.value)}
+                  placeholder="np. A, B, 1, 2, Północna..."
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddAlley()}
+                />
               </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Dodawanie grobów</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="alleySelect">Wybierz aleję</Label>
-              <select
-                id="alleySelect"
-                value={selectedAlley}
-                onChange={(e) => setSelectedAlley(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md bg-background"
-                disabled={addGrave.isPending}
-              >
-                <option value="">-- Wybierz --</option>
-                {cemetery?.alleys.map((alley) => (
-                  <option key={alley.name} value={alley.name}>
-                    Aleja {alley.name}
-                  </option>
-                ))}
-              </select>
+              <div className="flex items-end">
+                <Button
+                  onClick={handleAddAlley}
+                  disabled={!newAlleyName.trim() || addAlley.isPending}
+                >
+                  {addAlley.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Plus className="h-4 w-4 mr-2" />
+                  )}
+                  Dodaj aleję
+                </Button>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="plotNumber">Numer grobu</Label>
-              <Input
-                id="plotNumber"
-                type="number"
-                value={newPlotNumber}
-                onChange={(e) => setNewPlotNumber(e.target.value)}
-                placeholder="1"
-                disabled={addGrave.isPending}
-              />
-            </div>
-          </div>
+            <Separator />
 
-          <Button
-            onClick={handleAddGrave}
-            disabled={addGrave.isPending || !selectedAlley || !newPlotNumber}
-            className="w-full"
-          >
-            {addGrave.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">
+                Istniejące aleje ({sortedAlleys.length})
+              </Label>
+              {sortedAlleys.length === 0 ? (
+                <p className="text-sm text-muted-foreground italic">Brak alei. Dodaj pierwszą aleję powyżej.</p>
+              ) : (
+                <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                  {sortedAlleys.map((alley) => (
+                    <div
+                      key={alley.name}
+                      className="flex items-center justify-between p-3 border rounded-lg bg-muted/30"
+                    >
+                      <div>
+                        <span className="font-medium">Aleja {alley.name}</span>
+                        <span className="text-sm text-muted-foreground ml-2">
+                          ({alley.graveIds.length} {alley.graveIds.length === 1 ? 'grób' : 'grobów'})
+                        </span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDeleteAlleyDialog(alley.name)}
+                        disabled={alley.graveIds.length > 0 || removeAlley.isPending}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        title={alley.graveIds.length > 0 ? 'Usuń najpierw wszystkie groby z tej alei' : 'Usuń aleję'}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Add Grave */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Dodaj grób do alei</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {sortedAlleys.length === 0 ? (
+              <p className="text-sm text-muted-foreground italic">Najpierw dodaj aleję.</p>
             ) : (
-              <Plus className="h-4 w-4 mr-2" />
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label htmlFor="selectedAlley">Aleja</Label>
+                    <select
+                      id="selectedAlley"
+                      value={selectedAlley}
+                      onChange={(e) => setSelectedAlley(e.target.value)}
+                      className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      <option value="">Wybierz aleję</option>
+                      {sortedAlleys.map((alley) => (
+                        <option key={alley.name} value={alley.name}>
+                          Aleja {alley.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="newPlotNumber">Numer grobu</Label>
+                    <Input
+                      id="newPlotNumber"
+                      type="number"
+                      min="1"
+                      value={newPlotNumber}
+                      onChange={(e) => setNewPlotNumber(e.target.value)}
+                      placeholder="np. 1, 2, 3..."
+                      onKeyDown={(e) => e.key === 'Enter' && handleAddGrave()}
+                    />
+                  </div>
+                </div>
+                <Button
+                  onClick={handleAddGrave}
+                  disabled={!selectedAlley || !newPlotNumber || addGrave.isPending}
+                >
+                  {addGrave.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Plus className="h-4 w-4 mr-2" />
+                  )}
+                  Dodaj grób
+                </Button>
+              </>
             )}
-            Dodaj grób
-          </Button>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      <AlertDialog open={!!deleteAlleyDialog} onOpenChange={() => setDeleteAlleyDialog(null)}>
+        {/* Alley details with graves */}
+        {sortedAlleys.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Groby w alejach</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {sortedAlleys.map((alley) => (
+                <div key={alley.name} className="space-y-2">
+                  <h4 className="font-semibold text-sm">
+                    Aleja {alley.name} — {alley.graveIds.length} {alley.graveIds.length === 1 ? 'grób' : 'grobów'}
+                  </h4>
+                  {alley.graveIds.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {[...alley.graveIds]
+                        .sort((a, b) => Number(a) - Number(b))
+                        .map((graveId) => (
+                          <div
+                            key={graveId.toString()}
+                            className="flex items-center gap-1 bg-muted/50 border rounded px-2 py-1 text-xs"
+                          >
+                            <span>#{graveId.toString()}</span>
+                            <button
+                              onClick={() => setDeleteGraveDialog(graveId)}
+                              className="text-destructive hover:text-destructive/80 ml-1"
+                              title="Usuń grób"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic">Brak grobów w tej alei.</p>
+                  )}
+                  <Separator />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Delete Alley Confirmation */}
+      <AlertDialog open={!!deleteAlleyDialog} onOpenChange={(open) => !open && setDeleteAlleyDialog(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Czy na pewno usunąć aleję?</AlertDialogTitle>
+            <AlertDialogTitle>Usuń aleję</AlertDialogTitle>
             <AlertDialogDescription>
-              Ta operacja jest nieodwracalna. Aleja {deleteAlleyDialog} zostanie trwale usunięta.
+              Czy na pewno chcesz usunąć aleję <strong>{deleteAlleyDialog}</strong>?
+              Tej operacji nie można cofnąć.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={removeAlley.isPending}>Anuluj</AlertDialogCancel>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteAlleyDialog && handleRemoveAlley(deleteAlleyDialog)}
-              disabled={removeAlley.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {removeAlley.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : null}
-              Usuń
+              Usuń aleję
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={!!deleteGraveDialog} onOpenChange={() => setDeleteGraveDialog(null)}>
+      {/* Delete Grave Confirmation */}
+      <AlertDialog open={!!deleteGraveDialog} onOpenChange={(open) => !open && setDeleteGraveDialog(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Czy na pewno usunąć grób?</AlertDialogTitle>
+            <AlertDialogTitle>Usuń grób</AlertDialogTitle>
             <AlertDialogDescription>
-              Ta operacja jest nieodwracalna. Można usuwać tylko wolne groby.
+              Czy na pewno chcesz usunąć grób <strong>#{deleteGraveDialog?.toString()}</strong>?
+              Można usunąć tylko groby o statusie &quot;Wolny&quot;. Tej operacji nie można cofnąć.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={removeGrave.isPending}>Anuluj</AlertDialogCancel>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => deleteGraveDialog && handleRemoveGrave(deleteGraveDialog)}
-              disabled={removeGrave.isPending}
+              onClick={() => deleteGraveDialog !== null && handleRemoveGrave(deleteGraveDialog)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {removeGrave.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : null}
-              Usuń
+              Usuń grób
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   );
 }

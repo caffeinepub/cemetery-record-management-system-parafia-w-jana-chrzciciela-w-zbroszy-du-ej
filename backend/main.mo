@@ -10,8 +10,8 @@ import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
-import Storage "blob-storage/Storage";
 import MixinStorage "blob-storage/Mixin";
+import Storage "blob-storage/Storage";
 import Set "mo:core/Set";
 
 actor {
@@ -332,7 +332,7 @@ actor {
   let userProfiles = Map.empty<Principal, UserProfile>();
   var accessControlState = AccessControl.initState();
 
-  var alleysState = List.empty<Alley>();
+  let alleysState = List.empty<Alley>();
   var lastGraveIdState = 0;
   var cemeteryNameState = "Parafia św. Jana Chrzciciela w Zbroszy Dużej";
   var adminEmail = "zbroszaduza@archidiecezja.waw.pl";
@@ -370,7 +370,7 @@ actor {
 
     prayerForTheDeceased = {
       title = "Modlitwa za zmarłych";
-      content = "Wieczny odpoczynek racz im dać, Panie...\nA światłość wiekuista niechaj im świeci...";
+      content = "Wieczny odpoczynek racz im dać, Panie...\nA światłość wiekuista niech im świeci...";
       memorialPrayer = "";
     };
 
@@ -381,11 +381,21 @@ actor {
     };
   };
 
+  func compareAlleysByName(a : Alley, b : Alley) : Order.Order {
+    Text.compare(a.name, b.name);
+  };
+
+  func getSortedAlleys() : [Alley] {
+    alleysState.toArray().sort(
+      compareAlleysByName
+    );
+  };
+
   func verifyDataConsistency() : () {
     let validGraveRecordIds = graveRecords.toArray().map(func((id, _)) { id });
     let validIdsSet = Set.fromArray<Nat>(validGraveRecordIds);
 
-    let alleyArray = alleysState.toArray();
+    let alleyArray = getSortedAlleys();
     for (alley in alleyArray.values()) {
       for (id in alley.graveIds.values()) {
         if (not validIdsSet.contains(id)) {
@@ -499,7 +509,7 @@ actor {
     verifyDataConsistency();
     {
       cemeteryName = cemeteryNameState;
-      alleys = alleysState.toArray().map(
+      alleys = getSortedAlleys().map(
         func(alley) {
           { name = alley.name; graveIds = alley.graveIds.toArray() };
         }
@@ -589,7 +599,7 @@ actor {
         };
         graveRecords.add(newGraveId, newGrave);
 
-        let alleyArray = alleysState.toArray();
+        let alleyArray = getSortedAlleys();
         let updatedAlleys = alleyArray.map(
           func(a : Alley) : Alley {
             if (a.name == alley) {
@@ -628,7 +638,7 @@ actor {
 
         graveRecords.remove(id);
 
-        let alleyArray = alleysState.toArray();
+        let alleyArray = getSortedAlleys();
         let updatedAlleys = alleyArray.map(
           func(a : Alley) : Alley {
             if (a.name == grave.alley) {
@@ -697,47 +707,23 @@ actor {
     };
   };
 
-  public shared ({ caller }) func updateGraveLocation(id : Nat, newAlley : Text, newPlotNumber : Nat) : async AsyncResult<()> {
+  public shared ({ caller }) func changeGraveNumber(id : Nat, newPlotNumber : Nat) : async AsyncResult<()> {
     assertBossOrManager(caller);
 
-    if (not graveRecords.containsKey(id)) {
-      return #err(#graveNotFound({ graveId = id }));
-    };
-
-    let existingRecord = switch (graveRecords.get(id)) {
-      case (null) { return #err(#graveNotFound({ graveId = id })) };
-      case (?record) { record };
-    };
-
-    let updatedRecord : GraveRecord = {
-      existingRecord with
-      alley = newAlley;
-      plotNumber = newPlotNumber;
-    };
-
-    graveRecords.add(id, updatedRecord);
-
-    let filteredAlleys = alleysState.filter(func(a : Alley) : Bool { a.name != existingRecord.alley });
-    alleysState.clear();
-    for (alley in filteredAlleys.values()) {
-      alleysState.add(alley);
-    };
-
-    let matchingAlley = alleysState.find(func(a : Alley) : Bool { a.name == newAlley });
-    switch (matchingAlley) {
-      case (?alley) {
-        let newGraveIds = Set.empty<Nat>();
-        alley.graveIds.values().forEach(func(graveId) {
-          if (graveId != id) { newGraveIds.add(graveId) };
-        });
-        newGraveIds.add(id);
+    let graveOpt = graveRecords.get(id);
+    switch (graveOpt) {
+      case (?grave) {
+        let updatedGrave : GraveRecord = {
+          grave with
+          plotNumber = newPlotNumber;
+        };
+        graveRecords.add(id, updatedGrave);
+        #ok(());
       };
       case (null) {
-        return #err(#alleyNotFound({ alley = newAlley }));
+        #err(#graveNotFound({ graveId = id }));
       };
     };
-
-    #ok(());
   };
 
   public query ({ caller }) func searchGraves(
@@ -835,7 +821,7 @@ actor {
   public query func getCemeteryStateWithoutVerification() : async CemeteryView {
     {
       cemeteryName = cemeteryNameState;
-      alleys = alleysState.toArray().map(
+      alleys = getSortedAlleys().map(
         func(alley) {
           { name = alley.name; graveIds = alley.graveIds.toArray() };
         }

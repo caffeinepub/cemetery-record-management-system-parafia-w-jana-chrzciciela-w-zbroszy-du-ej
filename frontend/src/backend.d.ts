@@ -181,6 +181,7 @@ export interface backendInterface {
     addManager(principal: Principal): Promise<boolean>;
     assignBoss(newBoss: Principal): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    changeGraveNumber(id: bigint, newPlotNumber: bigint): Promise<AsyncResult>;
     clearManagers(): Promise<void>;
     getAccessRole(): Promise<string>;
     getAllGraves(): Promise<Array<GraveRecord>>;
@@ -225,7 +226,6 @@ export interface backendInterface {
     searchPublicGravesWithLocation(surname: string | null, yearOfDeath: bigint | null): Promise<Array<PublicGraveResult>>;
     updateCemeteryInformation(newSection: PublicHtmlSection): Promise<void>;
     updateGrave(id: bigint, updatedRecord: GraveRecord): Promise<AsyncResult>;
-    updateGraveLocation(id: bigint, newAlley: string, newPlotNumber: bigint): Promise<AsyncResult>;
     updateGravesDeclaration(newSection: PublicHtmlSection): Promise<void>;
     updateHomepageHeroContent(newContent: HomepageHeroContent): Promise<void>;
     updateLogoImage(newLogo: ExternalBlob | null): Promise<void>;

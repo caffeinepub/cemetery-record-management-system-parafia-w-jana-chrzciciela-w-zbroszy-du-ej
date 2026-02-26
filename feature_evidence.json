@@ -2,13 +2,13 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-add-the-ability-to-edit-a-grave-s-plot-number-and-or-alley-directly-from-the-admin-panel-both-from-the-grave-tile-map-view-admingravetilemap-and-from-the-grave-management-list-gravemanagement-the-edit-action-should-be-accessible-via-the-existing-graveeditdialog-or-a-dedicated-inline-control-and-must-persist-the-change-to-the-backend",
-      "featureTitle": "Add the ability to edit a grave's plot number (and/or alley) directly from the admin panel — both from the grave tile map view (AdminGraveTileMap) and from the grave management list (GraveManagement). The edit action should be accessible via the existing GraveEditDialog or a dedicated inline control, and must persist the change to the backend.",
+      "featureId": "feature-apply-consistent-alley-sorting-on-the-frontend-in-all-components-that-render-alleys-admingravetilemap-cemeterylayoutmanager-gravetilemap-graveresultslist-and-any-other-alley-lists-sort-alleys-alphabetically-numerically-on-the-client-side-as-a-safety-fallback-so-even-if-backend-order-changes-the-ui-always-shows-a-predictable-order",
+      "featureTitle": "Apply consistent alley sorting on the frontend in all components that render alleys (AdminGraveTileMap, CemeteryLayoutManager, GraveTileMap, GraveResultsList, and any other alley lists). Sort alleys alphabetically/numerically on the client side as a safety fallback, so even if backend order changes the UI always shows a predictable order.",
       "files": [
+        "frontend/src/components/GraveTileMap.tsx",
         "frontend/src/components/admin/AdminGraveTileMap.tsx",
-        "frontend/src/components/admin/GraveEditDialog.tsx",
-        "frontend/src/components/admin/GraveManagement.tsx",
-        "frontend/src/hooks/useQueries.ts"
+        "frontend/src/components/admin/CemeteryLayoutManager.tsx",
+        "frontend/src/utils/alleySort.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -20,18 +20,15 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-1"
+        "REQ-3"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-add-the-ability-to-delete-a-grave-record-directly-from-the-admin-panel-both-from-the-grave-tile-map-view-admingravetilemap-and-from-the-grave-management-list-gravemanagement-a-confirmation-dialog-must-be-shown-before-the-deletion-is-executed",
-      "featureTitle": "Add the ability to delete a grave record directly from the admin panel — both from the grave tile map view (AdminGraveTileMap) and from the grave management list (GraveManagement). A confirmation dialog must be shown before the deletion is executed.",
+      "featureId": "feature-add-a-safeguard-in-graveeditdialog-and-any-other-edit-dialogs-that-warns-the-admin-before-saving-a-plot-number-change-clearly-stating-that-this-operation-will-change-the-grave-identifier-show-a-confirmation-step-specifically-for-plot-number-changes-distinct-from-the-general-save-action-to-prevent-accidental-data-loss-operations",
+      "featureTitle": "Add a safeguard in GraveEditDialog (and any other edit dialogs) that warns the admin before saving a plot number change, clearly stating that this operation will change the grave identifier. Show a confirmation step specifically for plot number changes distinct from the general save action, to prevent accidental data-loss operations.",
       "files": [
-        "frontend/src/components/admin/AdminGraveTileMap.tsx",
-        "frontend/src/components/admin/GraveEditDialog.tsx",
-        "frontend/src/components/admin/GraveManagement.tsx",
-        "frontend/src/hooks/useQueries.ts"
+        "frontend/src/components/admin/GraveEditDialog.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -43,7 +40,7 @@
         "blob-storage@4.0.0"
       ],
       "testIds": [
-        "REQ-2"
+        "REQ-4"
       ],
       "confidence": "high"
     }

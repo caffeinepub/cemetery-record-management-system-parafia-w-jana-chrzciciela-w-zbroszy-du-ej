@@ -1,63 +1,100 @@
 {
   "kind": "build_request",
-  "title": "Add grave number editing and grave deletion from admin panel",
+  "title": "Fix: Safe grave number change, consistent alley sorting, prevent data loss",
   "projectName": "Cemetery Manager",
-  "priority": "normal",
+  "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Add the ability to edit a grave's plot number (and/or alley) directly from the admin panel — both from the grave tile map view (AdminGraveTileMap) and from the grave management list (GraveManagement). The edit action should be accessible via the existing GraveEditDialog or a dedicated inline control, and must persist the change to the backend.",
-      "target": "both",
+      "text": "Fix the grave number change logic in the backend so that updating a grave's plot number never deletes or detaches the parent alley. The operation must be atomic: copy all grave data (including all deceased persons, owner, status, payment info) to the new key, then remove the old key, while keeping the alley record fully intact and all its grave references updated correctly.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-1",
+          "msg-2"
         ],
         "quotes": [
-          "Edycja numeru grobu i usuwanie grobu bezpośrednio z mapy/panelu admina",
-          "wykonaj zadnie 1"
+          "po zmianie numeru grobu aplikacja usuwa całą aleje wcześniej istniejącą",
+          "Wprowadził błąd w logice zmiany numeru grobu, który usunął dane alei"
         ]
       },
       "acceptanceCriteria": [
-        "Admin can open an edit dialog/form for any existing grave from both the map tile view and the list view.",
-        "The edit form includes a field to change the plot number (and alley if needed).",
-        "Saving the form updates the grave record in the backend.",
-        "The updated plot number is immediately reflected in the map and list views after saving.",
-        "Validation prevents saving an empty or duplicate plot number within the same alley.",
-        "Backend exposes an updateGrave (or equivalent) function that accepts a modified GraveRecord and persists the changes."
+        "Changing a grave's plot number does not remove or empty the parent alley",
+        "All deceased persons, owner data, status and payment date are preserved after a plot number change",
+        "The alley retains all its other graves after a plot number change on one grave",
+        "If the new plot number already exists, the operation is rejected with an error message rather than overwriting"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Add the ability to delete a grave record directly from the admin panel — both from the grave tile map view (AdminGraveTileMap) and from the grave management list (GraveManagement). A confirmation dialog must be shown before the deletion is executed.",
-      "target": "both",
+      "text": "Ensure alleys are always stored and retrieved in a consistent, predictable sort order. Alleys must be sorted alphabetically by name (or numerically if names are numeric) in all backend query responses. This sort must be applied to every function that returns alleys or cemetery layout data.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-2",
+          "msg-3"
         ],
         "quotes": [
-          "usuwanie grobu bezpośrednio z mapy/panelu admina",
-          "wykonaj zadnie 1"
+          "aplikacja umieściła ją na końcu wszystkich alei, czyli nie zachowując żadnej spójności chronologicznej, alfabetycznej, numerycznej - totalny chaos",
+          "Stałe sortowanie alei (alfabetyczne lub numeryczne) — zawsze, wszędzie"
         ]
       },
       "acceptanceCriteria": [
-        "Admin can trigger a delete action for any grave from both the map tile view and the list view.",
-        "A confirmation dialog appears asking the admin to confirm deletion before proceeding.",
-        "Confirming deletion removes the grave record from the backend.",
-        "The deleted grave tile/entry disappears from the map and list views immediately after deletion.",
-        "Cancelling the confirmation dialog leaves the grave record unchanged.",
-        "Backend exposes a deleteGrave (or equivalent) function that removes a grave by its identifier."
+        "All backend endpoints that return alley lists return them sorted alphabetically (or numerically for numeric names)",
+        "A newly added or restored alley appears in its correct sorted position, not appended at the end",
+        "Sort order is stable across repeated calls"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Apply consistent alley sorting on the frontend in all components that render alleys (AdminGraveTileMap, CemeteryLayoutManager, GraveTileMap, GraveResultsList, and any other alley lists). Sort alleys alphabetically/numerically on the client side as a safety fallback, so even if backend order changes the UI always shows a predictable order.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-2",
+          "msg-3"
+        ],
+        "quotes": [
+          "aplikacja umieściła ją na końcu wszystkich alei, czyli nie zachowując żadnej spójności chronologicznej, alfabetycznej, numerycznej - totalny chaos"
+        ]
+      },
+      "acceptanceCriteria": [
+        "AdminGraveTileMap renders alleys in alphabetical/numerical order",
+        "GraveTileMap renders alleys in alphabetical/numerical order",
+        "CemeteryLayoutManager displays alleys in alphabetical/numerical order",
+        "Restoring or adding an alley immediately places it in the correct sorted position in all views without requiring a page reload"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Add a safeguard in GraveEditDialog (and any other edit dialogs) that warns the admin before saving a plot number change, clearly stating that this operation will change the grave identifier. Show a confirmation step specifically for plot number changes distinct from the general save action, to prevent accidental data-loss operations.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-3"
+        ],
+        "quotes": [
+          "Usunięcie możliwości przypadkowego uszkodzenia danych przy edycji"
+        ]
+      },
+      "acceptanceCriteria": [
+        "When the admin changes the plot number field and clicks Save, a confirmation dialog appears before the save is executed",
+        "The confirmation message explicitly mentions that the plot/grave number is being changed",
+        "Cancelling the confirmation leaves all data unchanged",
+        "Confirming proceeds with the safe atomic update from REQ-1"
       ]
     }
   ],
   "constraints": [
-    "Do not modify files listed in frontend.immutablePaths.",
-    "All backend logic must remain in the single actor in backend/main.mo.",
-    "Deletion must require explicit admin confirmation before executing."
+    "Do not alter any other data fields or schema beyond what is required to fix the grave number change and alley sorting logic",
+    "Do not remove the plot number editing feature — only make it safe",
+    "Do not touch frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui"
   ],
   "nonGoals": [
-    "Adding a navigation bar or other UI sections (separate task).",
-    "Public-facing grave editing or deletion.",
-    "Bulk deletion of multiple graves at once."
+    "Recovering previously lost cemetery data — this is a code fix only",
+    "Adding new features beyond the three bug fixes described above",
+    "Changing the visual design or theme of the application",
+    "Modifying authentication or authorization logic"
   ],
   "imageRequirements": {
     "required": [],

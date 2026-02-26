@@ -1,39 +1,46 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-26T07:50:49.783Z",
-  "summary": "The diff implements both REQ-1 (edit grave plot number/alley from admin panel) and REQ-2 (delete grave with confirmation dialog from admin panel). Both the AdminGraveTileMap and GraveManagement list views are wired to GraveEditDialog, which includes editable alley/plot number fields (using useUpdateGraveLocation), a delete button with AlertDialog confirmation, and the backend exposes updateGrave/updateGraveLocation/removeGrave functions. Most acceptance criteria appear to be met. One area of uncertainty is whether validation for empty or duplicate plot numbers within the same alley is fully implemented, as the diff is truncated before the full save logic is visible.",
+  "generatedAt": "2026-02-26T08:29:56.539Z",
+  "summary": "The diff implements REQ-2 (backend alley sorting), REQ-3 (frontend alley sorting in multiple components), and REQ-4 (plot number change confirmation dialog). REQ-1 (backend atomic grave number change logic) is referenced in frontend code via a useUpdateGraveLocation/changeGraveNumber hook but the actual backend fix in main.mo is truncated and cannot be fully verified.",
   "missing_requirements": [
     {
       "id": "REQ-1",
-      "requirement": "Validation prevents saving an empty or duplicate plot number within the same alley.",
-      "reason": "The GraveEditDialog file is truncated before the save/validation logic is shown. The diff does not provide sufficient evidence that duplicate plot number validation within the same alley is implemented.",
+      "requirement": "Fix the grave number change logic in the backend so that updating a grave's plot number never deletes or detaches the parent alley. The operation must be atomic: copy all grave data to the new key, then remove the old key, while keeping the alley record fully intact and all its grave references updated correctly. If the new plot number already exists, reject with an error.",
+      "reason": "The backend/main.mo diff is truncated and does not show the implementation of the atomic grave number change logic, the alley reference update, or the duplicate plot number check. The frontend references useUpdateGraveLocation and changeGraveNumber hooks suggesting backend support may exist, but the actual backend implementation cannot be verified from the truncated diff.",
       "evidence": [
-        "frontend/src/components/admin/GraveEditDialog.tsx"
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "GraveResultsList must also sort alleys alphabetically/numerically on the client side.",
+      "reason": "The file summary for GraveResultsList only mentions prop interface changes for GraveEditDialog, with no evidence of sortAlleys being applied. GraveResultsList is not shown as a modified file importing sortAlleys.",
+      "evidence": [
+        "frontend-file-summaries.txt"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "useUpdateGraveLocation hook added as a separate mutation distinct from useUpdateGrave, specifically handling alley and plot number location changes.",
-      "reason": "The build request only asked for an updateGrave (or equivalent) backend function. A separate dedicated location-update mutation was added without being explicitly requested, though it serves the requirement.",
+      "description": "Alley field is locked/read-only during grave editing in GraveEditDialog, preventing moving graves between alleys.",
+      "reason": "The build request does not mention locking the alley field during editing. It only requests a confirmation dialog for plot number changes. The file summary explicitly states the alley field is now locked read-only during editing, which is not part of any stated requirement.",
       "evidence": [
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/components/admin/GraveEditDialog.tsx"
+        "frontend/src/components/admin/GraveEditDialog.tsx",
+        "frontend-file-summaries.txt"
       ]
     }
   ],
-  "confidence": 0.78,
+  "confidence": 0.72,
   "changed_files": [
     "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/GraveResultsList.tsx",
+    "frontend/src/components/GraveTileMap.tsx",
     "frontend/src/components/admin/AdminGraveTileMap.tsx",
     "frontend/src/components/admin/CemeteryLayoutManager.tsx",
     "frontend/src/components/admin/GraveEditDialog.tsx",
-    "frontend/src/components/admin/GraveManagement.tsx",
-    "frontend/src/components/admin/ManagerDelegation.tsx",
     "frontend/src/hooks/useQueries.ts",
+    "frontend/src/utils/alleySort.ts",
     "project_state.json"
   ]
 }

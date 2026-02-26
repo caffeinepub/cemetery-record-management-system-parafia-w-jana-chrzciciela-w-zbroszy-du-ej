@@ -9,6 +9,7 @@ import type { GraveRecord } from '../../backend';
 import { GraveStatus } from '../../backend';
 import { getGraveStatusStyles, getStatusLabel, getStatusLegendColor } from '../../utils/graveStatusStyles';
 import LazyMount from '../LazyMount';
+import { sortAlleys } from '../../utils/alleySort';
 
 export default function AdminGraveTileMap() {
   const { data: graves = [], isLoading: gravesLoading } = useGetAllGraves();
@@ -24,6 +25,12 @@ export default function AdminGraveTileMap() {
     });
     return map;
   }, [graves]);
+
+  // Sort alleys client-side for consistent display order
+  const sortedAlleys = useMemo(() => {
+    if (!cemetery) return [];
+    return sortAlleys(cemetery.alleys);
+  }, [cemetery]);
 
   const getGraveById = (id: bigint): GraveRecord | undefined => {
     return graveMap.get(id.toString());
@@ -101,7 +108,7 @@ export default function AdminGraveTileMap() {
         </Card>
 
         <div className="space-y-8">
-          {cemetery.alleys.map((alley) => (
+          {sortedAlleys.map((alley) => (
             <LazyMount key={alley.name} rootMargin="600px">
               <Card>
                 <CardHeader>

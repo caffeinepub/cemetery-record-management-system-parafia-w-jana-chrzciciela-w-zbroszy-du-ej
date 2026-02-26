@@ -274,6 +274,7 @@ export interface backendInterface {
     addManager(principal: Principal): Promise<boolean>;
     assignBoss(newBoss: Principal): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    changeGraveNumber(id: bigint, newPlotNumber: bigint): Promise<AsyncResult>;
     clearManagers(): Promise<void>;
     getAccessRole(): Promise<string>;
     getAllGraves(): Promise<Array<GraveRecord>>;
@@ -318,7 +319,6 @@ export interface backendInterface {
     searchPublicGravesWithLocation(surname: string | null, yearOfDeath: bigint | null): Promise<Array<PublicGraveResult>>;
     updateCemeteryInformation(newSection: PublicHtmlSection): Promise<void>;
     updateGrave(id: bigint, updatedRecord: GraveRecord): Promise<AsyncResult>;
-    updateGraveLocation(id: bigint, newAlley: string, newPlotNumber: bigint): Promise<AsyncResult>;
     updateGravesDeclaration(newSection: PublicHtmlSection): Promise<void>;
     updateHomepageHeroContent(newContent: HomepageHeroContent): Promise<void>;
     updateLogoImage(newLogo: ExternalBlob | null): Promise<void>;
@@ -495,6 +495,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n14(this._uploadFile, this._downloadFile, arg1));
             return result;
+        }
+    }
+    async changeGraveNumber(arg0: bigint, arg1: bigint): Promise<AsyncResult> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.changeGraveNumber(arg0, arg1);
+                return from_candid_AsyncResult_n8(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.changeGraveNumber(arg0, arg1);
+            return from_candid_AsyncResult_n8(this._uploadFile, this._downloadFile, result);
         }
     }
     async clearManagers(): Promise<void> {
@@ -1032,20 +1046,6 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.updateGrave(arg0, to_candid_GraveRecord_n61(this._uploadFile, this._downloadFile, arg1));
-            return from_candid_AsyncResult_n8(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async updateGraveLocation(arg0: bigint, arg1: string, arg2: bigint): Promise<AsyncResult> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.updateGraveLocation(arg0, arg1, arg2);
-                return from_candid_AsyncResult_n8(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.updateGraveLocation(arg0, arg1, arg2);
             return from_candid_AsyncResult_n8(this._uploadFile, this._downloadFile, result);
         }
     }

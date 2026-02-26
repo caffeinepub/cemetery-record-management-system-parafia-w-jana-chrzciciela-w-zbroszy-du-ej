@@ -26,6 +26,7 @@ import type { GraveRecord, GraveOwner, DeceasedPerson, AlleyView } from '../../b
 import { GraveStatus } from '../../backend';
 import { useUpdateGrave, useAddGrave, useRemoveGrave, useUpdateGraveLocation, useGetCemeteryState } from '../../hooks/useQueries';
 import { toast } from 'sonner';
+import { sortAlleys } from '../../utils/alleySort';
 
 interface GraveEditDialogProps {
   open: boolean;
@@ -49,20 +50,12 @@ const emptyDeceased: DeceasedPerson = {
   placeOfDeath: '',
 };
 
-function statusLabel(status: string): string {
-  switch (status) {
-    case 'paid': return 'Opłacony';
-    case 'unpaid': return 'Nieopłacony';
-    case 'free': return 'Wolny';
-    case 'reserved': return 'Zarezerwowany';
-    default: return status;
-  }
-}
-
 export default function GraveEditDialog({ open, onOpenChange, grave, onSuccess }: GraveEditDialogProps) {
   const isEditing = grave !== null;
   const { data: cemetery } = useGetCemeteryState();
-  const alleys: AlleyView[] = cemetery?.alleys ?? [];
+  const rawAlleys: AlleyView[] = cemetery?.alleys ?? [];
+  // Always show alleys in sorted order
+  const alleys = sortAlleys(rawAlleys);
 
   // Form state
   const [alley, setAlley] = useState('');
@@ -79,6 +72,9 @@ export default function GraveEditDialog({ open, onOpenChange, grave, onSuccess }
 
   // Delete confirmation
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Plot number change confirmation
+  const [showPlotNumberConfirm, setShowPlotNumberConfirm] = useState(false);
 
   const updateGrave = useUpdateGrave();
   const addGrave = useAddGrave();
@@ -168,13 +164,7 @@ export default function GraveEditDialog({ open, onOpenChange, grave, onSuccess }
     return null;
   };
 
-  const handleSave = async () => {
-    const error = validate();
-    if (error) {
-      toast.error(error);
-      return;
-    }
-
+  const executeSave = async () => {
     const plotNum = parseInt(plotNumber, 10);
 
     if (!isEditing) {
@@ -190,12 +180,15 @@ export default function GraveEditDialog({ open, onOpenChange, grave, onSuccess }
       return;
     }
 
-    const locationChanged = alley !== originalAlley || plotNumber !== originalPlotNumber;
+    // Only plot number can be changed via changeGraveNumber.
+    // Alley changes are not supported by the backend — the alley field is locked.
+    const plotNumberChanged = plotNumber !== originalPlotNumber;
 
-    const buildUpdatedRecord = (currentAlley: string, currentPlotNumber: number): GraveRecord => ({
+    const buildUpdatedRecord = (): GraveRecord => ({
       ...grave!,
-      alley: currentAlley,
-      plotNumber: BigInt(currentPlotNumber),
+      // Always keep original alley — backend does not support moving graves between alleys
+      alley: originalAlley,
+      plotNumber: BigInt(plotNum),
       status: status as GraveStatus,
       owner: hasOwner ? owner : undefined,
       deceasedPersons,
@@ -204,12 +197,13 @@ export default function GraveEditDialog({ open, onOpenChange, grave, onSuccess }
         : undefined,
     });
 
-    if (locationChanged) {
+    if (plotNumberChanged) {
+      // First change the plot number via changeGraveNumber, then update the rest
       updateGraveLocation.mutate(
-        { id: grave!.id, newAlley: alley, newPlotNumber: plotNum },
+        { id: grave!.id, newAlley: originalAlley, newPlotNumber: plotNum },
         {
           onSuccess: () => {
-            const updatedRecord = buildUpdatedRecord(alley, plotNum);
+            const updatedRecord = buildUpdatedRecord();
             updateGrave.mutate(
               { id: grave!.id, record: updatedRecord },
               {
@@ -223,7 +217,7 @@ export default function GraveEditDialog({ open, onOpenChange, grave, onSuccess }
         }
       );
     } else {
-      const updatedRecord = buildUpdatedRecord(alley, plotNum);
+      const updatedRecord = buildUpdatedRecord();
       updateGrave.mutate(
         { id: grave!.id, record: updatedRecord },
         {
@@ -234,6 +228,27 @@ export default function GraveEditDialog({ open, onOpenChange, grave, onSuccess }
         }
       );
     }
+  };
+
+  const handleSave = async () => {
+    const error = validate();
+    if (error) {
+      toast.error(error);
+      return;
+    }
+
+    // If editing and plot number has changed, show confirmation first
+    if (isEditing && plotNumber !== originalPlotNumber) {
+      setShowPlotNumberConfirm(true);
+      return;
+    }
+
+    await executeSave();
+  };
+
+  const handlePlotNumberConfirm = async () => {
+    setShowPlotNumberConfirm(false);
+    await executeSave();
   };
 
   const handleDeleteConfirm = () => {
@@ -272,20 +287,26 @@ export default function GraveEditDialog({ open, onOpenChange, grave, onSuccess }
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="alley">Aleja</Label>
-                <Select value={alley} onValueChange={setAlley}>
-                  <SelectTrigger id="alley">
-                    <SelectValue placeholder="Wybierz aleję" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {alleys.map(a => (
-                      <SelectItem key={a.name} value={a.name}>{a.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {isEditing && alley !== originalAlley && (
-                  <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3" />
-                    Zmiana alei
+                {isEditing ? (
+                  // Alley is locked during editing — backend does not support moving graves
+                  <div className="flex h-10 w-full items-center rounded-md border border-input bg-muted px-3 py-2 text-sm text-muted-foreground">
+                    {originalAlley}
+                  </div>
+                ) : (
+                  <Select value={alley} onValueChange={setAlley}>
+                    <SelectTrigger id="alley">
+                      <SelectValue placeholder="Wybierz aleję" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {alleys.map(a => (
+                        <SelectItem key={a.name} value={a.name}>{a.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {isEditing && (
+                  <p className="text-xs text-muted-foreground">
+                    Aleja jest zablokowana — przenoszenie grobów między alejami nie jest obsługiwane.
                   </p>
                 )}
               </div>
@@ -302,7 +323,7 @@ export default function GraveEditDialog({ open, onOpenChange, grave, onSuccess }
                 {isEditing && plotNumber !== originalPlotNumber && (
                   <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
                     <AlertTriangle className="w-3 h-3" />
-                    Zmiana numeru
+                    Zmiana numeru — wymagane potwierdzenie
                   </p>
                 )}
               </div>
@@ -503,38 +524,70 @@ export default function GraveEditDialog({ open, onOpenChange, grave, onSuccess }
             >
               {isSaving ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Zapisywanie…</>
-              ) : isEditing ? 'Zapisz zmiany' : 'Dodaj grób'}
+              ) : (
+                'Zapisz'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete confirmation dialog */}
+      {/* Delete Confirmation */}
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Usuń grób</AlertDialogTitle>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              Usuń grób
+            </AlertDialogTitle>
             <AlertDialogDescription>
               Czy na pewno chcesz usunąć grób{' '}
               <strong>Aleja {grave?.alley}, nr {grave?.plotNumber?.toString()}</strong>?
-              {grave?.status !== 'free' && (
-                <span className="block mt-2 text-destructive font-medium">
-                  ⚠️ Uwaga: Można usunąć tylko grób o statusie „Wolny". Ten grób ma status „{statusLabel(grave?.status as string)}".
-                </span>
-              )}
-              <span className="block mt-2">Ta operacja jest nieodwracalna.</span>
+              Można usunąć tylko groby o statusie &quot;Wolny&quot;. Tej operacji nie można cofnąć.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Anuluj</AlertDialogCancel>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
-              disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Usuwanie…</>
-              ) : 'Usuń grób'}
+              {isDeleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              Usuń grób
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Plot Number Change Confirmation */}
+      <AlertDialog open={showPlotNumberConfirm} onOpenChange={setShowPlotNumberConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-500" />
+              Zmiana numeru grobu
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>
+                  Zamierzasz zmienić numer grobu z{' '}
+                  <strong className="text-foreground">{originalPlotNumber}</strong> na{' '}
+                  <strong className="text-foreground">{plotNumber}</strong>.
+                </p>
+                <p>
+                  Ta operacja zaktualizuje numer grobu. Wszystkie dane (osoby pochowane,
+                  właściciel, status, daty płatności) zostaną zachowane.
+                </p>
+                <p className="font-medium text-foreground">
+                  Czy chcesz kontynuować?
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogAction onClick={handlePlotNumberConfirm}>
+              Tak, zmień numer
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

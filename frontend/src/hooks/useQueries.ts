@@ -15,6 +15,7 @@ import type {
   PublicTileData,
   ExternalBlob,
 } from '../backend';
+import type { Principal } from '@dfinity/principal';
 import { toast } from 'sonner';
 
 // ─── Auth error helpers ───────────────────────────────────────────────────────
@@ -474,33 +475,33 @@ export function useUpdateGrave() {
   });
 }
 
+/**
+ * Changes only the plot number of an existing grave using the backend's
+ * changeGraveNumber method. Alley changes are not supported by the backend.
+ */
 export function useUpdateGraveLocation() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({
       id,
-      newAlley,
       newPlotNumber,
     }: {
       id: bigint;
-      newAlley: string;
+      newAlley: string; // kept in signature for API compatibility but alley changes are not supported
       newPlotNumber: number;
     }) => {
       if (!actor) throw new Error('Actor not available');
-      const result = await actor.updateGraveLocation(id, newAlley, BigInt(newPlotNumber));
+      const result = await actor.changeGraveNumber(id, BigInt(newPlotNumber));
       if (result.__kind__ === 'err') {
         const err = result.err;
         if (err.__kind__ === 'graveNotFound') {
           throw new Error('Grób nie został znaleziony');
         }
-        if (err.__kind__ === 'alleyNotFound') {
-          throw new Error(`Aleja "${err.alleyNotFound.alley}" nie istnieje`);
-        }
         if (err.__kind__ === 'invariantViolation') {
           throw new Error(`Błąd walidacji: ${err.invariantViolation.field}`);
         }
-        throw new Error('Błąd podczas zmiany lokalizacji grobu');
+        throw new Error('Błąd podczas zmiany numeru grobu');
       }
     },
     onSuccess: () => {
@@ -510,13 +511,13 @@ export function useUpdateGraveLocation() {
       queryClient.invalidateQueries({ queryKey: ['infinitePaginatedGraves'] });
       queryClient.invalidateQueries({ queryKey: ['publicTiles'] });
       queryClient.invalidateQueries({ queryKey: ['graveStatistics'] });
-      toast.success('Lokalizacja grobu zaktualizowana');
+      toast.success('Numer grobu zaktualizowany');
     },
     onError: (error: Error) => {
       if (isAuthorizationError(error)) {
         toast.error('Brak uprawnień');
       } else {
-        toast.error(error.message || 'Błąd podczas zmiany lokalizacji grobu');
+        toast.error(error.message || 'Błąd podczas zmiany numeru grobu');
       }
     },
   });
@@ -614,23 +615,11 @@ export function useGetAccessRole() {
   });
 }
 
-// ─── Manager Delegation ───────────────────────────────────────────────────────
-
-export function useGetManagers() {
-  const { actor, isFetching } = useActor();
-  return useQuery({
-    queryKey: ['managers'],
-    queryFn: async () => {
-      if (!actor) return [];
-      return actor.getManagers();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
+// ─── Boss & Manager Management ────────────────────────────────────────────────
 
 export function useGetBoss() {
   const { actor, isFetching } = useActor();
-  return useQuery({
+  return useQuery<Principal | null>({
     queryKey: ['boss'],
     queryFn: async () => {
       if (!actor) return null;
@@ -644,23 +633,19 @@ export function useAddManager() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
   return useMutation({
-    // Accepts Principal object directly (from @dfinity/principal)
     mutationFn: async (principal: { toString(): string }) => {
       if (!actor) throw new Error('Actor not available');
-      const { Principal } = await import('@dfinity/principal');
-      const p = Principal.fromText(principal.toString());
-      const result = await actor.addManager(p);
-      if (!result) throw new Error('Nie udało się dodać managera');
+      return actor.addManager(principal as any);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['managers'] });
-      toast.success('Manager dodany');
+      toast.success('Zarządca dodany');
     },
     onError: (error: Error) => {
       if (isBossLockError(error)) {
-        toast.error('Brak uprawnień Boss');
+        toast.error('Tylko Boss może zarządzać zarządcami');
       } else {
-        toast.error(error.message || 'Błąd podczas dodawania managera');
+        toast.error('Błąd podczas dodawania zarządcy');
       }
     },
   });
@@ -670,24 +655,32 @@ export function useRemoveManager() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
   return useMutation({
-    // Accepts Principal object directly (from @dfinity/principal)
     mutationFn: async (principal: { toString(): string }) => {
       if (!actor) throw new Error('Actor not available');
-      const { Principal } = await import('@dfinity/principal');
-      const p = Principal.fromText(principal.toString());
-      const result = await actor.removeManager(p);
-      if (!result) throw new Error('Nie udało się usunąć managera');
+      return actor.removeManager(principal as any);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['managers'] });
-      toast.success('Manager usunięty');
+      toast.success('Zarządca usunięty');
     },
     onError: (error: Error) => {
       if (isBossLockError(error)) {
-        toast.error('Brak uprawnień Boss');
+        toast.error('Tylko Boss może zarządzać zarządcami');
       } else {
-        toast.error(error.message || 'Błąd podczas usuwania managera');
+        toast.error('Błąd podczas usuwania zarządcy');
       }
     },
+  });
+}
+
+export function useGetManagers() {
+  const { actor, isFetching } = useActor();
+  return useQuery({
+    queryKey: ['managers'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getManagers();
+    },
+    enabled: !!actor && !isFetching,
   });
 }

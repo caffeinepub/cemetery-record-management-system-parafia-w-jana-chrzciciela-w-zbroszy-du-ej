@@ -1,73 +1,59 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Add grave number editing and grave deletion from admin panel",
+  "title": "Fix: Safe grave number change, consistent alley sorting, prevent data loss",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Add the ability to edit a grave's plot number and alley directly from the admin panel in both the tile map view and grave management list, persisting changes to the backend",
+      "id": "REQ-3",
+      "summary": "Apply consistent alley sorting on the frontend in all components that render alleys so the UI always shows a predictable alphabetical/numerical order",
       "acceptanceCriteria": [
-        "Admin can open an edit dialog/form for any existing grave from both the map tile view and the list view.",
-        "The edit form includes a field to change the plot number (and alley if needed).",
-        "Saving the form updates the grave record in the backend.",
-        "The updated plot number is immediately reflected in the map and list views after saving.",
-        "Validation prevents saving an empty or duplicate plot number within the same alley.",
-        "Backend exposes an updateGrave (or equivalent) function that accepts a modified GraveRecord and persists the changes."
+        "AdminGraveTileMap renders alleys in alphabetical/numerical order",
+        "GraveTileMap renders alleys in alphabetical/numerical order",
+        "CemeteryLayoutManager displays alleys in alphabetical/numerical order",
+        "Restoring or adding an alley immediately places it in the correct sorted position in all views without requiring a page reload"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/admin/GraveEditDialog.tsx",
-          "operation": "modify",
-          "description": "Extend the existing edit dialog to support editing plot number and alley fields for existing graves. Add validation to prevent empty or duplicate plot numbers within the same alley. Wire up the existing updateGrave backend method (already available in backend interface) to persist changes. Ensure the dialog can be opened from both AdminGraveTileMap and GraveManagement components. Add client-side validation and error handling for duplicate plot numbers."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Add or verify a mutation hook for updateGrave that calls actor.updateGrave(id, updatedRecord) and invalidates relevant query caches (cemetery state, all graves, paginated graves, public tiles). Include error handling for validation errors returned from the backend and display toast notifications on success/failure."
-        },
-        {
           "path": "frontend/src/components/admin/AdminGraveTileMap.tsx",
           "operation": "modify",
-          "description": "Ensure the tile click handler opens GraveEditDialog with the selected grave data, allowing the admin to edit plot number and alley. Verify that the dialog is properly wired and that changes trigger a re-fetch of cemetery data to update the map display immediately."
+          "description": "Add client-side alley sorting before rendering. Sort the cemetery.alleys array alphabetically by name (with numeric fallback) immediately after receiving data from useGetCemeteryState. Apply a stable sort function that handles both alphabetic and numeric alley names consistently."
         },
         {
-          "path": "frontend/src/components/admin/GraveManagement.tsx",
+          "path": "frontend/src/components/GraveTileMap.tsx",
           "operation": "modify",
-          "description": "Ensure each grave entry in the management list can open GraveEditDialog for editing. Verify that the dialog supports editing plot number and alley, and that successful updates trigger cache invalidation to refresh the list view immediately."
+          "description": "Add client-side alley sorting before rendering. Sort the cemetery.alleys array alphabetically by name (with numeric fallback) immediately after receiving data from useGetPublicTiles. Use the same sorting logic as AdminGraveTileMap to ensure consistency across public and admin views."
+        },
+        {
+          "path": "frontend/src/components/admin/CemeteryLayoutManager.tsx",
+          "operation": "modify",
+          "description": "Add client-side alley sorting before rendering. Sort the cemetery.alleys array alphabetically by name (with numeric fallback) immediately after receiving data from useGetCemeteryState. Ensure the sorted order is maintained after add/remove operations by re-sorting on each render."
+        },
+        {
+          "path": "frontend/src/components/GraveResultsList.tsx",
+          "operation": "modify",
+          "description": "Add client-side alley sorting for any alley grouping or display logic. If the component renders alley names or groups results by alley, apply the same alphabetical/numerical sort as other components to maintain consistency."
+        },
+        {
+          "path": "frontend/src/utils/alleySort.ts",
+          "operation": "create",
+          "description": "Create a utility module exporting a sortAlleys function that takes an array of AlleyView objects and returns a sorted copy. Implement logic that first attempts numeric comparison (if alley names parse as numbers) and falls back to locale-aware alphabetical comparison. Include a naturalSort helper for mixed alphanumeric alley names (e.g., 'Alley 2' before 'Alley 10'). Export the function for reuse across all alley-rendering components."
         }
       ]
     },
     {
-      "id": "REQ-2",
-      "summary": "Add the ability to delete a grave record directly from the admin panel in both the tile map view and grave management list, with mandatory confirmation dialog before deletion",
+      "id": "REQ-4",
+      "summary": "Add a safeguard in GraveEditDialog that warns the admin before saving a plot number change, showing a confirmation step specifically for plot number changes to prevent accidental data-loss operations",
       "acceptanceCriteria": [
-        "Admin can trigger a delete action for any grave from both the map tile view and the list view.",
-        "A confirmation dialog appears asking the admin to confirm deletion before proceeding.",
-        "Confirming deletion removes the grave record from the backend.",
-        "The deleted grave tile/entry disappears from the map and list views immediately after deletion.",
-        "Cancelling the confirmation dialog leaves the grave record unchanged.",
-        "Backend exposes a deleteGrave (or equivalent) function that removes a grave by its identifier."
+        "When the admin changes the plot number field and clicks Save, a confirmation dialog appears before the save is executed",
+        "The confirmation message explicitly mentions that the plot/grave number is being changed",
+        "Cancelling the confirmation leaves all data unchanged",
+        "Confirming proceeds with the safe atomic update from REQ-1"
       ],
       "file_operations": [
         {
           "path": "frontend/src/components/admin/GraveEditDialog.tsx",
           "operation": "modify",
-          "description": "Add a delete button to the grave edit dialog that triggers a confirmation dialog before calling the backend removeGrave method. Include proper error handling and success feedback. Ensure the dialog closes after successful deletion and cache invalidation occurs."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Add or verify a mutation hook for removeGrave that calls actor.removeGrave(id) and invalidates relevant query caches (cemetery state, all graves, paginated graves, public tiles, grave statistics). Include error handling and display toast notifications on success/failure of deletion."
-        },
-        {
-          "path": "frontend/src/components/admin/AdminGraveTileMap.tsx",
-          "operation": "modify",
-          "description": "Wire the delete functionality into the grave edit workflow when triggered from the tile map. Ensure that after successful deletion, the cemetery map re-fetches and updates to remove the deleted grave tile immediately."
-        },
-        {
-          "path": "frontend/src/components/admin/GraveManagement.tsx",
-          "operation": "modify",
-          "description": "Wire the delete functionality into the grave management list. Ensure that after successful deletion via the edit dialog, the list view re-fetches and updates to remove the deleted grave entry immediately."
+          "description": "Add plotNumber change detection by tracking the original plotNumber when the dialog opens (for edit mode). Before calling the save mutation, compare the current plotNumber field value with the original. If they differ, show a confirmation AlertDialog that explicitly warns the admin that changing the grave number will update the grave identifier. The confirmation message should state: 'You are about to change the plot number from [old] to [new]. This will update the grave identifier. Do you want to continue?' Include Cancel and Confirm buttons. Only proceed with the save mutation if the user confirms. If plotNumber has not changed, skip the confirmation and save immediately as before."
         }
       ]
     }
