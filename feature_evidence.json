@@ -1,0 +1,51 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-add-the-ability-to-edit-a-grave-s-plot-number-and-or-alley-directly-from-the-admin-panel-both-from-the-grave-tile-map-view-admingravetilemap-and-from-the-grave-management-list-gravemanagement-the-edit-action-should-be-accessible-via-the-existing-graveeditdialog-or-a-dedicated-inline-control-and-must-persist-the-change-to-the-backend",
+      "featureTitle": "Add the ability to edit a grave's plot number (and/or alley) directly from the admin panel — both from the grave tile map view (AdminGraveTileMap) and from the grave management list (GraveManagement). The edit action should be accessible via the existing GraveEditDialog or a dedicated inline control, and must persist the change to the backend.",
+      "files": [
+        "frontend/src/components/admin/AdminGraveTileMap.tsx",
+        "frontend/src/components/admin/GraveEditDialog.tsx",
+        "frontend/src/components/admin/GraveManagement.tsx",
+        "frontend/src/hooks/useQueries.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-the-ability-to-delete-a-grave-record-directly-from-the-admin-panel-both-from-the-grave-tile-map-view-admingravetilemap-and-from-the-grave-management-list-gravemanagement-a-confirmation-dialog-must-be-shown-before-the-deletion-is-executed",
+      "featureTitle": "Add the ability to delete a grave record directly from the admin panel — both from the grave tile map view (AdminGraveTileMap) and from the grave management list (GraveManagement). A confirmation dialog must be shown before the deletion is executed.",
+      "files": [
+        "frontend/src/components/admin/AdminGraveTileMap.tsx",
+        "frontend/src/components/admin/GraveEditDialog.tsx",
+        "frontend/src/components/admin/GraveManagement.tsx",
+        "frontend/src/hooks/useQueries.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "blob-storage@4.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

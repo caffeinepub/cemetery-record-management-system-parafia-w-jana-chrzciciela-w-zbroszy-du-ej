@@ -1,0 +1,73 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-26T07:50:49.786Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 2,
+    "implemented": 2,
+    "items": [
+      {
+        "id": "REQ-1",
+        "summary": "Add the ability to edit a grave's plot number (and/or alley) directly from the admin panel — both from the grave tile map view (AdminGraveTileMap) and from the grave management list (GraveManagement). The edit action should be accessible via the existing GraveEditDialog or a dedicated inline control, and must persist the change to the backend.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/admin/GraveEditDialog.tsx",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/admin/AdminGraveTileMap.tsx",
+          "frontend/src/components/admin/GraveManagement.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/admin/GraveEditDialog.tsx",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/admin/AdminGraveTileMap.tsx",
+          "frontend/src/components/admin/GraveManagement.tsx"
+        ]
+      },
+      {
+        "id": "REQ-2",
+        "summary": "Add the ability to delete a grave record directly from the admin panel — both from the grave tile map view (AdminGraveTileMap) and from the grave management list (GraveManagement). A confirmation dialog must be shown before the deletion is executed.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/admin/GraveEditDialog.tsx",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/admin/AdminGraveTileMap.tsx",
+          "frontend/src/components/admin/GraveManagement.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/admin/GraveEditDialog.tsx",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/admin/AdminGraveTileMap.tsx",
+          "frontend/src/components/admin/GraveManagement.tsx"
+        ]
+      }
+    ]
+  },
+  "changedFiles": [
+    "backend/main.mo",
+    "build-request.json",
+    "build-template/README.md",
+    "caffeine.lock.json",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/components/GraveResultsList.tsx",
+    "frontend/src/components/admin/AdminGraveTileMap.tsx",
+    "frontend/src/components/admin/CemeteryLayoutManager.tsx",
+    "frontend/src/components/admin/GraveEditDialog.tsx",
+    "frontend/src/components/admin/GraveManagement.tsx",
+    "frontend/src/components/admin/ManagerDelegation.tsx",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useQueries.ts",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}

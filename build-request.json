@@ -1,0 +1,66 @@
+{
+  "kind": "build_request",
+  "title": "Add grave number editing and grave deletion from admin panel",
+  "projectName": "Cemetery Manager",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Add the ability to edit a grave's plot number (and/or alley) directly from the admin panel — both from the grave tile map view (AdminGraveTileMap) and from the grave management list (GraveManagement). The edit action should be accessible via the existing GraveEditDialog or a dedicated inline control, and must persist the change to the backend.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "Edycja numeru grobu i usuwanie grobu bezpośrednio z mapy/panelu admina",
+          "wykonaj zadnie 1"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Admin can open an edit dialog/form for any existing grave from both the map tile view and the list view.",
+        "The edit form includes a field to change the plot number (and alley if needed).",
+        "Saving the form updates the grave record in the backend.",
+        "The updated plot number is immediately reflected in the map and list views after saving.",
+        "Validation prevents saving an empty or duplicate plot number within the same alley.",
+        "Backend exposes an updateGrave (or equivalent) function that accepts a modified GraveRecord and persists the changes."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Add the ability to delete a grave record directly from the admin panel — both from the grave tile map view (AdminGraveTileMap) and from the grave management list (GraveManagement). A confirmation dialog must be shown before the deletion is executed.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "usuwanie grobu bezpośrednio z mapy/panelu admina",
+          "wykonaj zadnie 1"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Admin can trigger a delete action for any grave from both the map tile view and the list view.",
+        "A confirmation dialog appears asking the admin to confirm deletion before proceeding.",
+        "Confirming deletion removes the grave record from the backend.",
+        "The deleted grave tile/entry disappears from the map and list views immediately after deletion.",
+        "Cancelling the confirmation dialog leaves the grave record unchanged.",
+        "Backend exposes a deleteGrave (or equivalent) function that removes a grave by its identifier."
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not modify files listed in frontend.immutablePaths.",
+    "All backend logic must remain in the single actor in backend/main.mo.",
+    "Deletion must require explicit admin confirmation before executing."
+  ],
+  "nonGoals": [
+    "Adding a navigation bar or other UI sections (separate task).",
+    "Public-facing grave editing or deletion.",
+    "Bulk deletion of multiple graves at once."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

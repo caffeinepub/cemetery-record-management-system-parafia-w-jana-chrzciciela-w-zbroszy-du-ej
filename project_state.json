@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "Cemetery management app with grave map. User wants to add grave number editing and grave deletion functionality directly from the map/admin panel.",
+  "architectural_notes": [],
+  "known_issues": [],
+  "isFixRequest": false,
+  "existing_features": [
+    {
+      "id": "feature-add-the-ability-to-edit-a-grave-s-plot-number-and-or-alley-directly-from-the-admin-panel-both-from-the-grave-tile-map-view-admingravetilemap-and-from-the-grave-management-list-gravemanagement-the-edit-action-should-be-accessible-via-the-existing-graveeditdialog-or-a-dedicated-inline-control-and-must-persist-the-change-to-the-backend",
+      "title": "Add the ability to edit a grave's plot number (and/or alley) directly from the admin panel — both from the grave tile map view (AdminGraveTileMap) and from the grave management list (GraveManagement). The edit action should be accessible via the existing GraveEditDialog or a dedicated inline control, and must persist the change to the backend.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-the-ability-to-delete-a-grave-record-directly-from-the-admin-panel-both-from-the-grave-tile-map-view-admingravetilemap-and-from-the-grave-management-list-gravemanagement-a-confirmation-dialog-must-be-shown-before-the-deletion-is-executed",
+      "title": "Add the ability to delete a grave record directly from the admin panel — both from the grave tile map view (AdminGraveTileMap) and from the grave management list (GraveManagement). A confirmation dialog must be shown before the deletion is executed.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Edit grave number and delete grave directly from the map/admin panel",
+      "reqIds": [],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "Cemetery Management App",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}
