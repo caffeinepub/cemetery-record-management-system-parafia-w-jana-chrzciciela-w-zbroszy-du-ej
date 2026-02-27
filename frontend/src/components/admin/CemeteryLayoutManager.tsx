@@ -51,7 +51,7 @@ export default function CemeteryLayoutManager() {
     try {
       await addAlley.mutateAsync(newAlleyName.trim());
       setNewAlleyName('');
-    } catch (error) {
+    } catch {
       // Error is already handled by the mutation's onError with toast
     }
   };
@@ -60,7 +60,7 @@ export default function CemeteryLayoutManager() {
     try {
       await removeAlley.mutateAsync(name);
       setDeleteAlleyDialog(null);
-    } catch (error) {
+    } catch {
       // Error is already handled by the mutation's onError with toast
     }
   };
@@ -76,7 +76,7 @@ export default function CemeteryLayoutManager() {
         plotNumber: Number(newPlotNumber),
       });
       setNewPlotNumber('');
-    } catch (error) {
+    } catch {
       // Error is already handled by the mutation's onError with toast
     }
   };
@@ -85,7 +85,7 @@ export default function CemeteryLayoutManager() {
     try {
       await removeGrave.mutateAsync(id);
       setDeleteGraveDialog(null);
-    } catch (error) {
+    } catch {
       // Error is already handled by the mutation's onError with toast
     }
   };
@@ -239,48 +239,6 @@ export default function CemeteryLayoutManager() {
             )}
           </CardContent>
         </Card>
-
-        {/* Alley details with graves */}
-        {sortedAlleys.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Groby w alejach</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {sortedAlleys.map((alley) => (
-                <div key={alley.name} className="space-y-2">
-                  <h4 className="font-semibold text-sm">
-                    Aleja {alley.name} — {alley.graveIds.length} {alley.graveIds.length === 1 ? 'grób' : 'grobów'}
-                  </h4>
-                  {alley.graveIds.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {[...alley.graveIds]
-                        .sort((a, b) => Number(a) - Number(b))
-                        .map((graveId) => (
-                          <div
-                            key={graveId.toString()}
-                            className="flex items-center gap-1 bg-muted/50 border rounded px-2 py-1 text-xs"
-                          >
-                            <span>#{graveId.toString()}</span>
-                            <button
-                              onClick={() => setDeleteGraveDialog(graveId)}
-                              className="text-destructive hover:text-destructive/80 ml-1"
-                              title="Usuń grób"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </button>
-                          </div>
-                        ))}
-                    </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground italic">Brak grobów w tej alei.</p>
-                  )}
-                  <Separator />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
       </div>
 
       {/* Delete Alley Confirmation */}

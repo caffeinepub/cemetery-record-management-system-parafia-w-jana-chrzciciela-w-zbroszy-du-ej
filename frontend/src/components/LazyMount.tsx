@@ -9,8 +9,8 @@ interface LazyMountProps {
 }
 
 /**
- * Component that only mounts its children when they are near the viewport
- * Useful for heavy content like large grids or maps
+ * Component that only mounts its children when they are near the viewport.
+ * Uses triggerOnce so once mounted, content stays mounted even when scrolling away.
  */
 export default function LazyMount({
   children,

@@ -52,12 +52,7 @@ export default function GraveTileMap() {
   }
 
   // Legend items using shared utilities
-  const legendItems: Array<{ status: GraveStatus; label: string; color: string }> = [
-    { status: GraveStatus.paid, label: getStatusLabel(GraveStatus.paid), color: getStatusLegendColor(GraveStatus.paid) },
-    { status: GraveStatus.unpaid, label: getStatusLabel(GraveStatus.unpaid), color: getStatusLegendColor(GraveStatus.unpaid) },
-    { status: GraveStatus.reserved, label: getStatusLabel(GraveStatus.reserved), color: getStatusLegendColor(GraveStatus.reserved) },
-    { status: GraveStatus.free, label: getStatusLabel(GraveStatus.free), color: getStatusLegendColor(GraveStatus.free) },
-  ];
+  const legendStatuses = [GraveStatus.paid, GraveStatus.unpaid, GraveStatus.reserved, GraveStatus.free] as const;
 
   return (
     <>
@@ -73,10 +68,10 @@ export default function GraveTileMap() {
             <div className="space-y-3">
               <h3 className="font-bold text-base">Legenda statusów:</h3>
               <div className="flex flex-wrap gap-4">
-                {legendItems.map((item) => (
-                  <div key={item.status} className="flex items-center gap-3 bg-muted/50 px-4 py-2 rounded-lg">
-                    <div className={`w-6 h-6 rounded-md ${item.color} shadow-sm ring-1 ring-border`} />
-                    <span className="text-sm font-semibold">{item.label}</span>
+                {legendStatuses.map((status) => (
+                  <div key={status} className="flex items-center gap-3 bg-muted/50 px-4 py-2 rounded-lg">
+                    <div className={`w-6 h-6 rounded-md ${getStatusLegendColor(status)} shadow-sm ring-1 ring-border`} />
+                    <span className="text-sm font-semibold">{getStatusLabel(status)}</span>
                   </div>
                 ))}
               </div>
@@ -130,7 +125,16 @@ export default function GraveTileMap() {
                                 <p className="font-bold text-base text-popover-foreground">
                                   Grób nr {tile.plotNumber.toString()}
                                 </p>
-                                <Badge variant={styles.background.includes('green') ? 'default' : styles.background.includes('red') ? 'destructive' : 'secondary'} className="font-semibold">
+                                <Badge
+                                  variant={
+                                    tile.status === GraveStatus.paid
+                                      ? 'default'
+                                      : tile.status === GraveStatus.unpaid
+                                      ? 'destructive'
+                                      : 'secondary'
+                                  }
+                                  className="font-semibold"
+                                >
                                   {getStatusLabel(tile.status)}
                                 </Badge>
                                 {deceasedNames && (

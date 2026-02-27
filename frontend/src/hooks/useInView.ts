@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, RefObject } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface UseInViewOptions {
   threshold?: number;
@@ -7,33 +7,42 @@ interface UseInViewOptions {
 }
 
 /**
- * Hook to detect when an element is in the viewport using IntersectionObserver
- * @param options - IntersectionObserver options
- * @returns ref to attach to element and inView boolean
+ * Hook to detect when an element is in the viewport using IntersectionObserver.
+ * Returns a tuple [ref, inView] for easy destructuring.
+ * When triggerOnce=true, once the element enters the viewport it stays "in view"
+ * even if the parent re-renders, preventing the B5+ alley reset bug.
  */
 export function useInView<T extends HTMLElement = HTMLDivElement>(
   options: UseInViewOptions = {}
-): [RefObject<T>, boolean] {
-  const { threshold = 0, rootMargin = '200px', triggerOnce = false } = options;
-  const [inView, setInView] = useState(false);
+): [React.RefObject<T>, boolean] {
+  const { threshold = 0, rootMargin = '0px', triggerOnce = false } = options;
   const ref = useRef<T>(null);
-  const observedRef = useRef(false);
+  const hasTriggeredRef = useRef(false);
+  const [inView, setInView] = useState(false);
 
   useEffect(() => {
     const element = ref.current;
     if (!element) return;
 
-    // If triggerOnce and already observed, skip
-    if (triggerOnce && observedRef.current) return;
+    // If triggerOnce already fired, keep inView=true without re-observing
+    if (triggerOnce && hasTriggeredRef.current) {
+      setInView(true);
+      return;
+    }
 
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        const isInView = entry.isIntersecting;
-        setInView(isInView);
-        
-        if (isInView && triggerOnce) {
-          observedRef.current = true;
-        }
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setInView(true);
+            if (triggerOnce) {
+              hasTriggeredRef.current = true;
+              observer.disconnect();
+            }
+          } else if (!triggerOnce) {
+            setInView(false);
+          }
+        });
       },
       { threshold, rootMargin }
     );
@@ -45,5 +54,5 @@ export function useInView<T extends HTMLElement = HTMLDivElement>(
     };
   }, [threshold, rootMargin, triggerOnce]);
 
-  return [ref as RefObject<T>, inView];
+  return [ref as React.RefObject<T>, inView];
 }

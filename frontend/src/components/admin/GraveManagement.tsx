@@ -7,6 +7,7 @@ import { Loader2, Plus, Search } from 'lucide-react';
 import GraveResultsList from '../GraveResultsList';
 import { buildGraveSearchIndex } from '../../utils/graveFullTextSearch';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
+import type { GraveRecord } from '../../backend';
 
 // Lazy load the edit dialog only when needed
 const GraveEditDialog = lazy(() => import('./GraveEditDialog'));
@@ -34,7 +35,7 @@ export default function GraveManagement() {
   // Build normalized search indices only when dataset changes
   const searchIndices = useMemo(() => {
     const map = new Map<string, string>();
-    allLoadedGraves.forEach((grave) => {
+    allLoadedGraves.forEach((grave: GraveRecord) => {
       map.set(grave.id.toString(), buildGraveSearchIndex(grave));
     });
     return map;
@@ -47,7 +48,7 @@ export default function GraveManagement() {
     }
 
     const normalizedQuery = debouncedSearchTerm.toLowerCase().trim();
-    return allLoadedGraves.filter((grave) => {
+    return allLoadedGraves.filter((grave: GraveRecord) => {
       const searchIndex = searchIndices.get(grave.id.toString()) || '';
       return searchIndex.includes(normalizedQuery);
     });

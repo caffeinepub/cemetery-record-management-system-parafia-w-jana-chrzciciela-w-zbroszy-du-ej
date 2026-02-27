@@ -1,30 +1,24 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Cemetery management application (aplikacja cmentarna) with alleys (aleje) and graves (groby). A critical bug was introduced where changing a grave number deleted the entire alley. The fix requires: (1) safe grave number change logic that preserves alley data, (2) consistent sorting of alleys (alphabetical or numerical), (3) prevention of accidental data loss during editing.",
-  "architectural_notes": [
-    "Graves are stored under keys based on their number - changing the number must be done atomically (delete old + create new with full data preservation)",
-    "Alleys must always be sorted in a consistent, predictable order (alphabetical or numerical)"
-  ],
-  "known_issues": [
-    "Changing grave number deletes the entire alley due to key-based storage and non-atomic update logic",
-    "Restored alleys are appended at the end without any sorting order"
-  ],
-  "isFixRequest": true,
+  "summary": "Cemetery app with a top navigation bar containing four sections: Mapa grobów, Wyszukiwanie, Modlitwa za zmarłych, Nasz cmentarz.",
+  "architectural_notes": [],
+  "known_issues": [],
+  "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-apply-consistent-alley-sorting-on-the-frontend-in-all-components-that-render-alleys-admingravetilemap-cemeterylayoutmanager-gravetilemap-graveresultslist-and-any-other-alley-lists-sort-alleys-alphabetically-numerically-on-the-client-side-as-a-safety-fallback-so-even-if-backend-order-changes-the-ui-always-shows-a-predictable-order",
-      "title": "Apply consistent alley sorting on the frontend in all components that render alleys (AdminGraveTileMap, CemeteryLayoutManager, GraveTileMap, GraveResultsList, and any other alley lists). Sort alleys alphabetically/numerically on the client side as a safety fallback, so even if backend order changes the UI always shows a predictable order.",
+      "id": "feature-replace-or-augment-the-existing-navigation-tiles-in-publicpage-tsx-with-a-sticky-top-navigation-bar-that-contains-four-clearly-labeled-sections-grave-map-mapa-grob-w-search-wyszukiwanie-prayer-for-the-deceased-modlitwa-za-zmar-ych-and-our-cemetery-nasz-cmentarz-the-bar-must-be-placed-at-the-top-of-the-public-page-below-the-existing-header-component-and-allow-smooth-instant-switching-between-the-four-sections-by-scrolling-to-or-revealing-the-corresponding-content-area",
+      "title": "Replace or augment the existing navigation tiles in PublicPage.tsx with a sticky top navigation bar that contains four clearly labeled sections: 'Grave Map' (Mapa grobów), 'Search' (Wyszukiwanie), 'Prayer for the Deceased' (Modlitwa za zmarłych), and 'Our Cemetery' (Nasz cmentarz). The bar must be placed at the top of the public page, below the existing Header component, and allow smooth, instant switching between the four sections by scrolling to or revealing the corresponding content area.",
       "reqIds": [
-        "REQ-3"
+        "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-add-a-safeguard-in-graveeditdialog-and-any-other-edit-dialogs-that-warns-the-admin-before-saving-a-plot-number-change-clearly-stating-that-this-operation-will-change-the-grave-identifier-show-a-confirmation-step-specifically-for-plot-number-changes-distinct-from-the-general-save-action-to-prevent-accidental-data-loss-operations",
-      "title": "Add a safeguard in GraveEditDialog (and any other edit dialogs) that warns the admin before saving a plot number change, clearly stating that this operation will change the grave identifier. Show a confirmation step specifically for plot number changes distinct from the general save action, to prevent accidental data-loss operations.",
+      "id": "feature-remove-or-hide-the-existing-publicsectionstiles-grid-component-the-four-large-tile-cards-from-publicpage-tsx-since-its-navigation-role-is-now-fulfilled-by-the-new-top-navigation-bar-the-four-content-sections-themselves-map-search-prayer-cemetery-info-must-remain-fully-functional-and-visible-when-their-respective-nav-item-is-selected",
+      "title": "Remove or hide the existing PublicSectionsTiles grid component (the four large tile cards) from PublicPage.tsx since its navigation role is now fulfilled by the new top navigation bar. The four content sections themselves (map, search, prayer, cemetery info) must remain fully functional and visible when their respective nav item is selected.",
       "reqIds": [
-        "REQ-4"
+        "REQ-2"
       ],
       "version": 1
     }
@@ -32,41 +26,13 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Fix: Safe grave number change - must not delete alley data, update only the grave number atomically",
+      "summary": "Top navigation bar with four sections: Mapa grobów, Wyszukiwanie, Modlitwa za zmarłych, Nasz cmentarz — styled aesthetically for smooth navigation",
       "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-2",
-      "summary": "Fix: Consistent sorting of alleys (alphabetical or numerical) - always displayed in predictable order",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-3",
-      "summary": "Fix: Prevent accidental data loss during grave/alley editing operations",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "Fix the grave number change logic in the backend so that updating a grave's plot number never deletes or detaches the parent alley. The operation must be atomic: copy all grave data (including all deceased persons, owner, status, payment info) to the new key, then remove the old key, while keeping the alley record fully intact and all its grave references updated correctly.",
-      "reqIds": [
-        "REQ-1"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Ensure alleys are always stored and retrieved in a consistent, predictable sort order. Alleys must be sorted alphabetically by name (or numerically if names are numeric) in all backend query responses. This sort must be applied to every function that returns alleys or cemetery layout data.",
-      "reqIds": [
-        "REQ-2"
-      ],
       "status": "pending"
     }
   ],
   "gameProjectType": "none",
-  "projectName": "Aplikacja Cmentarna",
+  "projectName": "Cemetery Map",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

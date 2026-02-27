@@ -1,13 +1,13 @@
 # Specification
 
 ## Summary
-**Goal:** Fix three bugs in Cemetery Manager: prevent data loss when changing a grave's plot number, enforce consistent alley sorting everywhere, and add a confirmation safeguard before plot number changes.
+**Goal:** Replace the existing tile-based navigation on the public page with a sticky top navigation bar containing four labeled sections.
 
 **Planned changes:**
-- Fix backend grave number change logic to be atomic: copy all grave data (deceased persons, owner, status, payment info) to the new key, remove the old key, and keep the parent alley fully intact with updated grave references
-- Reject plot number changes if the new number already exists, returning an error instead of overwriting
-- Apply consistent alphabetical/numerical sorting to all backend endpoints that return alley lists
-- Apply client-side alphabetical/numerical sorting of alleys in AdminGraveTileMap, CemeteryLayoutManager, GraveTileMap, and GraveResultsList as a reliable fallback
-- Add a confirmation dialog in GraveEditDialog that appears specifically when the plot number field is changed, warning the admin before the save is executed
+- Add a sticky horizontal navigation bar below the existing Header component in `PublicPage.tsx` with four items: "Mapa grobów", "Wyszukiwanie", "Modlitwa za zmarłych", "Nasz cmentarz"
+- Active navigation item is visually distinguished from inactive items
+- Clicking a nav item smoothly reveals/scrolls to the corresponding content section
+- Remove the existing `PublicSectionsTiles` grid component from the public page
+- Navigation bar is responsive and works on both desktop and mobile
 
-**User-visible outcome:** Admins can safely change a grave's plot number without losing alley data or other graves. Alleys always appear in a predictable sorted order across all views. A confirmation prompt prevents accidental plot number changes.
+**User-visible outcome:** Users can quickly switch between the four cemetery sections (Grave Map, Search, Prayer, Cemetery Info) using a clean sticky navigation bar at the top of the page, replacing the old large tile grid.

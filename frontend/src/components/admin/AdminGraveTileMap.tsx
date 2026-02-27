@@ -72,6 +72,8 @@ export default function AdminGraveTileMap() {
     );
   }
 
+  const legendStatuses = [GraveStatus.paid, GraveStatus.unpaid, GraveStatus.free, GraveStatus.reserved] as const;
+
   return (
     <>
       <div className="space-y-6">
@@ -87,22 +89,12 @@ export default function AdminGraveTileMap() {
               Kliknij na grób, aby edytować jego dane. Podświetlenie zmienia kolor zgodnie ze statusem grobu.
             </p>
             <div className="flex flex-wrap gap-4 mb-6">
-              <div className="flex items-center gap-2">
-                <div className={`w-4 h-4 rounded ${getStatusLegendColor(GraveStatus.paid)}`} />
-                <span className="text-sm">Opłacone</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className={`w-4 h-4 rounded ${getStatusLegendColor(GraveStatus.unpaid)}`} />
-                <span className="text-sm">Nieopłacone</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className={`w-4 h-4 rounded ${getStatusLegendColor(GraveStatus.free)}`} />
-                <span className="text-sm">Wolne</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className={`w-4 h-4 rounded ${getStatusLegendColor(GraveStatus.reserved)}`} />
-                <span className="text-sm">Zarezerwowane</span>
-              </div>
+              {legendStatuses.map((status) => (
+                <div key={status} className="flex items-center gap-2">
+                  <div className={`w-4 h-4 rounded ${getStatusLegendColor(status)}`} />
+                  <span className="text-sm">{getStatusLabel(status)}</span>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>

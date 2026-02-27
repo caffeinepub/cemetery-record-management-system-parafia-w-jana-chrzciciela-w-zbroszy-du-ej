@@ -1,76 +1,49 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-26T08:29:56.543Z",
+  "generatedAt": "2026-02-27T18:47:10.169Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 4,
+    "total": 2,
     "implemented": 2,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Fix the grave number change logic in the backend so that updating a grave's plot number never deletes or detaches the parent alley. The operation must be atomic: copy all grave data (including all deceased persons, owner, status, payment info) to the new key, then remove the old key, while keeping the alley record fully intact and all its grave references updated correctly.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-2",
-        "summary": "Ensure alleys are always stored and retrieved in a consistent, predictable sort order. Alleys must be sorted alphabetically by name (or numerically if names are numeric) in all backend query responses. This sort must be applied to every function that returns alleys or cemetery layout data.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-3",
-        "summary": "Apply consistent alley sorting on the frontend in all components that render alleys (AdminGraveTileMap, CemeteryLayoutManager, GraveTileMap, GraveResultsList, and any other alley lists). Sort alleys alphabetically/numerically on the client side as a safety fallback, so even if backend order changes the UI always shows a predictable order.",
+        "summary": "Replace or augment the existing navigation tiles in PublicPage.tsx with a sticky top navigation bar that contains four clearly labeled sections: 'Grave Map' (Mapa grobów), 'Search' (Wyszukiwanie), 'Prayer for the Deceased' (Modlitwa za zmarłych), and 'Our Cemetery' (Nasz cmentarz). The bar must be placed at the top of the public page, below the existing Header component, and allow smooth, instant switching between the four sections by scrolling to or revealing the corresponding content area.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/admin/AdminGraveTileMap.tsx",
-          "frontend/src/components/GraveTileMap.tsx",
-          "frontend/src/components/admin/CemeteryLayoutManager.tsx",
-          "frontend/src/components/GraveResultsList.tsx",
-          "frontend/src/utils/alleySort.ts"
+          "frontend/src/components/PublicNavigationBar.tsx",
+          "frontend/src/pages/PublicPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/admin/AdminGraveTileMap.tsx",
-          "frontend/src/components/GraveTileMap.tsx",
-          "frontend/src/components/admin/CemeteryLayoutManager.tsx",
-          "frontend/src/utils/alleySort.ts"
+          "frontend/src/components/PublicNavigationBar.tsx",
+          "frontend/src/pages/PublicPage.tsx"
         ]
       },
       {
-        "id": "REQ-4",
-        "summary": "Add a safeguard in GraveEditDialog (and any other edit dialogs) that warns the admin before saving a plot number change, clearly stating that this operation will change the grave identifier. Show a confirmation step specifically for plot number changes distinct from the general save action, to prevent accidental data-loss operations.",
+        "id": "REQ-2",
+        "summary": "Remove or hide the existing PublicSectionsTiles grid component (the four large tile cards) from PublicPage.tsx since its navigation role is now fulfilled by the new top navigation bar. The four content sections themselves (map, search, prayer, cemetery info) must remain fully functional and visible when their respective nav item is selected.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/admin/GraveEditDialog.tsx"
+          "frontend/src/components/PublicSectionsTiles.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/admin/GraveEditDialog.tsx"
+          "frontend/src/components/PublicSectionsTiles.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/components/GraveTileMap.tsx",
-    "frontend/src/components/admin/AdminGraveTileMap.tsx",
-    "frontend/src/components/admin/CemeteryLayoutManager.tsx",
-    "frontend/src/components/admin/GraveEditDialog.tsx",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/utils/alleySort.ts",
+    "frontend/src/components/PublicNavigationBar.tsx",
+    "frontend/src/components/PublicSectionsTiles.tsx",
+    "frontend/src/pages/PublicPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

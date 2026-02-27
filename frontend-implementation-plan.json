@@ -1,59 +1,46 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix: Safe grave number change, consistent alley sorting, prevent data loss",
+  "title": "Add top navigation bar with four cemetery sections",
   "requirements": [
     {
-      "id": "REQ-3",
-      "summary": "Apply consistent alley sorting on the frontend in all components that render alleys so the UI always shows a predictable alphabetical/numerical order",
+      "id": "REQ-1",
+      "summary": "Replace navigation tiles with a sticky top navigation bar containing four labeled sections (Mapa grobów, Wyszukiwanie, Modlitwa za zmarłych, Nasz cmentarz) for smooth section switching",
       "acceptanceCriteria": [
-        "AdminGraveTileMap renders alleys in alphabetical/numerical order",
-        "GraveTileMap renders alleys in alphabetical/numerical order",
-        "CemeteryLayoutManager displays alleys in alphabetical/numerical order",
-        "Restoring or adding an alley immediately places it in the correct sorted position in all views without requiring a page reload"
+        "A horizontal sticky navigation bar is visible at the top of the public page with exactly four items: Mapa grobów, Wyszukiwanie, Modlitwa za zmarłych, Nasz cmentarz.",
+        "Clicking any navigation item immediately activates and displays the corresponding section.",
+        "The active navigation item is visually distinguished (e.g., underline, highlight, or accent color) from inactive items.",
+        "Navigation transitions are smooth and do not cause full page reloads.",
+        "The bar is responsive and looks aesthetically appropriate on both desktop and mobile screen sizes.",
+        "The bar remains accessible (sticky) while scrolling through the page content.",
+        "Labels displayed match the Polish text: Mapa grobów, Wyszukiwanie, Modlitwa za zmarłych, Nasz cmentarz."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/admin/AdminGraveTileMap.tsx",
-          "operation": "modify",
-          "description": "Add client-side alley sorting before rendering. Sort the cemetery.alleys array alphabetically by name (with numeric fallback) immediately after receiving data from useGetCemeteryState. Apply a stable sort function that handles both alphabetic and numeric alley names consistently."
-        },
-        {
-          "path": "frontend/src/components/GraveTileMap.tsx",
-          "operation": "modify",
-          "description": "Add client-side alley sorting before rendering. Sort the cemetery.alleys array alphabetically by name (with numeric fallback) immediately after receiving data from useGetPublicTiles. Use the same sorting logic as AdminGraveTileMap to ensure consistency across public and admin views."
-        },
-        {
-          "path": "frontend/src/components/admin/CemeteryLayoutManager.tsx",
-          "operation": "modify",
-          "description": "Add client-side alley sorting before rendering. Sort the cemetery.alleys array alphabetically by name (with numeric fallback) immediately after receiving data from useGetCemeteryState. Ensure the sorted order is maintained after add/remove operations by re-sorting on each render."
-        },
-        {
-          "path": "frontend/src/components/GraveResultsList.tsx",
-          "operation": "modify",
-          "description": "Add client-side alley sorting for any alley grouping or display logic. If the component renders alley names or groups results by alley, apply the same alphabetical/numerical sort as other components to maintain consistency."
-        },
-        {
-          "path": "frontend/src/utils/alleySort.ts",
+          "path": "frontend/src/components/PublicNavigationBar.tsx",
           "operation": "create",
-          "description": "Create a utility module exporting a sortAlleys function that takes an array of AlleyView objects and returns a sorted copy. Implement logic that first attempts numeric comparison (if alley names parse as numbers) and falls back to locale-aware alphabetical comparison. Include a naturalSort helper for mixed alphanumeric alley names (e.g., 'Alley 2' before 'Alley 10'). Export the function for reuse across all alley-rendering components."
+          "description": "Create a new sticky navigation bar component that renders four horizontally aligned navigation items with Polish labels (Mapa grobów, Wyszukiwanie, Modlitwa za zmarłych, Nasz cmentarz). The component accepts an activeSection prop and an onSectionChange callback. Style the bar to be fixed or sticky at the top of the content area (below the Header), with active item styling (e.g., border-bottom or background highlight) to indicate the current section. Ensure responsive design for both desktop and mobile using Tailwind CSS classes. The navigation items should be keyboard accessible and use semantic button elements."
+        },
+        {
+          "path": "frontend/src/pages/PublicPage.tsx",
+          "operation": "modify",
+          "description": "Replace the PublicSectionsTiles component with the new PublicNavigationBar component. Add state management for the active section using useState. Wire the PublicNavigationBar's onSectionChange callback to update the active section state. Update the conditional rendering logic to show/hide the four content sections (grave map, search, prayer, cemetery info) based on the active section state. Ensure the navigation bar is placed immediately below the HeroSection and above all content sections. Remove the import and usage of PublicSectionsTiles entirely from this file."
         }
       ]
     },
     {
-      "id": "REQ-4",
-      "summary": "Add a safeguard in GraveEditDialog that warns the admin before saving a plot number change, showing a confirmation step specifically for plot number changes to prevent accidental data-loss operations",
+      "id": "REQ-2",
+      "summary": "Remove the PublicSectionsTiles grid component from the public page while keeping all four content sections functional via the new navigation bar",
       "acceptanceCriteria": [
-        "When the admin changes the plot number field and clicks Save, a confirmation dialog appears before the save is executed",
-        "The confirmation message explicitly mentions that the plot/grave number is being changed",
-        "Cancelling the confirmation leaves all data unchanged",
-        "Confirming proceeds with the safe atomic update from REQ-1"
+        "The large navigation tile grid (PublicSectionsTiles) is no longer rendered on the public page.",
+        "All four content sections (grave map, search, prayer, cemetery info) remain accessible via the new navigation bar.",
+        "No visual duplication of navigation controls exists on the public page."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/admin/GraveEditDialog.tsx",
-          "operation": "modify",
-          "description": "Add plotNumber change detection by tracking the original plotNumber when the dialog opens (for edit mode). Before calling the save mutation, compare the current plotNumber field value with the original. If they differ, show a confirmation AlertDialog that explicitly warns the admin that changing the grave number will update the grave identifier. The confirmation message should state: 'You are about to change the plot number from [old] to [new]. This will update the grave identifier. Do you want to continue?' Include Cancel and Confirm buttons. Only proceed with the save mutation if the user confirms. If plotNumber has not changed, skip the confirmation and save immediately as before."
+          "path": "frontend/src/components/PublicSectionsTiles.tsx",
+          "operation": "delete",
+          "description": "Delete the PublicSectionsTiles component file as it is no longer needed. The navigation role is now fulfilled by the new PublicNavigationBar component created in REQ-1."
         }
       ]
     }
